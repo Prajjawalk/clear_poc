@@ -1,0 +1,24 @@
+[
+    {
+        "model": "alerts.subscription",
+        "pk": 1,
+        "fields": {
+            "user": 8,
+            "active": true,
+            "method": "email",
+            "frequency": "immediate",
+            "created_at": "2025-09-19T12:28:06.081Z",
+            "updated_at": "2025-09-19T12:28:06.081Z",
+            "locations": [
+                9,
+                10
+            ],
+            "shock_types": [
+                1,
+                2,
+                3,
+                4
+            ]
+        }
+    }
+]

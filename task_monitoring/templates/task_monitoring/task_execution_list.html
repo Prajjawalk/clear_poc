@@ -1,0 +1,256 @@
+{% extends "task_monitoring/base.html" %}
+{% load i18n %}
+
+{% block title %}Task Executions - Task Monitoring{% endblock %}
+
+{% block main_content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="/">
+                        <i class="bi bi-house"></i> Home
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'task_monitoring:dashboard' %}">Task Monitoring</a>
+                </li>
+                <li class="breadcrumb-item active">Task Executions</li>
+            </ol>
+        </nav>
+        <h1 class="nrc-heading mb-0">
+            <i class="bi bi-list-task me-2 text-warning"></i>{% trans "Task Executions" %}
+        </h1>
+    </div>
+    <div class="d-flex align-items-center">
+        <a href="{% url 'task_monitoring:scheduled_tasks_list' %}" class="btn btn-outline-primary">
+            <i class="bi bi-calendar3"></i> {% trans "Scheduled Tasks" %}
+        </a>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0 nrc-heading">
+            <i class="bi bi-funnel me-2"></i>{% trans "Filter Executions" %}
+        </h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+                        <div class="col-md-2">
+                            <label for="status" class="form-label">{% trans "Status" %}</label>
+                            <select name="status" id="status" class="form-select">
+                                <option value="">{% trans "All" %}</option>
+                                {% for value, label in status_choices %}
+                                    <option value="{{ value }}" {% if current_filters.status == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="task_type" class="form-label">{% trans "Task Type" %}</label>
+                            <select name="task_type" id="task_type" class="form-select">
+                                <option value="">{% trans "All" %}</option>
+                                {% for task_type in task_types %}
+                                    <option value="{{ task_type.id }}" {% if current_filters.task_type == task_type.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ task_type.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="source" class="form-label">{% trans "Source" %}</label>
+                            <select name="source" id="source" class="form-select">
+                                <option value="">{% trans "All" %}</option>
+                                {% for source in sources %}
+                                    <option value="{{ source.id }}" {% if current_filters.source == source.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ source.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="date_from" class="form-label">{% trans "From Date" %}</label>
+                            <input type="date" name="date_from" id="date_from" class="form-control" value="{{ current_filters.date_from }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="date_to" class="form-label">{% trans "To Date" %}</label>
+                            <input type="date" name="date_to" id="date_to" class="form-control" value="{{ current_filters.date_to }}">
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-outline-primary me-2">
+                                {% trans "Filter" %}
+                            </button>
+                            <a href="{% url 'task_monitoring:task_executions_list' %}" class="btn btn-outline-secondary">
+                                {% trans "Clear" %}
+                            </a>
+                        </div>
+        </form>
+        
+        <div class="row mt-3">
+            <div class="col-md-6">
+                <input type="text" name="search" class="form-control" placeholder="{% trans 'Search task IDs, sources, variables...' %}" 
+                       value="{{ current_filters.search }}" form="filter-form">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Executions Table -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0 nrc-heading">
+            <i class="bi bi-list-ul me-2"></i>{% trans "Task Executions" %}
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if executions %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                                    <tr>
+                                        <th>{% trans "Task ID" %}</th>
+                                        <th>{% trans "Type" %}</th>
+                                        <th>{% trans "Status" %}</th>
+                                        <th>{% trans "Source/Variable" %}</th>
+                                        <th>{% trans "Duration" %}</th>
+                                        <th>{% trans "Created" %}</th>
+                                        <th>{% trans "Completed" %}</th>
+                                        <th>{% trans "Retries" %}</th>
+                                        <th>{% trans "Actions" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for execution in executions %}
+                                        <tr>
+                                            <td>
+                                                <code class="small">{{ execution.task_id|slice:":8" }}...</code>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-info">{{ execution.task_type.name }}</span>
+                                            </td>
+                                            <td>
+                                                {% if execution.status == "success" %}
+                                                    <span class="badge bg-success">{% trans "Success" %}</span>
+                                                {% elif execution.status == "failure" %}
+                                                    <span class="badge bg-danger">{% trans "Failed" %}</span>
+                                                {% elif execution.status == "pending" %}
+                                                    <span class="badge bg-warning">{% trans "Pending" %}</span>
+                                                {% elif execution.status == "started" %}
+                                                    <span class="badge bg-info">{% trans "Running" %}</span>
+                                                {% elif execution.status == "retry" %}
+                                                    <span class="badge bg-warning">{% trans "Retry" %}</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">{{ execution.get_status_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if execution.source %}
+                                                    <strong>{{ execution.source.name }}</strong>
+                                                    {% if execution.variable %}
+                                                        <br><small class="text-muted">{{ execution.variable.name }}</small>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <em class="text-muted">{% trans "No source" %}</em>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if execution.duration_seconds %}
+                                                    {% if execution.duration_seconds < 60 %}
+                                                        {{ execution.duration_seconds|floatformat:1 }}s
+                                                    {% elif execution.duration_seconds < 3600 %}
+                                                        {% widthratio execution.duration_seconds 60 1 %}m
+                                                    {% else %}
+                                                        {% widthratio execution.duration_seconds 3600 1 %}h
+                                                    {% endif %}
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {{ execution.created_at|date:"M j, H:i" }}
+                                            </td>
+                                            <td>
+                                                {% if execution.completed_at %}
+                                                    {{ execution.completed_at|date:"M j, H:i" }}
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if execution.retry_count > 0 %}
+                                                    <span class="badge bg-warning">{{ execution.retry_count }}/{{ execution.max_retries }}</span>
+                                                {% else %}
+                                                    <span class="text-muted">0</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'task_monitoring:logs_detail' execution.task_id %}"
+                                                   class="btn btn-sm btn-outline-info me-1"
+                                                   title="{% trans 'View Task Logs' %}">
+                                                    <i class="bi bi-file-text"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if is_paginated %}
+                            <nav aria-label="{% trans 'Task executions pagination' %}">
+                                <ul class="pagination justify-content-center mt-4">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=1{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                                {% trans "First" %}
+                                            </a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                                {% trans "Previous" %}
+                                            </a>
+                                        </li>
+                                    {% endif %}
+
+                                    <li class="page-item active">
+                                        <span class="page-link">
+                                            {% trans "Page" %} {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}
+                                        </span>
+                                    </li>
+
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                                {% trans "Next" %}
+                                            </a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                                {% trans "Last" %}
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+        {% else %}
+            <div class="text-center py-4">
+                <i class="bi bi-list-task display-1 text-muted mb-3"></i>
+                <h4 class="nrc-heading">{% trans "No task executions found" %}</h4>
+                <p class="text-muted">
+                    {% trans "Task executions will appear here once you start running data pipeline tasks." %}
+                </p>
+                <a href="{% url 'task_monitoring:scheduled_tasks_list' %}" class="btn btn-primary">
+                    <i class="bi bi-calendar3"></i> {% trans "Set Up Scheduled Tasks" %}
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

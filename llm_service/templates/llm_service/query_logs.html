@@ -1,0 +1,483 @@
+{% extends "llm_service/base.html" %}
+{% load humanize %}
+{% load i18n %}
+
+{% block title %}{% trans "Query Logs" %} - {% trans "LLM Service" %}{% endblock %}
+
+{% block main_content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="/">
+                        <i class="bi bi-house"></i> {% trans "Home" %}
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'llm_service:dashboard' %}">{% trans "LLM Service" %}</a>
+                </li>
+                <li class="breadcrumb-item active">{% trans "Query Logs" %}</li>
+            </ol>
+        </nav>
+        <h1 class="nrc-heading mb-0">
+            <i class="bi bi-journal-text me-2 text-dark"></i>{% trans "Query Logs" %}
+        </h1>
+        <p class="text-muted">{% trans "View and analyze LLM query history and performance" %}</p>
+    </div>
+    <div class="btn-group" role="group">
+        <button type="button" class="btn btn-outline-secondary" onclick="window.location.reload()">
+            <i class="bi bi-arrow-clockwise me-1"></i>{% trans "Refresh" %}
+        </button>
+        <a href="{% url 'llm_service:dashboard' %}" class="btn btn-primary">
+            <i class="bi bi-speedometer2 me-1"></i>{% trans "Dashboard" %}
+        </a>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card border-primary">
+            <div class="card-body text-center">
+                <i class="bi bi-chat-dots display-6 text-primary mb-2"></i>
+                <h6 class="text-muted">{% trans "Total Queries" %}</h6>
+                <h3 class="mb-0">{{ stats.total_queries|default:0|intcomma }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card border-success">
+            <div class="card-body text-center">
+                <i class="bi bi-check-circle display-6 text-success mb-2"></i>
+                <h6 class="text-muted">{% trans "Success Rate" %}</h6>
+                <h3 class="mb-0">{{ stats.success_rate|floatformat:1 }}%</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card border-info">
+            <div class="card-body text-center">
+                <i class="bi bi-speedometer2 display-6 text-info mb-2"></i>
+                <h6 class="text-muted">{% trans "Avg Response" %}</h6>
+                <h3 class="mb-0">
+                    {% if stats.avg_response_time %}
+                        {{ stats.avg_response_time|floatformat:0 }}ms
+                    {% else %}
+                        -
+                    {% endif %}
+                </h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card border-warning">
+            <div class="card-body text-center">
+                <i class="bi bi-coin display-6 text-warning mb-2"></i>
+                <h6 class="text-muted">{% trans "Avg Tokens" %}</h6>
+                <h3 class="mb-0">
+                    {% if stats.avg_tokens %}
+                        {{ stats.avg_tokens|floatformat:0|intcomma }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-funnel text-secondary me-2"></i>{% trans "Filters" %}
+        </h5>
+    </div>
+    <div class="card-body">
+        <form method="get" id="filter-form">
+            <div class="row g-3">
+                <!-- Search -->
+                <div class="col-md-4">
+                    <label for="search" class="form-label">{% trans "Search" %}</label>
+                    <input type="text" class="form-control" id="search" name="search"
+                           value="{{ filters.search }}"
+                           placeholder="{% trans 'Hash, error, or application...' %}">
+                </div>
+
+                <!-- Provider Filter -->
+                <div class="col-md-2">
+                    <label for="provider" class="form-label">{% trans "Provider" %}</label>
+                    <select class="form-select" id="provider" name="provider">
+                        <option value="">{% trans "All" %}</option>
+                        {% for provider in all_providers %}
+                            <option value="{{ provider }}" {% if provider == filters.provider %}selected{% endif %}>
+                                {{ provider }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Model Filter -->
+                <div class="col-md-2">
+                    <label for="model" class="form-label">{% trans "Model" %}</label>
+                    <select class="form-select" id="model" name="model">
+                        <option value="">{% trans "All" %}</option>
+                        {% for model in all_models %}
+                            <option value="{{ model }}" {% if model == filters.model %}selected{% endif %}>
+                                {{ model }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Success Filter -->
+                <div class="col-md-2">
+                    <label for="success" class="form-label">{% trans "Status" %}</label>
+                    <select class="form-select" id="success" name="success">
+                        <option value="">{% trans "All" %}</option>
+                        <option value="true" {% if filters.success == 'true' %}selected{% endif %}>
+                            {% trans "Success" %}
+                        </option>
+                        <option value="false" {% if filters.success == 'false' %}selected{% endif %}>
+                            {% trans "Failed" %}
+                        </option>
+                    </select>
+                </div>
+
+                <!-- Date From -->
+                <div class="col-md-3">
+                    <label for="date_from" class="form-label">{% trans "From Date" %}</label>
+                    <input type="datetime-local" class="form-control" id="date_from" name="date_from"
+                           value="{{ filters.date_from }}">
+                </div>
+
+                <!-- Date To -->
+                <div class="col-md-3">
+                    <label for="date_to" class="form-label">{% trans "To Date" %}</label>
+                    <input type="datetime-local" class="form-control" id="date_to" name="date_to"
+                           value="{{ filters.date_to }}">
+                </div>
+
+                <!-- Filter Actions -->
+                <div class="col-md-6 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="bi bi-search me-1"></i>{% trans "Apply Filters" %}
+                    </button>
+                    <a href="{% url 'llm_service:query_logs' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle me-1"></i>{% trans "Clear" %}
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Query Logs Table -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-table text-primary me-2"></i>
+            {% trans "Query History" %}
+            <span class="badge bg-secondary ms-2">{{ page_obj.paginator.count|intcomma }}</span>
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if page_obj.object_list %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>{% trans "Time" %}</th>
+                            <th>{% trans "User" %}</th>
+                            <th>{% trans "Provider" %}</th>
+                            <th>{% trans "Model" %}</th>
+                            <th>{% trans "Application" %}</th>
+                            <th>{% trans "Status" %}</th>
+                            <th class="text-end">{% trans "Response Time" %}</th>
+                            <th class="text-end">{% trans "Tokens" %}</th>
+                            <th>{% trans "Actions" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in page_obj.object_list %}
+                            <tr>
+                                <td>
+                                    <span title="{{ log.created_at|date:'c' }}">
+                                        {{ log.created_at|naturaltime }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if log.user %}
+                                        <i class="bi bi-person-circle text-muted me-1"></i>
+                                        {{ log.user.username }}
+                                    {% else %}
+                                        <span class="text-muted">{% trans "System" %}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-info text-dark">{{ log.provider }}</span>
+                                </td>
+                                <td>
+                                    {% if log.model %}
+                                        <small class="text-muted">{{ log.model }}</small>
+                                    {% else %}
+                                        <small class="text-muted">-</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if log.application %}
+                                        <span class="badge bg-secondary">{{ log.application }}</span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if log.success %}
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle"></i> {% trans "Success" %}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-danger"
+                                              title="{{ log.error_message|default:'Unknown error' }}">
+                                            <i class="bi bi-x-circle"></i> {% trans "Failed" %}
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    {% if log.response_time_ms %}
+                                        {% if log.response_time_ms < 1000 %}
+                                            <span class="text-success">{{ log.response_time_ms }}ms</span>
+                                        {% elif log.response_time_ms < 3000 %}
+                                            <span class="text-warning">{{ log.response_time_ms }}ms</span>
+                                        {% else %}
+                                            <span class="text-danger">{{ log.response_time_ms }}ms</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    {% if log.total_tokens %}
+                                        <span title="Input: {{ log.tokens_input|default:0 }}, Output: {{ log.tokens_output|default:0 }}">
+                                            {{ log.total_tokens|intcomma }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-outline-primary"
+                                            data-bs-toggle="modal" data-bs-target="#logModal{{ log.id }}"
+                                            title="{% trans 'View Details' %}">
+                                        <i class="bi bi-eye"></i>
+                                        {% if log.prompt_text or log.response_text %}
+                                            <i class="bi bi-chat-text text-success ms-1" title="{% trans 'Content available' %}"></i>
+                                        {% endif %}
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <!-- Modal for log details -->
+                            <div class="modal fade" id="logModal{{ log.id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">
+                                                {% trans "Query Log Details" %}
+                                                <small class="text-muted ms-2">#{{ log.id }}</small>
+                                            </h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="row mb-3">
+                                                <div class="col-md-6">
+                                                    <strong>{% trans "Time" %}:</strong><br>
+                                                    {{ log.created_at|date:'Y-m-d H:i:s' }}
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <strong>{% trans "Status" %}:</strong><br>
+                                                    {% if log.success %}
+                                                        <span class="badge bg-success">Success</span>
+                                                    {% else %}
+                                                        <span class="badge bg-danger">Failed</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-3">
+                                                <div class="col-md-6">
+                                                    <strong>{% trans "Provider" %}:</strong><br>
+                                                    {{ log.provider }}
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <strong>{% trans "Model" %}:</strong><br>
+                                                    {{ log.model|default:"-" }}
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-3">
+                                                <div class="col-md-6">
+                                                    <strong>{% trans "User" %}:</strong><br>
+                                                    {{ log.user.username|default:"System" }}
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <strong>{% trans "Application" %}:</strong><br>
+                                                    {{ log.application|default:"-" }}
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-3">
+                                                <div class="col-md-6">
+                                                    <strong>{% trans "Response Time" %}:</strong><br>
+                                                    {{ log.response_time_ms|default:0 }}ms
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <strong>{% trans "Cost Estimate" %}:</strong><br>
+                                                    {% if log.cost_estimate %}
+                                                        ${{ log.cost_estimate|floatformat:6 }}
+                                                    {% else %}
+                                                        -
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+
+                                            {% if log.total_tokens %}
+                                            <div class="row mb-3">
+                                                <div class="col-12">
+                                                    <strong>{% trans "Token Usage" %}:</strong><br>
+                                                    <div class="progress" style="height: 25px;">
+                                                        {% with input_pct=log.tokens_input|default:0|floatformat:0 output_pct=log.tokens_output|default:0|floatformat:0 %}
+                                                        <div class="progress-bar bg-info" role="progressbar"
+                                                             style="width: {% widthratio log.tokens_input log.total_tokens 100 %}%">
+                                                            Input: {{ log.tokens_input|default:0|intcomma }}
+                                                        </div>
+                                                        <div class="progress-bar bg-success" role="progressbar"
+                                                             style="width: {% widthratio log.tokens_output log.total_tokens 100 %}%">
+                                                            Output: {{ log.tokens_output|default:0|intcomma }}
+                                                        </div>
+                                                        {% endwith %}
+                                                    </div>
+                                                    <small class="text-muted">Total: {{ log.total_tokens|intcomma }} tokens</small>
+                                                </div>
+                                            </div>
+                                            {% endif %}
+
+                                            {% if log.prompt_text %}
+                                            <div class="row mb-3">
+                                                <div class="col-12">
+                                                    <strong>{% trans "Prompt" %}:</strong><br>
+                                                    <div class="bg-light p-2 rounded" style="max-height: 200px; overflow-y: auto;">
+                                                        <pre class="mb-0" style="white-space: pre-wrap;">{{ log.prompt_text }}</pre>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endif %}
+
+                                            {% if log.response_text %}
+                                            <div class="row mb-3">
+                                                <div class="col-12">
+                                                    <strong>{% trans "Response" %}:</strong><br>
+                                                    <div class="bg-light p-2 rounded" style="max-height: 300px; overflow-y: auto;">
+                                                        <pre class="mb-0" style="white-space: pre-wrap;">{{ log.response_text }}</pre>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endif %}
+
+                                            <div class="row mb-3">
+                                                <div class="col-12">
+                                                    <strong>{% trans "Prompt Hash" %}:</strong><br>
+                                                    <code>{{ log.prompt_hash|truncatechars:32 }}</code>
+                                                </div>
+                                            </div>
+
+                                            {% if not log.success and log.error_message %}
+                                            <div class="row mb-3">
+                                                <div class="col-12">
+                                                    <strong>{% trans "Error Message" %}:</strong><br>
+                                                    <div class="alert alert-danger">
+                                                        {{ log.error_message }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endif %}
+
+                                            {% if log.metadata %}
+                                            <div class="row">
+                                                <div class="col-12">
+                                                    <strong>{% trans "Metadata" %}:</strong><br>
+                                                    <pre class="bg-light p-2 rounded">{{ log.metadata|pprint }}</pre>
+                                                </div>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                {% trans "Close" %}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+                <nav aria-label="{% trans 'Query log pagination' %}">
+                    <ul class="pagination justify-content-center mt-4">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% for key, value in filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                    {% trans "First" %}
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">
+                                {% trans "Page" %} {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}
+                            </span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                    {% trans "Last" %}
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-journal-x display-1 text-muted"></i>
+                <h4 class="mt-3">{% trans "No Query Logs Found" %}</h4>
+                <p class="text-muted">
+                    {% if filters.search or filters.provider or filters.model or filters.success or filters.date_from or filters.date_to %}
+                        {% trans "Try adjusting your filters or" %}
+                        <a href="{% url 'llm_service:query_logs' %}">{% trans "clear all filters" %}</a>.
+                    {% else %}
+                        {% trans "Query logs will appear here after LLM queries are made." %}
+                    {% endif %}
+                </p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

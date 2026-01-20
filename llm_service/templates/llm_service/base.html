@@ -1,0 +1,141 @@
+{% extends "layout.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "NRC EWAS - LLM Service" %}{% endblock %}
+{% block description %}Norwegian Refugee Council EWAS Sudan - LLM Service Management{% endblock %}
+{% block header_subtitle %}{% trans "LLM Service" %}{% endblock %}
+{% block app_class %}app-llm-service{% endblock %}
+
+{% block sidebar_icon %}bi bi-cpu{% endblock %}
+{% block sidebar_color %}dark{% endblock %}
+{% block sidebar_heading %}{% trans "LLM Service" %}{% endblock %}
+
+{% block mobile_sidebar_icon %}bi bi-cpu{% endblock %}
+{% block mobile_sidebar_color %}dark{% endblock %}
+{% block mobile_sidebar_heading %}{% trans "LLM Service" %}{% endblock %}
+
+{% block sidebar_nav %}
+<ul class="nav nav-pills flex-column">
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+           href="{% url 'llm_service:dashboard' %}" title="{% trans 'Dashboard' %}">
+            <i class="bi bi-speedometer2"></i>
+            <span class="nav-text ms-2">{% trans "Dashboard" %}</span>
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if request.resolver_match.url_name == 'test_interface' %}active{% endif %}"
+           href="{% url 'llm_service:test_interface' %}" title="{% trans 'Test Interface' %}">
+            <i class="bi bi-chat-dots"></i>
+            <span class="nav-text ms-2">{% trans "Test Interface" %}</span>
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if request.resolver_match.url_name == 'query_logs' %}active{% endif %}"
+           href="{% url 'llm_service:query_logs' %}" title="{% trans 'Query Logs' %}">
+            <i class="bi bi-journal-text"></i>
+            <span class="nav-text ms-2">{% trans "Query Logs" %}</span>
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'llm_service:api_provider_status' %}"
+           title="{% trans 'Provider Status' %}" target="_blank">
+            <i class="bi bi-server"></i>
+            <span class="nav-text ms-2">{% trans "Provider Status" %}</span>
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'llm_service:api_service_stats' %}"
+           title="{% trans 'Service Statistics' %}" target="_blank">
+            <i class="bi bi-graph-up"></i>
+            <span class="nav-text ms-2">{% trans "Statistics" %}</span>
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="/admin/llm_service/" title="{% trans 'Admin Interface' %}">
+            <i class="bi bi-gear"></i>
+            <span class="nav-text ms-2">{% trans "Admin" %}</span>
+        </a>
+    </li>
+</ul>
+{% endblock %}
+
+{% block mobile_sidebar_nav %}
+<ul class="nav nav-pills flex-column">
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+           href="{% url 'llm_service:dashboard' %}">
+            <i class="bi bi-speedometer2 me-2"></i>
+            {% trans "Dashboard" %}
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if request.resolver_match.url_name == 'test_interface' %}active{% endif %}"
+           href="{% url 'llm_service:test_interface' %}">
+            <i class="bi bi-chat-dots me-2"></i>
+            {% trans "Test Interface" %}
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if request.resolver_match.url_name == 'query_logs' %}active{% endif %}"
+           href="{% url 'llm_service:query_logs' %}">
+            <i class="bi bi-journal-text me-2"></i>
+            {% trans "Query Logs" %}
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'llm_service:api_provider_status' %}" target="_blank">
+            <i class="bi bi-server me-2"></i>
+            {% trans "Provider Status" %}
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'llm_service:api_service_stats' %}" target="_blank">
+            <i class="bi bi-graph-up me-2"></i>
+            {% trans "Statistics" %}
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="/admin/llm_service/">
+            <i class="bi bi-gear me-2"></i>
+            {% trans "Admin" %}
+        </a>
+    </li>
+</ul>
+{% endblock %}
+
+{% block sidebar_actions %}
+<hr class="my-3">
+
+<h6 class="sidebar-heading nrc-heading mb-3">
+    <i class="bi bi-lightning me-2 text-warning"></i>
+    <span class="sidebar-text">{% trans "Quick Actions" %}</span>
+</h6>
+<div class="d-grid gap-2">
+    <a href="{% url 'llm_service:api_query' %}" class="btn btn-outline-primary btn-sm"
+       title="{% trans 'API Documentation' %}" target="_blank">
+        <i class="bi bi-code-slash"></i><span class="nav-text ms-1">{% trans "API Docs" %}</span>
+    </a>
+    <button type="button" class="btn btn-outline-success btn-sm"
+            onclick="window.location.reload()" title="{% trans 'Refresh Status' %}">
+        <i class="bi bi-arrow-clockwise"></i><span class="nav-text ms-1">{% trans "Refresh" %}</span>
+    </button>
+</div>
+{% endblock %}
+
+{% block mobile_sidebar_actions %}
+<hr class="my-3">
+
+<h6 class="sidebar-heading nrc-heading mb-3">
+    <i class="bi bi-lightning me-2 text-warning"></i>
+    {% trans "Quick Actions" %}
+</h6>
+<div class="d-grid gap-2">
+    <a href="{% url 'llm_service:api_query' %}" class="btn btn-outline-primary btn-sm" target="_blank">
+        <i class="bi bi-code-slash me-1"></i>{% trans "API Docs" %}
+    </a>
+    <button type="button" class="btn btn-outline-success btn-sm" onclick="window.location.reload()">
+        <i class="bi bi-arrow-clockwise me-1"></i>{% trans "Refresh" %}
+    </button>
+</div>
+{% endblock %}

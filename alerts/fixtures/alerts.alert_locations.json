@@ -1,0 +1,58 @@
+[
+  {
+    "model": "alerts.alert_locations",
+    "pk": 1,
+    "fields": {
+      "alert": 1,
+      "location": 17
+    }
+  },
+  {
+    "model": "alerts.alert_locations",
+    "pk": 2,
+    "fields": {
+      "alert": 1,
+      "location": 9
+    }
+  },
+  {
+    "model": "alerts.alert_locations",
+    "pk": 3,
+    "fields": {
+      "alert": 2,
+      "location": 4
+    }
+  },
+  {
+    "model": "alerts.alert_locations",
+    "pk": 4,
+    "fields": {
+      "alert": 3,
+      "location": 11
+    }
+  },
+  {
+    "model": "alerts.alert_locations",
+    "pk": 5,
+    "fields": {
+      "alert": 3,
+      "location": 18
+    }
+  },
+  {
+    "model": "alerts.alert_locations",
+    "pk": 6,
+    "fields": {
+      "alert": 4,
+      "location": 11
+    }
+  },
+  {
+    "model": "alerts.alert_locations",
+    "pk": 7,
+    "fields": {
+      "alert": 4,
+      "location": 18
+    }
+  }
+]

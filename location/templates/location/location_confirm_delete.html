@@ -1,0 +1,118 @@
+{% extends "location/base.html" %}
+
+{% block title %}Delete {{ object.name }}{% endblock %}
+
+{% block main_content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Delete Location</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group">
+            <a href="{% url 'location:location_detail' object.pk %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Details
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-exclamation-triangle"></i> Confirm Deletion
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="lead">
+                    Are you sure you want to delete the location <strong>"{{ object.name }}"</strong>?
+                </p>
+                
+                <div class="alert alert-warning" role="alert">
+                    <h6 class="alert-heading">
+                        <i class="bi bi-warning"></i> Warning: This action cannot be undone
+                    </h6>
+                    <p class="mb-0">
+                        Deleting this location will permanently remove it from the system along with all associated data.
+                    </p>
+                </div>
+
+                <!-- Location Details -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">Location Information</h6>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm table-borderless mb-0">
+                            <tbody>
+                                <tr>
+                                    <th scope="row" class="w-25">Name:</th>
+                                    <td>{{ object.name }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Geographic ID:</th>
+                                    <td><code>{{ object.geo_id }}</code></td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Administrative Level:</th>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ object.admin_level.name }}</span>
+                                        <small class="text-muted">Level {{ object.admin_level.code }}</small>
+                                    </td>
+                                </tr>
+                                {% if object.parent %}
+                                    <tr>
+                                        <th scope="row">Parent Location:</th>
+                                        <td>{{ object.parent.name }} ({{ object.parent.geo_id }})</td>
+                                    </tr>
+                                {% endif %}
+                                <tr>
+                                    <th scope="row">Created:</th>
+                                    <td>{{ object.created_at|date:"F j, Y \a\t g:i A" }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Impact Assessment -->
+                {% with child_count=object.children.count gazetteer_count=object.gazetteer_entries.count %}
+                    {% if child_count > 0 or gazetteer_count > 0 %}
+                        <div class="alert alert-danger" role="alert">
+                            <h6 class="alert-heading">
+                                <i class="bi bi-exclamation-circle"></i> Deletion Impact
+                            </h6>
+                            <p>This action will also affect:</p>
+                            <ul class="mb-0">
+                                {% if child_count > 0 %}
+                                    <li>
+                                        <strong>{{ child_count }} child location{{ child_count|pluralize }}</strong> 
+                                        will lose their parent reference
+                                    </li>
+                                {% endif %}
+                                {% if gazetteer_count > 0 %}
+                                    <li>
+                                        <strong>{{ gazetteer_count }} gazetteer entr{{ gazetteer_count|pluralize:"y,ies" }}</strong> 
+                                        will be permanently deleted
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> Yes, Delete This Location
+                        </button>
+                        <a href="{% url 'location:location_detail' object.pk %}" class="btn btn-secondary">
+                            <i class="bi bi-x-lg"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

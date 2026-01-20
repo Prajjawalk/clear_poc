@@ -1,0 +1,202 @@
+{% extends "alert_framework/base.html" %}
+{% load humanize %}
+{% load i18n %}
+
+{% block title %}{% trans "Template" %}: {{ alert_template.name }}{% endblock %}
+
+{% block main_content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="/">
+                        <i class="bi bi-house"></i> {% trans "Home" %}
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'alert_framework:dashboard' %}">{% trans "Alert Framework" %}</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'alert_framework:template_list' %}">{% trans "Templates" %}</a>
+                </li>
+                <li class="breadcrumb-item active">{{ alert_template.name }}</li>
+            </ol>
+        </nav>
+        <h1 class="nrc-heading mb-0">
+            <i class="bi bi-file-text me-2 text-success"></i>{{ alert_template.name }}
+        </h1>
+    </div>
+    <div class="btn-group" role="group">
+        <a href="{% url 'alert_framework:template_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>{% trans "Back to List" %}
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <!-- Template Information -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">{% trans "Template Information" %}</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-3">{% trans "Name" %}</dt>
+                    <dd class="col-sm-9">{{ alert_template.name }}</dd>
+
+                    <dt class="col-sm-3">{% trans "Description" %}</dt>
+                    <dd class="col-sm-9">{{ alert_template.description|default:"—" }}</dd>
+
+                    <dt class="col-sm-3">{% trans "Shock Type" %}</dt>
+                    <dd class="col-sm-9">
+                        {% if alert_template.shock_type %}
+                            <span class="badge bg-primary">{{ alert_template.shock_type.name }}</span>
+                        {% else %}
+                            <span class="text-muted">{% trans "Generic template" %}</span>
+                        {% endif %}
+                    </dd>
+
+                    <dt class="col-sm-3">{% trans "Detector Type" %}</dt>
+                    <dd class="col-sm-9">
+                        {% if alert_template.detector_type %}
+                            <span class="badge bg-info">{{ alert_template.detector_type }}</span>
+                        {% else %}
+                            <span class="text-muted">{% trans "All detectors" %}</span>
+                        {% endif %}
+                    </dd>
+
+                    <dt class="col-sm-3">{% trans "Status" %}</dt>
+                    <dd class="col-sm-9">
+                        <span class="badge bg-{% if alert_template.active %}success{% else %}secondary{% endif %}">
+                            {% if alert_template.active %}{% trans "Active" %}{% else %}{% trans "Inactive" %}{% endif %}
+                        </span>
+                    </dd>
+
+                    <dt class="col-sm-3">{% trans "Created" %}</dt>
+                    <dd class="col-sm-9">
+                        {{ alert_template.created_at|date:"Y-m-d H:i:s" }}
+                        <small class="text-muted">({{ alert_template.created_at|naturaltime }})</small>
+                    </dd>
+
+                    <dt class="col-sm-3">{% trans "Updated" %}</dt>
+                    <dd class="col-sm-9">
+                        {{ alert_template.updated_at|date:"Y-m-d H:i:s" }}
+                        <small class="text-muted">({{ alert_template.updated_at|naturaltime }})</small>
+                    </dd>
+                </dl>
+            </div>
+        </div>
+
+        <!-- Template Content -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">{% trans "Template Content" %}</h5>
+            </div>
+            <div class="card-body">
+                <h6>{% trans "Title Template" %}</h6>
+                <pre class="bg-light p-3 rounded mb-3">{{ alert_template.title }}</pre>
+
+                <h6>{% trans "Content Template" %}</h6>
+                <pre class="bg-light p-3 rounded">{{ alert_template.text }}</pre>
+            </div>
+        </div>
+
+        <!-- Template Preview -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">{% trans "Preview with Sample Data" %}</h5>
+            </div>
+            <div class="card-body template-preview">
+                {% if preview %}
+                    <div class="border rounded p-3 bg-light">
+                        <h6 class="fw-bold">{% trans "Generated Alert:" %}</h6>
+                        <div class="alert alert-info">
+                            <strong>{{ preview.title }}</strong>
+                            <hr>
+                            {{ preview.text|linebreaks }}
+                        </div>
+                    </div>
+                {% elif preview_error %}
+                    <div class="alert alert-danger">
+                        <h6>{% trans "Template Error:" %}</h6>
+                        <pre class="mb-0">{{ preview_error }}</pre>
+                    </div>
+                {% else %}
+                    <p class="text-muted">{% trans "Preview not available" %}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <!-- Usage Statistics -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5 class="mb-0">{% trans "Usage Statistics" %}</h5>
+            </div>
+            <div class="card-body">
+                <dl class="mb-0">
+                    <dt>{% trans "Total Detections" %}</dt>
+                    <dd class="mb-2">
+                        <h4 class="text-primary mb-0">{{ usage_stats.detections_with_shock_type }}</h4>
+                        <small class="text-muted">{% trans "with this shock type" %}</small>
+                    </dd>
+
+                    <dt>{% trans "Recent Usage (30 days)" %}</dt>
+                    <dd>
+                        <h4 class="text-info mb-0">{{ usage_stats.recent_usage }}</h4>
+                        <small class="text-muted">{% trans "detections" %}</small>
+                    </dd>
+                </dl>
+            </div>
+        </div>
+
+        <!-- Template Variables -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5 class="mb-0">{% trans "Available Variables" %}</h5>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted mb-2">{% trans "These variables can be used in the template:" %}</p>
+                <div class="row">
+                    <div class="col-12">
+                        {% verbatim %}
+                        <code class="small d-block mb-1">{{ detector_name }}</code>
+                        <code class="small d-block mb-1">{{ detection_timestamp }}</code>
+                        <code class="small d-block mb-1">{{ confidence_score }}</code>
+                        <code class="small d-block mb-1">{{ location_names }}</code>
+                        <code class="small d-block mb-1">{{ primary_location.name }}</code>
+                        <code class="small d-block mb-1">{{ shock_type }}</code>
+                        {% endverbatim %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">{% trans "Template Help" %}</h5>
+            </div>
+            <div class="card-body">
+                <h6 class="small">{% trans "Template Syntax" %}</h6>
+                <p class="small text-muted">
+                    {% trans "Templates use Django template syntax. Use double curly braces for variables and template tags for logic." %}
+                </p>
+                
+                <h6 class="small">{% trans "Example" %}</h6>
+                {% verbatim %}
+                <pre class="small bg-light p-2 rounded">Alert in {{ primary_location.name }}
+Confidence: {{ confidence_score|floatformat:1 }}%
+{% for location in location_names %}
+- {{ location }}
+{% endfor %}</pre>
+                {% endverbatim %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

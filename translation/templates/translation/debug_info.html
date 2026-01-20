@@ -1,0 +1,19 @@
+{% load translation_tags %}
+
+{% if show_debug %}
+<div class="translation-debug" style="border: 1px solid #ccc; padding: 10px; margin: 5px; background: #f9f9f9; font-size: 12px; font-family: monospace;">
+    <strong>Translation Debug:</strong><br>
+    <strong>Label:</strong> {{ label }}<br>
+    <strong>Translation:</strong> "{{ translation }}"<br>
+    <strong>Language:</strong> {{ current_language }}<br>
+
+    {% if coverage %}
+    <strong>Coverage:</strong>
+    <ul style="margin: 5px 0; padding-left: 20px;">
+        {% for lang_code, info in coverage.items %}
+        <li>{{ info.name }} ({{ lang_code }}): {{ info.translated }}/{{ info.total }} ({{ info.percentage|floatformat:1 }}%)</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+</div>
+{% endif %}

@@ -1,0 +1,306 @@
+{% extends "task_monitoring/base.html" %}
+{% load i18n %}
+
+{% block title %}Queue Monitoring - Task Monitoring{% endblock %}
+
+{% block main_content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="/">
+                        <i class="bi bi-house"></i> Home
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'task_monitoring:dashboard' %}">Task Monitoring</a>
+                </li>
+                <li class="breadcrumb-item active">Queue Monitoring</li>
+            </ol>
+        </nav>
+        <h1 class="nrc-heading mb-0">
+            <i class="bi bi-layers me-2 text-warning"></i>{% trans "Queue Monitoring" %}
+        </h1>
+    </div>
+    <div class="d-flex align-items-center">
+        <button onclick="location.reload()" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-clockwise"></i> {% trans "Refresh" %}
+        </button>
+    </div>
+</div>
+
+{% if error %}
+    <div class="alert alert-danger" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <strong>{% trans "Error:" %}</strong> {{ error }}
+    </div>
+{% else %}
+    <!-- Redis Information -->
+    {% if redis_info.connected %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0 nrc-heading">
+                    <i class="bi bi-server me-2"></i>{% trans "Redis Server Information" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <i class="bi bi-check-circle-fill text-success fs-1"></i>
+                            <div class="mt-2">
+                                <strong>{% trans "Connected" %}</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <div class="fs-4 text-primary">{{ redis_info.memory_usage }}</div>
+                            <div class="text-muted">{% trans "Memory Usage" %}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <div class="fs-4 text-info">{{ redis_info.total_keys }}</div>
+                            <div class="text-muted">{% trans "Total Keys" %}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <div class="fs-6 text-secondary">v{{ redis_info.version }}</div>
+                            <div class="text-muted">{% trans "Redis Version" %}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Workers Information -->
+    {% if workers %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0 nrc-heading">
+                    <i class="bi bi-cpu me-2"></i>{% trans "Celery Workers" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Worker" %}</th>
+                                <th>{% trans "Status" %}</th>
+                                <th>{% trans "Processes" %}</th>
+                                <th>{% trans "Max Concurrency" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for worker in workers %}
+                                <tr>
+                                    <td>
+                                        <i class="bi bi-gear me-2"></i>
+                                        <code>{{ worker.name }}</code>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success">{{ worker.status|title }}</span>
+                                    </td>
+                                    <td>{{ worker.processes }}</td>
+                                    <td>{{ worker.max_concurrency }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Queue Overview -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0 nrc-heading">
+                <i class="bi bi-list-ul me-2"></i>{% trans "Queue Overview" %}
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if queues %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Queue Name" %}</th>
+                                <th>{% trans "Waiting" %}</th>
+                                <th>{% trans "Active" %}</th>
+                                <th>{% trans "Scheduled" %}</th>
+                                <th>{% trans "Reserved" %}</th>
+                                <th>{% trans "Total" %}</th>
+                                <th>{% trans "Actions" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for queue in queues %}
+                                <tr>
+                                    <td>
+                                        <i class="bi bi-inbox me-2"></i>
+                                        <strong>{{ queue.name }}</strong>
+                                    </td>
+                                    <td>
+                                        {% if queue.length > 0 %}
+                                            <span class="badge bg-warning">{{ queue.length }}</span>
+                                        {% else %}
+                                            <span class="text-muted">0</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if queue.active_tasks > 0 %}
+                                            <span class="badge bg-primary">{{ queue.active_tasks }}</span>
+                                        {% else %}
+                                            <span class="text-muted">0</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if queue.scheduled_tasks > 0 %}
+                                            <span class="badge bg-info">{{ queue.scheduled_tasks }}</span>
+                                        {% else %}
+                                            <span class="text-muted">0</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if queue.reserved_tasks > 0 %}
+                                            <span class="badge bg-secondary">{{ queue.reserved_tasks }}</span>
+                                        {% else %}
+                                            <span class="text-muted">0</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if queue.total_tasks > 0 %}
+                                            <strong class="text-primary">{{ queue.total_tasks }}</strong>
+                                        {% else %}
+                                            <span class="text-muted">0</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if queue.length > 0 %}
+                                            <form method="post" action="{% url 'task_monitoring:clear_queue' queue.name %}" 
+                                                  style="display: inline;"
+                                                  onsubmit="return confirm('{% trans 'Are you sure you want to clear all tasks from this queue?' %}')">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-outline-danger btn-sm" title="{% trans 'Clear Queue' %}">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-inbox display-1 text-muted mb-3"></i>
+                    <h4 class="nrc-heading">{% trans "No queues found" %}</h4>
+                    <p class="text-muted">
+                        {% trans "Unable to retrieve queue information from Celery." %}
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Detailed Task List -->
+    {% if all_tasks %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0 nrc-heading">
+                    <i class="bi bi-list-task me-2"></i>{% trans "Active Tasks" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Task ID" %}</th>
+                                <th>{% trans "Task Name" %}</th>
+                                <th>{% trans "Status" %}</th>
+                                <th>{% trans "Queue" %}</th>
+                                <th>{% trans "Worker" %}</th>
+                                <th>{% trans "Retries" %}</th>
+                                <th>{% trans "Actions" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for task in all_tasks %}
+                                <tr>
+                                    <td>
+                                        <code class="small">{{ task.id|truncatechars:12 }}</code>
+                                    </td>
+                                    <td>
+                                        <div class="small">{{ task.name }}</div>
+                                        {% if task.args %}
+                                            <small class="text-muted">Args: {{ task.args|truncatechars:50 }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if task.status == 'active' %}
+                                            <span class="badge bg-primary">{% trans "Active" %}</span>
+                                        {% elif task.status == 'scheduled' %}
+                                            <span class="badge bg-info">{% trans "Scheduled" %}</span>
+                                        {% elif task.status == 'reserved' %}
+                                            <span class="badge bg-secondary">{% trans "Reserved" %}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ task.queue }}</td>
+                                    <td>
+                                        <small class="text-muted">{{ task.worker|truncatechars:20 }}</small>
+                                    </td>
+                                    <td>
+                                        {% if task.retries > 0 %}
+                                            <span class="badge bg-warning">{{ task.retries }}</span>
+                                        {% else %}
+                                            <span class="text-muted">0</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <form method="post" action="{% url 'task_monitoring:revoke_task' task.id %}" 
+                                              style="display: inline;"
+                                              onsubmit="return confirm('{% trans 'Are you sure you want to revoke this task?' %}')">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" title="{% trans 'Revoke Task' %}">
+                                                <i class="bi bi-x-circle"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endif %}
+
+<script>
+// Auto-refresh every 30 seconds
+setTimeout(function() {
+    location.reload();
+}, 30000);
+
+// Handle AJAX form submissions for better UX
+document.addEventListener('DOMContentLoaded', function() {
+    const forms = document.querySelectorAll('form[action*="clear"], form[action*="revoke"]');
+    forms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const button = form.querySelector('button[type="submit"]');
+            button.disabled = true;
+            button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+        });
+    });
+});
+</script>
+{% endblock %}

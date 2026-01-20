@@ -1,0 +1,238 @@
+{% extends "location/base.html" %}
+{% load humanize %}
+
+{% block title %}{{ location.name }} - Location Details{% endblock %}
+
+{% block main_content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">{{ location.name }}</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'location:location_update' location.pk %}" class="btn btn-sm btn-primary">
+                <i class="bi bi-pencil"></i> Edit
+            </a>
+            <a href="{% url 'location:location_delete' location.pk %}" class="btn btn-sm btn-outline-danger" data-action="delete">
+                <i class="bi bi-trash"></i> Delete
+            </a>
+        </div>
+        <div class="btn-group">
+            <a href="{% url 'location:location_list' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Main Information -->
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Location Information</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tbody>
+                        <tr>
+                            <th scope="row" class="w-25">Name:</th>
+                            <td>{{ location.name }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Geographic ID:</th>
+                            <td><code>{{ location.geo_id }}</code></td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Administrative Level:</th>
+                            <td>
+                                <span class="badge bg-secondary">{{ location.admin_level.name }}</span>
+                                <small class="text-muted">Level {{ location.admin_level.code }}</small>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Parent Location:</th>
+                            <td>
+                                {% if location.parent %}
+                                    <a href="{% url 'location:location_detail' location.parent.pk %}" class="text-decoration-none">
+                                        {{ location.parent.name }}
+                                    </a>
+                                    <small class="text-muted d-block">{{ location.parent.geo_id }}</small>
+                                {% else %}
+                                    <em class="text-muted">No parent (root level)</em>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% if location.comment %}
+                            <tr>
+                                <th scope="row">Comment:</th>
+                                <td>{{ location.comment }}</td>
+                            </tr>
+                        {% endif %}
+                        <tr>
+                            <th scope="row">Has Boundary:</th>
+                            <td>
+                                {% if location.boundary %}
+                                    <span class="text-success"><i class="bi bi-check-circle"></i> Yes</span>
+                                {% else %}
+                                    <span class="text-muted"><i class="bi bi-x-circle"></i> No</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Has Point:</th>
+                            <td>
+                                {% if location.point %}
+                                    <span class="text-success"><i class="bi bi-check-circle"></i> Yes</span>
+                                    <small class="text-muted d-block">
+                                        Coordinates: {{ location.point.y|floatformat:4 }}°, {{ location.point.x|floatformat:4 }}°
+                                    </small>
+                                {% else %}
+                                    <span class="text-muted"><i class="bi bi-x-circle"></i> No</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Created:</th>
+                            <td>{{ location.created_at|date:"F j, Y \a\t g:i A" }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Updated:</th>
+                            <td>{{ location.updated_at|date:"F j, Y \a\t g:i A" }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Gazetteer Entries -->
+        {% if gazetteer_entries %}
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Alternative Names & Codes</h5>
+                    <a href="{% url 'location:gazetteer_create' %}?location={{ location.pk }}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-plus"></i> Add Entry
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Source</th>
+                                    <th>Name</th>
+                                    <th>Code</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for entry in gazetteer_entries %}
+                                    <tr>
+                                        <td><span class="badge bg-info">{{ entry.source }}</span></td>
+                                        <td>{{ entry.name }}</td>
+                                        <td>
+                                            {% if entry.code %}
+                                                <code>{{ entry.code }}</code>
+                                            {% else %}
+                                                <em class="text-muted">No code</em>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{% url 'location:gazetteer_update' entry.pk %}" 
+                                                   class="btn btn-outline-primary" title="Edit">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <a href="{% url 'location:gazetteer_delete' entry.pk %}" 
+                                                   class="btn btn-outline-danger" title="Delete" data-action="delete">
+                                                    <i class="bi bi-trash"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Sidebar Information -->
+    <div class="col-md-4">
+        <!-- Hierarchy -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">Location Hierarchy</h6>
+            </div>
+            <div class="card-body">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        {% for ancestor in hierarchy %}
+                            {% if forloop.last %}
+                                <li class="breadcrumb-item active" aria-current="page">
+                                    {{ ancestor.name }}
+                                </li>
+                            {% else %}
+                                <li class="breadcrumb-item">
+                                    <a href="{% url 'location:location_detail' ancestor.pk %}" class="text-decoration-none">
+                                        {{ ancestor.name }}
+                                    </a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    </ol>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Child Locations -->
+        {% if children %}
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="card-title mb-0">Child Locations</h6>
+                    <span class="badge bg-primary">{{ children|length }}</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for child in children %}
+                            <div class="list-group-item d-flex justify-content-between align-items-start">
+                                <div class="ms-2 me-auto">
+                                    <a href="{% url 'location:location_detail' child.pk %}" class="text-decoration-none fw-semibold">
+                                        {{ child.name }}
+                                    </a>
+                                    <small class="text-muted d-block">{{ child.geo_id }}</small>
+                                </div>
+                                <span class="badge bg-secondary">{{ child.admin_level.name }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'location:location_create' %}?parent={{ location.pk }}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-plus"></i> Add Child Location
+                    </a>
+                    <a href="{% url 'location:gazetteer_create' %}?location={{ location.pk }}" class="btn btn-outline-success btn-sm">
+                        <i class="bi bi-plus"></i> Add Gazetteer Entry
+                    </a>
+                    <hr>
+                    <a href="{% url 'location:location_list' %}?parent={{ location.pk }}" class="btn btn-outline-info btn-sm">
+                        <i class="bi bi-list"></i> View All Children
+                    </a>
+                    <a href="{% url 'location:location_list' %}?admin_level={{ location.admin_level.code }}" class="btn btn-outline-info btn-sm">
+                        <i class="bi bi-layers"></i> View Same Level
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

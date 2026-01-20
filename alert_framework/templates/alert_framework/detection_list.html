@@ -1,0 +1,267 @@
+{% extends "alert_framework/base.html" %}
+{% load humanize %}
+{% load i18n %}
+
+{% block title %}{% trans "Detections" %}{% endblock %}
+
+{% block main_content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="/">
+                        <i class="bi bi-house"></i> {% trans "Home" %}
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'alert_framework:dashboard' %}">{% trans "Alert Framework" %}</a>
+                </li>
+                <li class="breadcrumb-item active">{% trans "Detections" %}</li>
+            </ol>
+        </nav>
+        <h1 class="nrc-heading mb-0">
+            <i class="bi bi-exclamation-triangle me-2 text-warning"></i>{% trans "Alert Framework Detections" %}
+        </h1>
+    </div>
+</div>
+
+<!-- Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-primary">{{ stats.total_detections }}</h5>
+                <p class="card-text">{% trans "Total Detections" %}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-warning">{{ stats.pending }}</h5>
+                <p class="card-text">{% trans "Pending" %}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-success">{{ stats.processed }}</h5>
+                <p class="card-text">{% trans "Processed" %}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-info">{{ stats.recent_24h }}</h5>
+                <p class="card-text">{% trans "Recent (24h)" %}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filters -->
+<div class="search-filters">
+    <form method="get" class="row g-3">
+        <div class="col-md-3">
+            <select name="detector" class="form-select">
+                <option value="">{% trans "All Detectors" %}</option>
+                {% for detector in detectors %}
+                    <option value="{{ detector.id }}" {% if filters.detector == detector.id|stringformat:"s" %}selected{% endif %}>
+                        {{ detector.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select name="status" class="form-select">
+                <option value="">{% trans "All Statuses" %}</option>
+                <option value="pending" {% if filters.status == 'pending' %}selected{% endif %}>{% trans "Pending" %}</option>
+                <option value="processed" {% if filters.status == 'processed' %}selected{% endif %}>{% trans "Processed" %}</option>
+                <option value="dismissed" {% if filters.status == 'dismissed' %}selected{% endif %}>{% trans "Dismissed" %}</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select name="shock_type" class="form-select">
+                <option value="">{% trans "All Shock Types" %}</option>
+                {% for shock_type_id, shock_type_name in shock_types %}
+                    <option value="{{ shock_type_id }}" {% if filters.shock_type == shock_type_id|stringformat:"s" %}selected{% endif %}>
+                        {{ shock_type_name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="show_duplicates" name="show_duplicates" 
+                       {% if filters.show_duplicates %}checked{% endif %}>
+                <label class="form-check-label" for="show_duplicates">
+                    {% trans "Show Duplicates" %}
+                </label>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="d-grid d-md-flex gap-2">
+                <button type="submit" class="btn btn-outline-primary">
+                    <i class="bi bi-funnel me-1"></i>{% trans "Filter" %}
+                </button>
+                <a href="{% url 'alert_framework:detection_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle me-1"></i>{% trans "Clear" %}
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Results Summary -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <span class="text-muted">
+        {% if page_obj %}
+            {% blocktrans with start=page_obj.start_index end=page_obj.end_index total=page_obj.paginator.count %}Showing {{ start }}-{{ end }} of {{ total }} detections{% endblocktrans %}
+        {% else %}
+            {% blocktrans count counter=stats.total_detections %}{{ counter }} detection total{% plural %}{{ counter }} detections total{% endblocktrans %}
+        {% endif %}
+    </span>
+</div>
+
+<!-- Detection List -->
+{% if detections %}
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                            <th>{% trans "ID" %}</th>
+                            <th>{% trans "Detector" %}</th>
+                            <th>{% trans "Timestamp" %}</th>
+                            <th>{% trans "Shock Type" %}</th>
+                            <th>{% trans "Locations" %}</th>
+                            <th>{% trans "Status" %}</th>
+                            <th>{% trans "Confidence" %}</th>
+                            <th class="table-actions">{% trans "Actions" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for detection in detections %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'alert_framework:detection_detail' detection.pk %}">
+                                        #{{ detection.id }}
+                                    </a>
+                                    {% if detection.duplicate_of %}
+                                        <br><small class="text-muted">{% trans "Duplicate" %}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'alert_framework:detector_detail' detection.detector.pk %}">
+                                        {{ detection.detector.name }}
+                                    </a>
+                                </td>
+                                <td>{{ detection.detection_timestamp|naturaltime }}</td>
+                                <td>
+                                    {% if detection.shock_type %}
+                                        {{ detection.shock_type.name }}
+                                    {% else %}
+                                        <span class="text-muted">{% trans "Unknown" %}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% for location in detection.locations.all %}
+                                        <span class="badge bg-secondary me-1">{{ location.name }}</span>
+                                    {% empty %}
+                                        <span class="text-muted">{% trans "No locations" %}</span>
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if detection.status == 'pending' %}warning{% elif detection.status == 'processed' %}success{% elif detection.status == 'dismissed' %}secondary{% else %}primary{% endif %}">
+                                        {{ detection.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if detection.confidence_score %}
+                                        {{ detection.confidence_score|floatformat:2 }}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="table-actions">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{% url 'alert_framework:detection_detail' detection.pk %}" 
+                                           class="btn btn-outline-primary" title="{% trans 'View Details' %}">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        {% if detection.status == 'pending' %}
+                                            <form method="post" action="{% url 'alert_framework:detection_action' detection.pk %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="action" value="process">
+                                                <button type="submit" class="btn btn-outline-success" title="{% trans 'Process' %}">
+                                                    <i class="bi bi-check"></i>
+                                                </button>
+                                            </form>
+                                            <form method="post" action="{% url 'alert_framework:detection_action' detection.pk %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="action" value="dismiss">
+                                                <button type="submit" class="btn btn-outline-danger" title="{% trans 'Dismiss' %}">
+                                                    <i class="bi bi-x"></i>
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+                <nav aria-label="Detections pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{% trans "Previous" %}</a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{% trans "Next" %}</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+    </div>
+{% else %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-exclamation-triangle text-muted" style="font-size: 3rem;"></i>
+            <h4 class="mt-3">{% trans "No Detections Found" %}</h4>
+            {% if filters.detector or filters.status or filters.shock_type %}
+                <p class="text-muted">{% trans "No detections match your current filters." %}</p>
+                <a href="{% url 'alert_framework:detection_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle me-1"></i>{% trans "Clear Filters" %}
+                </a>
+            {% else %}
+                <p class="text-muted">{% trans "No detections have been generated yet." %}</p>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

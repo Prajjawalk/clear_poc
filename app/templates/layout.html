@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="container-fluid py-4 {% block app_class %}{% endblock %}">
+    <div class="d-flex">
+        <!-- Sidebar -->
+        <div class="d-none d-lg-block sidebar-wrapper" id="sidebarColumn">
+            <div class="sidebar p-3">
+                <div class="d-flex justify-content-center align-items-center mb-3 position-relative">
+                    <h6 class="sidebar-heading nrc-heading mb-0 d-flex align-items-center">
+                        <i class="{% block sidebar_icon %}bi bi-house{% endblock %} me-2 text-{% block sidebar_color %}primary{% endblock %}"></i>
+                        <span class="sidebar-text">{% block sidebar_heading %}{% trans "Navigation" %}{% endblock %}</span>
+                    </h6>
+                    <button class="btn btn-link btn-sm p-0 sidebar-toggle position-absolute end-0" type="button">
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+                </div>
+                
+                {% block sidebar_nav %}
+                <ul class="nav nav-pills flex-column">
+                    <li class="nav-item mb-1">
+                        <a class="nav-link" href="/" title="{% trans 'Home' %}">
+                            <i class="bi bi-house"></i>
+                            <span class="nav-text ms-2">{% trans "Home" %}</span>
+                        </a>
+                    </li>
+                </ul>
+                {% endblock %}
+                
+                {% block sidebar_actions %}
+                <hr class="my-3">
+                
+                <h6 class="sidebar-heading nrc-heading mb-3">
+                    <i class="bi bi-lightning me-2 text-warning"></i>
+                    <span class="sidebar-text">{% trans "Quick Actions" %}</span>
+                </h6>
+                <div class="d-grid gap-2">
+                    <a href="/" class="btn btn-outline-primary btn-sm" title="{% trans 'Dashboard' %}">
+                        <i class="bi bi-house"></i><span class="nav-text ms-1">{% trans "Dashboard" %}</span>
+                    </a>
+                </div>
+                {% endblock %}
+            </div>
+        </div>
+        
+        <!-- Mobile navigation off-canvas -->
+        <div class="offcanvas offcanvas-start d-lg-none" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
+            <div class="offcanvas-header">
+                <h5 class="offcanvas-title nrc-heading" id="mobileSidebarLabel">
+                    {% trans "Menu" %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body">
+                <div class="sidebar">
+                    <!-- Repeat sidebar content for mobile -->
+                    <h6 class="sidebar-heading nrc-heading mb-3">
+                        <i class="{% block mobile_sidebar_icon %}{% endblock %} me-2 text-{% block mobile_sidebar_color %}{% endblock %}"></i>
+                        {% block mobile_sidebar_heading %}{% endblock %}
+                    </h6>
+                    
+                    {% block mobile_sidebar_nav %}
+                    <ul class="nav nav-pills flex-column">
+                        <li class="nav-item mb-1">
+                            <a class="nav-link" href="/">
+                                <i class="bi bi-house me-2"></i>
+                                {% trans "Home" %}
+                            </a>
+                        </li>
+                    </ul>
+                    {% endblock %}
+                    
+                    {% block mobile_sidebar_actions %}
+                    <hr class="my-3">
+                    
+                    <h6 class="sidebar-heading nrc-heading mb-3">
+                        <i class="bi bi-lightning me-2 text-warning"></i>
+                        {% trans "Quick Actions" %}
+                    </h6>
+                    <div class="d-grid gap-2">
+                        <a href="/" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-house me-1"></i>{% trans "Dashboard" %}
+                        </a>
+                    </div>
+                    {% endblock %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content" id="mainContent">
+            <!-- Mobile sidebar toggle -->
+            <div class="d-lg-none mb-3">
+                <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
+                    <i class="bi bi-list me-1"></i>{% trans "Menu" %}
+                </button>
+            </div>
+            
+            {% include 'includes/messages.html' %}
+            
+            {% block main_content %}{% endblock %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sidebarToggle = document.querySelector('.sidebar-toggle');
+    const sidebarWrapper = document.getElementById('sidebarColumn');
+    
+    if (sidebarToggle && sidebarWrapper) {
+        sidebarToggle.addEventListener('click', function() {
+            sidebarWrapper.classList.toggle('collapsed');
+            
+            // Store sidebar state in localStorage
+            const isCollapsed = sidebarWrapper.classList.contains('collapsed');
+            localStorage.setItem('sidebarCollapsed', isCollapsed);
+        });
+        
+        // Restore sidebar state from localStorage
+        const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+        if (isCollapsed) {
+            sidebarWrapper.classList.add('collapsed');
+        }
+    }
+});
+</script>
+{% endblock %}

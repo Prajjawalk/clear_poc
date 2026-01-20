@@ -1,0 +1,58 @@
+[
+  {
+    "model": "alerts.shocktype",
+    "pk": 1,
+    "fields": {
+      "name": "Conflict",
+      "name_en": "Conflict",
+      "name_ar": "نزاع",
+      "icon": "⚡",
+      "color": "#dc3545",
+      "css_class": "conflict",
+      "created_at": "2024-01-15T10:00:00Z",
+      "updated_at": "2024-01-15T10:00:00Z"
+    }
+  },
+  {
+    "model": "alerts.shocktype",
+    "pk": 2,
+    "fields": {
+      "name": "Natural disasters",
+      "name_en": "Natural disasters",
+      "name_ar": "كوارث طبيعية",
+      "icon": "💧",
+      "color": "#fd7e14",
+      "css_class": "natural-disasters",
+      "created_at": "2024-01-15T10:00:00Z",
+      "updated_at": "2024-01-15T10:00:00Z"
+    }
+  },
+  {
+    "model": "alerts.shocktype",
+    "pk": 3,
+    "fields": {
+      "name": "Health emergencies",
+      "name_en": "Health emergencies",
+      "name_ar": "حالات الطوارئ الصحية",
+      "icon": "❤️‍🩹",
+      "color": "#20c997",
+      "css_class": "health-emergencies",
+      "created_at": "2024-01-15T10:00:00Z",
+      "updated_at": "2024-01-15T10:00:00Z"
+    }
+  },
+  {
+    "model": "alerts.shocktype",
+    "pk": 4,
+    "fields": {
+      "name": "Food security",
+      "name_en": "Food security",
+      "name_ar": "الأمن الغذائي",
+      "icon": "🥖",
+      "color": "#6f42c1",
+      "css_class": "food-security",
+      "created_at": "2024-01-15T10:00:00Z",
+      "updated_at": "2024-01-15T10:00:00Z"
+    }
+  }
+]

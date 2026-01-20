@@ -1,0 +1,289 @@
+{% extends "llm_service/base.html" %}
+{% load humanize %}
+{% load i18n %}
+
+{% block title %}{% trans "LLM Service Dashboard" %}{% endblock %}
+
+{% block main_content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="/">
+                        <i class="bi bi-house"></i> {% trans "Home" %}
+                    </a>
+                </li>
+                <li class="breadcrumb-item active">{% trans "LLM Service" %}</li>
+            </ol>
+        </nav>
+        <h1 class="nrc-heading mb-0">
+            <i class="bi bi-cpu me-2 text-dark"></i>{% trans "LLM Service Dashboard" %}
+        </h1>
+        <p class="text-muted">{% trans "Monitor LLM providers and service performance" %}</p>
+    </div>
+    <div class="btn-group" role="group">
+        <a href="{% url 'llm_service:test_interface' %}" class="btn btn-primary">
+            <i class="bi bi-chat-dots me-1"></i>{% trans "Test Interface" %}
+        </a>
+        <a href="{% url 'llm_service:api_provider_status' %}" class="btn btn-outline-secondary" target="_blank">
+            <i class="bi bi-server me-1"></i>{% trans "API Status" %}
+        </a>
+    </div>
+</div>
+
+{% if error %}
+<!-- Error Message -->
+<div class="alert alert-warning" role="alert">
+    <i class="bi bi-exclamation-triangle me-2"></i>
+    <strong>{% trans "Service Unavailable" %}</strong><br>
+    {% trans "Unable to load LLM service data. Please check the configuration." %}
+    <small class="d-block mt-1 text-muted">{{ error }}</small>
+</div>
+{% endif %}
+
+<!-- Service Overview Cards -->
+<div class="row mb-4">
+    <!-- Provider Status Summary -->
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card border-primary">
+            <div class="card-body text-center">
+                <i class="bi bi-cpu display-4 text-primary mb-2"></i>
+                <h5 class="card-title">{% trans "Providers" %}</h5>
+                {% if provider_status %}
+                    <h2 class="mb-0">{{ provider_status.providers|length }}</h2>
+                    <small class="text-muted">
+                        {% with active_count=provider_status.providers|length %}
+                            {% if active_count > 0 %}
+                                <span class="text-success">{{ active_count }} {% trans "available" %}</span>
+                            {% else %}
+                                <span class="text-warning">{% trans "none configured" %}</span>
+                            {% endif %}
+                        {% endwith %}
+                    </small>
+                {% else %}
+                    <h2 class="mb-0 text-muted">-</h2>
+                    <small class="text-muted">{% trans "loading..." %}</small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Query Statistics -->
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card border-success">
+            <div class="card-body text-center">
+                <i class="bi bi-graph-up display-4 text-success mb-2"></i>
+                <h5 class="card-title">{% trans "Queries Today" %}</h5>
+                {% if service_stats %}
+                    <h2 class="mb-0">{{ service_stats.total_queries|default:0|floatformat:0 }}</h2>
+                    <small class="text-muted">
+                        {% if service_stats.successful_queries %}
+                            <span class="text-success">{{ service_stats.successful_queries }} {% trans "successful" %}</span>
+                        {% else %}
+                            <span class="text-muted">{% trans "no activity" %}</span>
+                        {% endif %}
+                    </small>
+                {% else %}
+                    <h2 class="mb-0 text-muted">-</h2>
+                    <small class="text-muted">{% trans "loading..." %}</small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Metrics -->
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card border-info">
+            <div class="card-body text-center">
+                <i class="bi bi-speedometer2 display-4 text-info mb-2"></i>
+                <h5 class="card-title">{% trans "Avg Response" %}</h5>
+                {% if service_stats and service_stats.avg_response_time_ms %}
+                    <h2 class="mb-0">{{ service_stats.avg_response_time_ms|floatformat:0 }}ms</h2>
+                    <small class="text-muted">
+                        {% if service_stats.avg_response_time_ms < 1000 %}
+                            <span class="text-success">{% trans "fast" %}</span>
+                        {% elif service_stats.avg_response_time_ms < 3000 %}
+                            <span class="text-warning">{% trans "moderate" %}</span>
+                        {% else %}
+                            <span class="text-danger">{% trans "slow" %}</span>
+                        {% endif %}
+                    </small>
+                {% else %}
+                    <h2 class="mb-0 text-muted">-</h2>
+                    <small class="text-muted">{% trans "no data" %}</small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Cache Performance -->
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card border-warning">
+            <div class="card-body text-center">
+                <i class="bi bi-lightning display-4 text-warning mb-2"></i>
+                <h5 class="card-title">{% trans "Cache Hit Rate" %}</h5>
+                {% if service_stats.cache.total_entries %}
+                    {% with hit_rate=service_stats.cache.total_hits|default:0 %}
+                        <h2 class="mb-0">{{ hit_rate|floatformat:0 }}%</h2>
+                        <small class="text-muted">
+                            {% if hit_rate > 70 %}
+                                <span class="text-success">{% trans "excellent" %}</span>
+                            {% elif hit_rate > 40 %}
+                                <span class="text-warning">{% trans "good" %}</span>
+                            {% else %}
+                                <span class="text-info">{% trans "building" %}</span>
+                            {% endif %}
+                        </small>
+                    {% endwith %}
+                {% else %}
+                    <h2 class="mb-0 text-muted">-</h2>
+                    <small class="text-muted">{% trans "no cache data" %}</small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Information -->
+<div class="row">
+    <!-- Provider Details -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-server text-primary me-2"></i>{% trans "Provider Status" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if provider_status and provider_status.providers %}
+                    {% for provider in provider_status.providers %}
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h6 class="mb-1">{{ provider.name|default:"Unknown Provider" }}</h6>
+                                <small class="text-muted">{{ provider.type|default:"Unknown Type" }}</small>
+                            </div>
+                            <div class="text-end">
+                                {% if provider.active %}
+                                    <span class="badge bg-success">{% trans "Active" %}</span>
+                                {% else %}
+                                    <span class="badge bg-danger">{% trans "Inactive" %}</span>
+                                {% endif %}
+                                {% if provider.configured %}
+                                    <br><small class="text-success">{% trans "Configured" %}</small>
+                                {% else %}
+                                    <br><small class="text-warning">{% trans "Not Configured" %}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if not forloop.last %}<hr>{% endif %}
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center text-muted py-3">
+                        <i class="bi bi-exclamation-triangle display-6 text-muted"></i>
+                        <p class="mt-2">{% trans "No providers configured" %}</p>
+                        <small>{% trans "Configure LLM providers to start using the service" %}</small>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-activity text-success me-2"></i>{% trans "Service Statistics" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if service_stats %}
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <div class="border-end">
+                                <div class="h4 mb-0">{{ service_stats.total_queries|default:0 }}</div>
+                                <small class="text-muted">{% trans "Total Queries" %}</small>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="h4 mb-0">{{ service_stats.successful_queries|default:0 }}</div>
+                            <small class="text-muted">{% trans "Successful" %}</small>
+                        </div>
+                    </div>
+
+                    {% if service_stats.total_tokens %}
+                        <div class="row text-center">
+                            <div class="col-6 mb-3">
+                                <div class="border-end">
+                                    <div class="h4 mb-0">{{ service_stats.total_tokens|default:0|floatformat:0 }}</div>
+                                    <small class="text-muted">{% trans "Tokens Used" %}</small>
+                                </div>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <div class="h4 mb-0">{{ service_stats.avg_response_time_ms|default:0|floatformat:0 }}ms</div>
+                                <small class="text-muted">{% trans "Avg Response" %}</small>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if service_stats.providers %}
+                        <hr>
+                        <h6 class="mb-2">{% trans "Provider Breakdown" %}</h6>
+                        {% for provider_stat in service_stats.providers %}
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span>{{ provider_stat.provider }}</span>
+                                <span>{{ provider_stat.queries }} {% trans "queries" %}</span>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% else %}
+                    <div class="text-center text-muted py-3">
+                        <i class="bi bi-graph-up display-6 text-muted"></i>
+                        <p class="mt-2">{% trans "No activity yet" %}</p>
+                        <small>{% trans "Statistics will appear after first queries" %}</small>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row">
+    <div class="col-12">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-lightning me-2"></i>{% trans "Quick Actions" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <a href="{% url 'llm_service:test_interface' %}" class="btn btn-outline-primary w-100">
+                            <i class="bi bi-chat-dots me-2"></i>{% trans "Test Queries" %}
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{% url 'llm_service:query_logs' %}" class="btn btn-outline-success w-100">
+                            <i class="bi bi-journal-text me-2"></i>{% trans "Query Logs" %}
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{% url 'llm_service:api_provider_status' %}" class="btn btn-outline-info w-100" target="_blank">
+                            <i class="bi bi-server me-2"></i>{% trans "Provider API" %}
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="/admin/llm_service/" class="btn btn-outline-secondary w-100">
+                            <i class="bi bi-gear me-2"></i>{% trans "Administration" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,421 @@
+{% extends "llm_service/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "LLM Service Test Interface" %}{% endblock %}
+
+{% block main_content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="/">
+                        <i class="bi bi-house"></i> {% trans "Home" %}
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'llm_service:test_interface' %}">{% trans "LLM Service" %}</a>
+                </li>
+                <li class="breadcrumb-item active">{% trans "Test Interface" %}</li>
+            </ol>
+        </nav>
+        <h1 class="nrc-heading mb-0">
+            <i class="bi bi-cpu me-2 text-dark"></i>{% trans "LLM Service Test Interface" %}
+        </h1>
+        <p class="text-muted">{% trans "Test LLM providers and monitor service health" %}</p>
+    </div>
+    <div class="btn-group" role="group">
+        <a href="{% url 'llm_service:api_provider_status' %}" class="btn btn-outline-primary" target="_blank">
+            <i class="bi bi-server me-1"></i>{% trans "Provider Status" %}
+        </a>
+        <a href="{% url 'llm_service:api_service_stats' %}" class="btn btn-outline-success" target="_blank">
+            <i class="bi bi-graph-up me-1"></i>{% trans "Statistics" %}
+        </a>
+    </div>
+</div>
+
+<!-- Service Status Cards -->
+<div class="row mb-4">
+    <!-- Provider Status -->
+    <div class="col-md-6 mb-3">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-cpu text-primary"></i>
+                    {% trans "Provider Status" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="provider-status">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">{% trans "Loading..." %}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Service Statistics -->
+    <div class="col-md-6 mb-3">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-graph-up text-success"></i>
+                    {% trans "Service Statistics" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="service-stats">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">{% trans "Loading..." %}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Query Testing Section -->
+<div class="row">
+    <!-- Query Form -->
+    <div class="col-lg-8 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-chat-dots text-info"></i>
+                    {% trans "Query Testing" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="query-form">
+                    {% csrf_token %}
+
+                    <!-- Provider and Model Selection -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="provider-select" class="form-label">{% trans "Provider" %}</label>
+                            <select class="form-select" id="provider-select" name="provider">
+                                <option value="">{% trans "Use default provider" %}</option>
+                                {% for provider in providers %}
+                                <option value="{{ provider.name }}">{{ provider.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="model-input" class="form-label">{% trans "Model" %} <small class="text-muted">({% trans "optional" %})</small></label>
+                            <input type="text" class="form-control" id="model-input" name="model"
+                                   placeholder="e.g., gpt-3.5-turbo">
+                        </div>
+                    </div>
+
+                    <!-- Prompt Input -->
+                    <div class="mb-3">
+                        <label for="prompt-input" class="form-label">{% trans "Prompt" %}</label>
+                        <textarea class="form-control" id="prompt-input" name="prompt" rows="4"
+                                  placeholder="{% trans 'Enter your test prompt here...' %}" required>Tell me a joke</textarea>
+                    </div>
+
+                    <!-- Advanced Parameters -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="temperature-input" class="form-label">{% trans "Temperature" %}</label>
+                            <input type="number" class="form-control" id="temperature-input" name="temperature"
+                                   min="0" max="1" step="0.1" value="0.7">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="max-tokens-input" class="form-label">{% trans "Max Tokens" %}</label>
+                            <input type="number" class="form-control" id="max-tokens-input" name="max_tokens"
+                                   min="1" max="4000" value="150">
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="stream-checkbox" name="stream">
+                                <label class="form-check-label" for="stream-checkbox">
+                                    {% trans "Stream response" %}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System Message -->
+                    <div class="mb-3">
+                        <label for="system-input" class="form-label">{% trans "System Message" %} <small class="text-muted">({% trans "optional" %})</small></label>
+                        <textarea class="form-control" id="system-input" name="system" rows="2"
+                                  placeholder="{% trans 'Optional system message to set conversation context...' %}"></textarea>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-between">
+                        <button type="button" class="btn btn-outline-secondary" id="clear-btn">
+                            <i class="bi bi-eraser me-1"></i>{% trans "Clear" %}
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="submit-btn">
+                            <span class="spinner-border spinner-border-sm d-none" id="submit-spinner"></span>
+                            <i class="bi bi-send me-1"></i>{% trans "Send Query" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Response Display -->
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-reply text-warning"></i>
+                    {% trans "Response" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="response-container">
+                    <div class="text-muted text-center">
+                        <i class="bi bi-chat-text display-6 text-muted"></i>
+                        <p class="mt-2">{% trans "Submit a query to see the response" %}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Help Section -->
+<div class="row">
+    <div class="col-12">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-info-circle me-2"></i>{% trans "Usage Information" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="bi bi-lightbulb text-warning me-2"></i>{% trans "Tips" %}</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="bi bi-check-circle text-success me-2"></i>{% trans "Leave provider empty to use default" %}</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>{% trans "Temperature controls creativity (0=focused, 1=creative)" %}</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>{% trans "Max tokens limits response length" %}</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>{% trans "System messages set conversation context" %}</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="bi bi-gear text-primary me-2"></i>{% trans "Configuration" %}</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="bi bi-server me-2"></i>{% trans "Provider status shows availability" %}</li>
+                            <li><i class="bi bi-graph-up me-2"></i>{% trans "Statistics track usage patterns" %}</li>
+                            <li><i class="bi bi-shield-check me-2"></i>{% trans "All queries are logged for monitoring" %}</li>
+                            <li><i class="bi bi-clock me-2"></i>{% trans "Response times include network latency" %}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Load provider status
+    loadProviderStatus();
+
+    // Load service stats
+    loadServiceStats();
+
+    // Handle form submission
+    document.getElementById('query-form').addEventListener('submit', handleQuerySubmit);
+
+    // Handle clear button
+    document.getElementById('clear-btn').addEventListener('click', clearResponse);
+
+    function loadProviderStatus() {
+        fetch('{% url "llm_service:api_provider_status" %}')
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('provider-status');
+                container.innerHTML = '';
+
+                if (data.providers && data.providers.length > 0) {
+                    data.providers.forEach(provider => {
+                        const statusBadge = provider.active ?
+                            '<span class="badge bg-success">{% trans "Active" %}</span>' :
+                            '<span class="badge bg-danger">{% trans "Inactive" %}</span>';
+
+                        container.innerHTML += `
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <strong>${provider.name || 'Unknown'}</strong>
+                                ${statusBadge}
+                            </div>
+                        `;
+                    });
+                } else {
+                    container.innerHTML = '<div class="text-muted"><i class="bi bi-exclamation-triangle me-2"></i>{% trans "No providers available" %}</div>';
+                }
+            })
+            .catch(error => {
+                document.getElementById('provider-status').innerHTML =
+                    '<div class="text-danger"><i class="bi bi-x-circle me-2"></i>{% trans "Error loading provider status" %}</div>';
+            });
+    }
+
+    function loadServiceStats() {
+        fetch('{% url "llm_service:api_service_stats" %}')
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('service-stats');
+                container.innerHTML = `
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="h4 mb-0">${data.total_queries || 0}</div>
+                            <small class="text-muted">{% trans "Total Queries" %}</small>
+                        </div>
+                        <div class="col-6">
+                            <div class="h4 mb-0">${Math.round(data.success_rate || 0)}%</div>
+                            <small class="text-muted">{% trans "Success Rate" %}</small>
+                        </div>
+                    </div>
+                    <div class="row text-center mt-3">
+                        <div class="col-6">
+                            <div class="h4 mb-0">${Math.round(data.avg_response_time_ms || 0)}ms</div>
+                            <small class="text-muted">{% trans "Avg Response" %}</small>
+                        </div>
+                        <div class="col-6">
+                            <div class="h4 mb-0">${Math.round(data.cache_hit_rate || 0)}%</div>
+                            <small class="text-muted">{% trans "Cache Hit Rate" %}</small>
+                        </div>
+                    </div>
+                `;
+            })
+            .catch(error => {
+                document.getElementById('service-stats').innerHTML =
+                    '<div class="text-danger"><i class="bi bi-x-circle me-2"></i>{% trans "Error loading statistics" %}</div>';
+            });
+    }
+
+    function handleQuerySubmit(event) {
+        event.preventDefault();
+
+        const submitBtn = document.getElementById('submit-btn');
+        const spinner = document.getElementById('submit-spinner');
+        const responseContainer = document.getElementById('response-container');
+
+        // Show loading state
+        submitBtn.disabled = true;
+        spinner.classList.remove('d-none');
+
+        // Prepare form data
+        const formData = new FormData(event.target);
+        const queryData = {
+            prompt: formData.get('prompt'),
+            provider: formData.get('provider') || null,
+            model: formData.get('model') || null,
+            temperature: parseFloat(formData.get('temperature')) || null,
+            max_tokens: parseInt(formData.get('max_tokens')) || null,
+            system: formData.get('system') || null,
+            stream: formData.has('stream')
+        };
+
+        // Remove null values
+        Object.keys(queryData).forEach(key => {
+            if (queryData[key] === null || queryData[key] === '') {
+                delete queryData[key];
+            }
+        });
+
+        if (queryData.stream) {
+            handleStreamingQuery(queryData);
+        } else {
+            handleRegularQuery(queryData);
+        }
+    }
+
+    function handleRegularQuery(queryData) {
+        const responseContainer = document.getElementById('response-container');
+
+        fetch('{% url "llm_service:api_query" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify(queryData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                responseContainer.innerHTML = `
+                    <div class="alert alert-danger" role="alert">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>{% trans "Error:" %}</strong> ${data.error}
+                        ${data.details ? '<br><small>' + data.details + '</small>' : ''}
+                    </div>
+                `;
+            } else {
+                responseContainer.innerHTML = `
+                    <div class="alert alert-success" role="alert">
+                        <strong><i class="bi bi-check-circle me-2"></i>{% trans "Response:" %}</strong>
+                        <div class="mt-2 p-2 bg-light rounded">${data.response}</div>
+                        <hr>
+                        <small class="text-muted">
+                            <i class="bi bi-server me-1"></i>{% trans "Provider:" %} ${data.provider} |
+                            <i class="bi bi-clock me-1"></i>{% trans "Time:" %} ${data.response_time_ms}ms
+                        </small>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            responseContainer.innerHTML = `
+                <div class="alert alert-danger" role="alert">
+                    <i class="bi bi-wifi-off me-2"></i>{% trans "Network error occurred" %}
+                </div>
+            `;
+        })
+        .finally(() => {
+            resetSubmitButton();
+        });
+    }
+
+    function handleStreamingQuery(queryData) {
+        // Streaming implementation placeholder
+        const responseContainer = document.getElementById('response-container');
+        responseContainer.innerHTML = `
+            <div class="alert alert-info" role="alert">
+                <i class="bi bi-info-circle me-2"></i>{% trans "Streaming responses not yet implemented in this test interface" %}
+            </div>
+        `;
+        resetSubmitButton();
+    }
+
+    function clearResponse() {
+        document.getElementById('response-container').innerHTML = `
+            <div class="text-muted text-center">
+                <i class="bi bi-chat-text display-6 text-muted"></i>
+                <p class="mt-2">{% trans "Submit a query to see the response" %}</p>
+            </div>
+        `;
+    }
+
+    function resetSubmitButton() {
+        const submitBtn = document.getElementById('submit-btn');
+        const spinner = document.getElementById('submit-spinner');
+
+        submitBtn.disabled = false;
+        spinner.classList.add('d-none');
+    }
+
+    function getCsrfToken() {
+        const token = document.querySelector('[name=csrfmiddlewaretoken]');
+        return token ? token.value : '';
+    }
+});
+</script>
+{% endblock %}

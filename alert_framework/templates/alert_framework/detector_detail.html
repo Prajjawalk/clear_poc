@@ -1,0 +1,226 @@
+{% extends "alert_framework/base.html" %}
+{% load humanize %}
+{% load i18n %}
+
+{% block title %}{% trans "Detector" %}: {{ detector.name }}{% endblock %}
+
+{% block main_content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="/">
+                        <i class="bi bi-house"></i> {% trans "Home" %}
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'alert_framework:dashboard' %}">{% trans "Alert Framework" %}</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'alert_framework:detector_list' %}">{% trans "Detectors" %}</a>
+                </li>
+                <li class="breadcrumb-item active">{{ detector.name }}</li>
+            </ol>
+        </nav>
+        <h1 class="nrc-heading mb-0">
+            <i class="bi bi-search me-2 text-primary"></i>{{ detector.name }}
+        </h1>
+    </div>
+    <div class="btn-group" role="group">
+        <a href="{% url 'alert_framework:detector_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>{% trans "Back to List" %}
+        </a>
+        <a href="{% url 'alert_framework:detector_edit' detector.pk %}" class="btn btn-outline-primary">
+            <i class="bi bi-pencil me-1"></i>{% trans "Edit" %}
+        </a>
+        {% if detector.active %}
+            <form method="post" action="{% url 'alert_framework:detector_run' detector.pk %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-play me-1"></i>{% trans "Run Now" %}
+                </button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Detector Information -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">{% trans "Detector Information" %}</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-3">{% trans "Name" %}</dt>
+                    <dd class="col-sm-9">{{ detector.name }}</dd>
+
+                    <dt class="col-sm-3">{% trans "Description" %}</dt>
+                    <dd class="col-sm-9">{{ detector.description|default:"—" }}</dd>
+
+                    <dt class="col-sm-3">{% trans "Class" %}</dt>
+                    <dd class="col-sm-9"><code>{{ detector.class_name }}</code></dd>
+
+                    <dt class="col-sm-3">{% trans "Status" %}</dt>
+                    <dd class="col-sm-9">
+                        <span class="badge bg-{% if detector.active %}success{% else %}secondary{% endif %}">
+                            {% if detector.active %}{% trans "Active" %}{% else %}{% trans "Inactive" %}{% endif %}
+                        </span>
+                    </dd>
+
+                    <dt class="col-sm-3">{% trans "Schedule" %}</dt>
+                    <dd class="col-sm-9">
+                        {% if detector.schedule %}
+                            <span class="badge bg-info">{% trans "Scheduled" %}</span>
+                        {% else %}
+                            <span class="text-muted">{% trans "Manual only" %}</span>
+                        {% endif %}
+                    </dd>
+
+                    <dt class="col-sm-3">{% trans "Last Run" %}</dt>
+                    <dd class="col-sm-9">
+                        {% if detector.last_run %}
+                            {{ detector.last_run|naturaltime }}
+                        {% else %}
+                            <span class="text-muted">{% trans "Never" %}</span>
+                        {% endif %}
+                    </dd>
+
+                    <dt class="col-sm-3">{% trans "Configuration" %}</dt>
+                    <dd class="col-sm-9">
+                        {% if detector.configuration %}
+                            <pre class="small bg-light p-2 rounded">{{ detector.configuration|pprint }}</pre>
+                        {% else %}
+                            <span class="text-muted">{% trans "No configuration" %}</span>
+                        {% endif %}
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <!-- Detection Statistics -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5 class="mb-0">{% trans "Detection Statistics" %}</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h4 class="text-primary">{{ detection_stats.total }}</h4>
+                        <small class="text-muted">{% trans "Total" %}</small>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-warning">{{ detection_stats.pending }}</h4>
+                        <small class="text-muted">{% trans "Pending" %}</small>
+                    </div>
+                    <div class="col-6 mt-2">
+                        <h4 class="text-success">{{ detection_stats.processed }}</h4>
+                        <small class="text-muted">{% trans "Processed" %}</small>
+                    </div>
+                    <div class="col-6 mt-2">
+                        <h4 class="text-secondary">{{ detection_stats.dismissed }}</h4>
+                        <small class="text-muted">{% trans "Dismissed" %}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Metrics -->
+        {% if performance %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">{% trans "Performance Metrics" %}</h5>
+            </div>
+            <div class="card-body">
+                <dl class="mb-0">
+                    <dt>{% trans "Success Rate" %}</dt>
+                    <dd>{{ performance.success_rate|floatformat:1 }}%</dd>
+
+                    <dt>{% trans "Avg. Detections/Run" %}</dt>
+                    <dd>{{ performance.avg_detections_per_run|floatformat:1 }}</dd>
+
+                    {% if performance.last_run %}
+                    <dt>{% trans "Last Run" %}</dt>
+                    <dd>{{ performance.last_run|timesince }} {% trans "ago" %}</dd>
+                    {% endif %}
+                </dl>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Recent Detections -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">{% trans "Recent Detections" %}</h5>
+    </div>
+    <div class="card-body">
+        {% if recent_detections %}
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>{% trans "ID" %}</th>
+                            <th>{% trans "Timestamp" %}</th>
+                            <th>{% trans "Shock Type" %}</th>
+                            <th>{% trans "Locations" %}</th>
+                            <th>{% trans "Status" %}</th>
+                            <th>{% trans "Confidence" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for detection in recent_detections %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'alert_framework:detection_detail' detection.pk %}">
+                                        #{{ detection.id }}
+                                    </a>
+                                </td>
+                                <td>{{ detection.detection_timestamp|naturaltime }}</td>
+                                <td>
+                                    {% if detection.shock_type %}
+                                        {{ detection.shock_type.name }}
+                                    {% else %}
+                                        <span class="text-muted">{% trans "Unknown" %}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% for location in detection.locations.all %}
+                                        <span class="badge bg-secondary me-1">{{ location.name }}</span>
+                                    {% empty %}
+                                        <span class="text-muted">{% trans "No locations" %}</span>
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if detection.status == 'pending' %}warning{% elif detection.status == 'processed' %}success{% elif detection.status == 'dismissed' %}secondary{% else %}primary{% endif %}">
+                                        {{ detection.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if detection.confidence_score %}
+                                        {{ detection.confidence_score|floatformat:2 }}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="text-center">
+                <a href="{% url 'alert_framework:detection_list' %}?detector={{ detector.id }}" class="btn btn-sm btn-primary">
+                    {% trans "View All Detections" %}
+                </a>
+            </div>
+        {% else %}
+            <p class="text-muted text-center py-3">{% trans "No recent detections" %}</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

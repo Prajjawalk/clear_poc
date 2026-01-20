@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load translation_tags %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block description %}{% translate "Norwegian Refugee EWAS Sudan - Central Dashboard" %}{% endblock %}
+{% block header_subtitle %}{% trans "Central Dashboard" %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+    <!-- Hero Section -->
+    <div class="row justify-content-center mb-3">
+        <div class="col-lg-8 text-center">
+            <h1 class="display-5 nrc-heading mb-2">
+                {% translate "Early Warning and Alert System" %}
+            </h1>
+            <p class="nrc-text mb-3">
+                {% translate "A comprehensive humanitarian data management platform for Sudan, providing real-time monitoring, location management, and data pipeline capabilities to support early warning systems." %}
+            </p>
+        </div>
+    </div>
+
+    <!-- Applications Grid -->
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <h3 class="nrc-heading text-center mb-3">
+                <i class="bi bi-grid-3x3-gap me-2"></i>{% translate "System Applications" %}
+            </h3>
+
+            <div class="row g-3 justify-content-center">
+                {% for app in applications %}
+                <div class="col-lg-3 col-md-6">
+                    <div class="card stat-card h-100 border-{{ app.color }}" style="min-height: 200px;">
+                        <div class="card-body d-flex flex-column text-center py-2">
+                            <div class="mb-2">
+                                <i class="{{ app.icon }} text-{{ app.color }}" style="font-size: 2.2rem;"></i>
+                            </div>
+                            <h6 class="card-title nrc-heading mb-1">{{ app.name }}</h6>
+                            <p class="card-text nrc-text small flex-grow-1 mb-2">{{ app.description }}</p>
+                            <div class="mt-auto">
+                                <a href="{{ app.url }}" class="btn btn-{{ app.color }} btn-sm w-100">
+                                    {% translate "Access" %} {{ app.name }}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+
+                {% if user.is_staff %}
+                <!-- Administration Card -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="card stat-card h-100 border-secondary" style="min-height: 200px;">
+                        <div class="card-body d-flex flex-column text-center py-2">
+                            <div class="mb-2">
+                                <i class="bi bi-gear text-secondary" style="font-size: 2.2rem;"></i>
+                            </div>
+                            <h6 class="card-title nrc-heading mb-1">{% translate "Administration" %}</h6>
+                            <p class="card-text nrc-text small flex-grow-1 mb-2">{% translate "System administration, user management, and configuration settings." %}</p>
+                            <div class="mt-auto">
+                                <a href="/admin/" class="btn btn-secondary btn-sm w-100">
+                                    {% translate "Access Administration" %}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- System Health Card -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="card stat-card h-100 border-success" style="min-height: 200px;">
+                        <div class="card-body d-flex flex-column text-center py-2">
+                            <div class="mb-2">
+                                <i class="bi bi-heart-pulse text-success" style="font-size: 2.2rem;"></i>
+                            </div>
+                            <h6 class="card-title nrc-heading mb-1">{% translate "System Health" %}</h6>
+                            <p class="card-text nrc-text small flex-grow-1 mb-2">{% translate "Monitor system status, database connections, and service health." %}</p>
+                            <div class="mt-auto">
+                                <a href="/healthcheck/" class="btn btn-success btn-sm w-100" target="_blank">
+                                    {% translate "Check System Health" %}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add smooth hover effects
+document.querySelectorAll('.stat-card').forEach(card => {
+    card.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-5px)';
+        this.style.transition = 'all 0.3s ease';
+    });
+
+    card.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0)';
+    });
+});
+
+</script>
+{% endblock %}

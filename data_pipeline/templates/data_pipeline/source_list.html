@@ -1,0 +1,188 @@
+{% extends "data_pipeline/base.html" %}
+{% load humanize %}
+
+{% block title %}Data Sources{% endblock %}
+
+{% block main_content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="/">
+                        <i class="bi bi-house"></i> Home
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'data_pipeline:dashboard' %}">Data Pipeline</a>
+                </li>
+                <li class="breadcrumb-item active">Sources</li>
+            </ol>
+        </nav>
+        <h1 class="nrc-heading mb-0">
+            <i class="bi bi-diagram-3 me-2 text-primary"></i>Data Pipeline Sources
+        </h1>
+    </div>
+    <div class="btn-group" role="group">
+        <a href="{% url 'data_pipeline:source_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus me-1"></i>New Source
+        </a>
+    </div>
+</div>
+
+<!-- Search and Filters -->
+<div class="search-filters">
+    <form method="get" class="row g-3">
+        <div class="col-md-6">
+            <input type="text" class="form-control" name="q" value="{{ query }}" 
+                   placeholder="Search sources by name, description, or class...">
+        </div>
+        <div class="col-md-3">
+            <select class="form-select" name="type">
+                <option value="">All Types</option>
+                {% for choice in source_types %}
+                    <option value="{{ choice }}" {% if choice == source_type %}selected{% endif %}>
+                        {{ choice|title }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <div class="d-grid d-md-flex gap-2">
+                <button type="submit" class="btn btn-outline-primary">
+                    <i class="bi bi-search me-1"></i>Search
+                </button>
+                {% if query or source_type %}
+                    <a href="{% url 'data_pipeline:source_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle me-1"></i>Clear
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Results Summary -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <span class="text-muted">
+        {% if page_obj %}
+            Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ total_count }} sources
+        {% else %}
+            {{ total_count }} sources total
+        {% endif %}
+    </span>
+</div>
+
+<!-- Sources Table -->
+{% if page_obj %}
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Variables</th>
+                        <th>Data Records</th>
+                        <th>Updated</th>
+                        <th class="table-actions">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for source in page_obj %}
+                        <tr>
+                            <td>
+                                <div>
+                                    <strong>
+                                        <a href="{% url 'data_pipeline:source_detail' source.id %}" 
+                                           class="text-decoration-none">{{ source.name }}</a>
+                                    </strong>
+                                    {% if source.description %}
+                                        <br><small class="text-muted">{{ source.description|truncatechars:80 }}</small>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary badge-type">{{ source.get_type_display }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-primary">{{ source.variable_count }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{ source.data_count|intcomma }}</span>
+                            </td>
+                            <td>
+                                <small class="text-muted">{{ source.updated_at|date:"M d, Y" }}</small>
+                            </td>
+                            <td class="table-actions">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="{% url 'data_pipeline:source_detail' source.id %}" 
+                                       class="btn btn-outline-primary" title="View Details">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'data_pipeline:source_edit' source.id %}" 
+                                       class="btn btn-outline-secondary" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'data_pipeline:variable_create' %}?source={{ source.id }}" 
+                                       class="btn btn-outline-success" title="Add Variable">
+                                        <i class="bi bi-plus"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+        <nav aria-label="Sources pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if query %}q={{ query }}&{% endif %}{% if source_type %}type={{ source_type }}&{% endif %}page=1">First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if query %}q={{ query }}&{% endif %}{% if source_type %}type={{ source_type }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>
+                    </li>
+                {% endif %}
+                
+                <li class="page-item active">
+                    <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                </li>
+                
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if query %}q={{ query }}&{% endif %}{% if source_type %}type={{ source_type }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if query %}q={{ query }}&{% endif %}{% if source_type %}type={{ source_type }}&{% endif %}page={{ page_obj.paginator.num_pages }}">Last</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+{% else %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-database text-muted" style="font-size: 3rem;"></i>
+            <h4 class="mt-3">No Data Sources Found</h4>
+            {% if query or source_type %}
+                <p class="text-muted">No sources match your current filters.</p>
+                <a href="{% url 'data_pipeline:source_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle me-1"></i>Clear Filters
+                </a>
+            {% else %}
+                <p class="text-muted">Get started by adding your first data source.</p>
+                <a href="{% url 'data_pipeline:source_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus me-1"></i>Create First Source
+                </a>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,242 @@
+{% extends "users/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Notification Preferences" %}{% endblock %}
+
+{% block main_content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="/">
+                        <i class="bi bi-house"></i> {% trans "Home" %}
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'users:profile' %}">{% trans "User Management" %}</a>
+                </li>
+                <li class="breadcrumb-item active">{% trans "Notification Preferences" %}</li>
+            </ol>
+        </nav>
+        <h1 class="nrc-heading mb-0">
+            <i class="bi bi-bell me-2 text-success"></i>{% trans "Notification Preferences" %}
+        </h1>
+    </div>
+    <div class="btn-group" role="group">
+        <a href="{% url 'users:profile' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>{% trans "Back to Profile" %}
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <form method="post">
+            {% csrf_token %}
+
+            <!-- Internal Notifications -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-bell me-2"></i>{% trans "Internal Notifications" %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" name="internal_enabled" id="internal_enabled"
+                               {% if preferences.internal_enabled %}checked{% endif %}>
+                        <label class="form-check-label" for="internal_enabled">
+                            <strong>{% trans "Enable Internal Notifications" %}</strong>
+                        </label>
+                        <div class="form-text">
+                            {% trans "Show notifications within the application interface" %}
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <h6 class="mb-3">{% trans "Notification Types" %}</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="alert_notifications" id="alert_notifications"
+                                       {% if preferences.alert_notifications %}checked{% endif %}>
+                                <label class="form-check-label" for="alert_notifications">
+                                    <i class="bi bi-exclamation-triangle text-warning me-1"></i>{% trans "Alert Notifications" %}
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="system_notifications" id="system_notifications"
+                                       {% if preferences.system_notifications %}checked{% endif %}>
+                                <label class="form-check-label" for="system_notifications">
+                                    <i class="bi bi-gear text-primary me-1"></i>{% trans "System Notifications" %}
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="update_notifications" id="update_notifications"
+                                       {% if preferences.update_notifications %}checked{% endif %}>
+                                <label class="form-check-label" for="update_notifications">
+                                    <i class="bi bi-arrow-repeat text-info me-1"></i>{% trans "Update Notifications" %}
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="feedback_notifications" id="feedback_notifications"
+                                       {% if preferences.feedback_notifications %}checked{% endif %}>
+                                <label class="form-check-label" for="feedback_notifications">
+                                    <i class="bi bi-chat-text text-success me-1"></i>{% trans "Feedback Notifications" %}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Display Settings -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-display me-2"></i>{% trans "Display Settings" %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" name="show_desktop_notifications" id="show_desktop_notifications"
+                                       {% if preferences.show_desktop_notifications %}checked{% endif %}>
+                                <label class="form-check-label" for="show_desktop_notifications">
+                                    <strong>{% trans "Desktop Notifications" %}</strong>
+                                </label>
+                                <div class="form-text">
+                                    {% trans "Show browser desktop notifications" %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" name="play_sound" id="play_sound"
+                                       {% if preferences.play_sound %}checked{% endif %}>
+                                <label class="form-check-label" for="play_sound">
+                                    <strong>{% trans "Sound Alerts" %}</strong>
+                                </label>
+                                <div class="form-text">
+                                    {% trans "Play sound for new notifications" %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quiet Hours -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-moon me-2"></i>{% trans "Quiet Hours" %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" name="quiet_hours_enabled" id="quiet_hours_enabled"
+                               {% if preferences.quiet_hours_enabled %}checked{% endif %}>
+                        <label class="form-check-label" for="quiet_hours_enabled">
+                            <strong>{% trans "Enable Quiet Hours" %}</strong>
+                        </label>
+                        <div class="form-text">
+                            {% trans "Disable notifications during specified hours" %}
+                        </div>
+                    </div>
+
+                    <div id="quiet_hours_settings" style="{% if not preferences.quiet_hours_enabled %}display: none;{% endif %}">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="quiet_hours_start" class="form-label">{% trans "Start Time" %}</label>
+                                <input type="time" class="form-control" name="quiet_hours_start" id="quiet_hours_start"
+                                       value="{{ preferences.quiet_hours_start|default:'22:00' }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="quiet_hours_end" class="form-label">{% trans "End Time" %}</label>
+                                <input type="time" class="form-control" name="quiet_hours_end" id="quiet_hours_end"
+                                       value="{{ preferences.quiet_hours_end|default:'08:00' }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-lg me-1"></i>{% trans "Save Preferences" %}
+                </button>
+                <a href="{% url 'users:profile' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-lg me-1"></i>{% trans "Cancel" %}
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-info-circle me-2"></i>{% trans "About Notifications" %}
+                </h6>
+            </div>
+            <div class="card-body">
+                <h6>{% trans "Internal Notifications" %}</h6>
+                <p class="small text-muted">
+                    {% trans "These notifications appear within the application interface and provide real-time updates about system events." %}
+                </p>
+
+                <h6>{% trans "Desktop Notifications" %}</h6>
+                <p class="small text-muted">
+                    {% trans "Browser-based notifications that appear even when the application is not in focus. Your browser will ask for permission." %}
+                </p>
+
+                <h6>{% trans "Quiet Hours" %}</h6>
+                <p class="small text-muted">
+                    {% trans "During quiet hours, only urgent notifications will be displayed. This helps reduce interruptions during rest periods." %}
+                </p>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-envelope me-2"></i>{% trans "Email Notifications" %}
+                </h6>
+            </div>
+            <div class="card-body">
+                <p class="small">
+                    {% trans "Email notification settings are managed in your" %}
+                    <a href="{% url 'users:profile' %}">{% trans "profile settings" %}</a>.
+                </p>
+                <div class="d-grid">
+                    <a href="{% url 'users:profile' %}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-gear me-1"></i>{% trans "Email Settings" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const quietHoursToggle = document.getElementById('quiet_hours_enabled');
+    const quietHoursSettings = document.getElementById('quiet_hours_settings');
+
+    quietHoursToggle.addEventListener('change', function() {
+        if (this.checked) {
+            quietHoursSettings.style.display = 'block';
+        } else {
+            quietHoursSettings.style.display = 'none';
+        }
+    });
+});
+</script>
+{% endblock %}

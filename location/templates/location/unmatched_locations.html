@@ -1,0 +1,673 @@
+{% extends "location/base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}Unmatched Locations Management{% endblock %}
+
+{% block sidebar_actions %}
+<hr class="my-3">
+
+<!-- Filters Section -->
+<h6 class="sidebar-heading nrc-heading mb-3">
+    <i class="bi bi-funnel me-2 text-info"></i>
+    <span class="sidebar-text">{% trans "Filters" %}</span>
+</h6>
+
+<form method="get" id="filter-form">
+    <div class="mb-3">
+        <label for="sidebar-source" class="form-label small">
+            <i class="bi bi-database"></i> 
+            <span class="nav-text">{% trans "Source" %}</span>
+        </label>
+        <select name="source" id="sidebar-source" class="form-select form-select-sm">
+            <option value="">All Sources</option>
+            {% for source in sources %}
+                <option value="{{ source }}" {% if source_filter == source %}selected{% endif %}>{{ source }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="mb-3">
+        <label for="sidebar-search" class="form-label small">
+            <i class="bi bi-search"></i> 
+            <span class="nav-text">{% trans "Search" %}</span>
+        </label>
+        <input type="text" name="search" id="sidebar-search" class="form-control form-control-sm" 
+               value="{{ search_query }}" placeholder="Search locations...">
+    </div>
+    <div class="d-grid gap-2">
+        <button type="submit" class="btn btn-primary btn-sm">
+            <i class="bi bi-funnel"></i> 
+            <span class="nav-text ms-1">{% trans "Apply Filter" %}</span>
+        </button>
+        <a href="{% url 'location:unmatched_locations' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-x-circle"></i> 
+            <span class="nav-text ms-1">{% trans "Clear" %}</span>
+        </a>
+    </div>
+</form>
+
+<hr class="my-3">
+
+<!-- Quick Actions -->
+<h6 class="sidebar-heading nrc-heading mb-3">
+    <i class="bi bi-lightning me-2 text-warning"></i>
+    <span class="sidebar-text">{% trans "Quick Actions" %}</span>
+</h6>
+<div class="d-grid gap-2">
+    <a href="{% url 'location:location_create' %}" class="btn btn-outline-primary btn-sm" title="{% trans 'New Location' %}">
+        <i class="bi bi-plus"></i>
+        <span class="nav-text ms-1">{% trans "New Location" %}</span>
+    </a>
+    <a href="{% url 'location:gazetteer_create' %}" class="btn btn-outline-success btn-sm" title="{% trans 'New Gazetteer Entry' %}">
+        <i class="bi bi-plus"></i>
+        <span class="nav-text ms-1">{% trans "New Gazetteer Entry" %}</span>
+    </a>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.match-probability {
+    font-size: 0.85em;
+    color: #666;
+}
+.probability-high { color: #28a745; font-weight: bold; }
+.probability-medium { color: #ffc107; }
+.probability-low { color: #dc3545; }
+
+.table td {
+    vertical-align: middle;
+}
+
+.location-name {
+    font-weight: 500;
+    color: #212529;
+    cursor: help;
+}
+
+.location-dropdown {
+    min-width: 280px;
+    font-size: 0.9em;
+}
+
+.occurrence-badge {
+    background: #17a2b8;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 12px;
+    font-size: 0.75em;
+}
+
+.admin-level-badge {
+    background: #6c757d;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.75em;
+}
+
+.source-badge {
+    background: #e9ecef;
+    color: #495057;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.75em;
+}
+
+.btn-xs {
+    padding: 2px 6px;
+    font-size: 0.75em;
+    border-radius: 3px;
+}
+
+.unmatched-row.processing {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.stat-card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+/* Tooltip styling */
+.tooltip .tooltip-inner {
+    max-width: 300px;
+    text-align: left;
+}
+
+/* Manual search styling */
+.manual-search-results {
+    z-index: 9999 !important; /* Highest z-index to appear above everything */
+    position: fixed !important; /* Use fixed positioning to escape table container */
+}
+
+/* Ensure table container doesn't clip dropdowns */
+.table-responsive {
+    overflow: visible !important;
+}
+
+.card-body {
+    overflow: visible !important;
+}
+
+.manual-search-results .list-group-item {
+    border-left: none;
+    border-right: none;
+}
+
+.manual-search-results .list-group-item:hover {
+    background-color: #f8f9fa;
+}
+
+/* Loading animation */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.spin {
+    animation: spin 1s linear infinite;
+}
+</style>
+{% endblock %}
+
+{% block main_content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="{% url 'location:dashboard' %}">
+                        <i class="bi bi-geo-alt"></i> Location
+                    </a>
+                </li>
+                <li class="breadcrumb-item active">Unmatched Locations</li>
+            </ol>
+        </nav>
+        <h1 class="h2">Unmatched Locations</h1>
+    </div>
+</div>
+
+
+<!-- Results Summary -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <p class="text-muted mb-0">
+        {% if page_obj %}
+            Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ page_obj.paginator.count }} unmatched location{{ page_obj.paginator.count|pluralize }}
+        {% endif %}
+    </p>
+</div>
+
+<!-- Unmatched Locations Table -->
+<div class="card">
+    <div class="card-body p-0">
+        {% if locations_with_matches %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 15%;">Location Name</th>
+                                <th style="width: 25%;">Original Location</th>
+                                <th style="width: 8%;">Source</th>
+                                <th style="width: 7%;">Level</th>
+                                <th style="width: 32%;">Match to Location</th>
+                                <th style="width: 13%;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in locations_with_matches %}
+                            <tr class="unmatched-row" id="unmatched-{{ item.unmatched.id }}">
+                                <!-- Location Name -->
+                                <td>
+                                    <span class="location-name">{{ item.unmatched.name }}</span>
+                                    <span class="occurrence-badge ms-2">{{ item.unmatched.occurrence_count }}x</span>
+                                </td>
+
+                                <!-- Original Location (from context) -->
+                                <td>
+                                    <span class="text-muted small" 
+                                          data-bs-toggle="tooltip" 
+                                          data-bs-placement="top" 
+                                          title="Last seen: {{ item.unmatched.last_seen|date:'M d, Y H:i' }}">
+                                        {{ item.unmatched.context|default:"No context available" }}
+                                    </span>
+                                </td>
+
+                                <!-- Source -->
+                                <td>
+                                    <span class="source-badge">{{ item.unmatched.source }}</span>
+                                </td>
+
+                                <!-- Admin Level -->
+                                <td>
+                                    {% if item.unmatched.admin_level %}
+                                        <span class="admin-level-badge">{{ item.unmatched.admin_level }}</span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+
+                                <!-- Location Dropdown and Search -->
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        <!-- Location Dropdown -->
+                                        <select class="form-select form-select-sm location-dropdown flex-grow-1" 
+                                                id="location-select-{{ item.unmatched.id }}"
+                                                data-unmatched-id="{{ item.unmatched.id }}"
+                                                style="min-width: 200px;">
+                                            <option value="">-- Select a location --</option>
+                                            {% for match in item.potential_matches %}
+                                                <option value="{{ match.location.id }}" 
+                                                        data-probability="{{ match.probability|floatformat:2 }}">
+                                                    {{ match.location.geo_id }} - {{ match.location.name }} 
+                                                    ({{ match.location.admin_level.name }})
+                                                    <span class="match-probability 
+                                                        {% if match.probability >= 0.8 %}probability-high
+                                                        {% elif match.probability >= 0.5 %}probability-medium
+                                                        {% else %}probability-low{% endif %}">
+                                                        - {% widthratio match.probability 1 100 %}% match
+                                                    </span>
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                        
+                                        <!-- Direct search input field -->
+                                        <div class="position-relative" style="min-width: 150px;">
+                                            <input type="text" 
+                                                   class="form-control form-control-sm manual-search-input" 
+                                                   placeholder="Or search..." 
+                                                   data-unmatched-id="{{ item.unmatched.id }}"
+                                                   autocomplete="off">
+                                            <div class="manual-search-results shadow-sm bg-white rounded border" 
+                                                 id="manual-results-{{ item.unmatched.id }}" 
+                                                 style="max-height: 200px; overflow-y: auto; display: none;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Show computation pending message -->
+                                    {% if item.computation_pending %}
+                                    <div class="text-muted mt-1" style="font-size: 0.75em;">
+                                        <i class="bi bi-clock"></i> Computing potential matches...
+                                    </div>
+                                    {% endif %}
+                                </td>
+
+                                <!-- Action Buttons -->
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <button type="button" 
+                                                class="btn btn-success btn-xs add-to-gazetteer-btn"
+                                                data-unmatched-id="{{ item.unmatched.id }}"
+                                                disabled
+                                                title="Add to gazetteer">
+                                            <i class="bi bi-plus-circle"></i> Add
+                                        </button>
+                                        <button type="button" 
+                                                class="btn btn-danger btn-xs delete-unmatched-btn"
+                                                data-unmatched-id="{{ item.unmatched.id }}"
+                                                data-unmatched-name="{{ item.unmatched.name }}"
+                                                title="Delete unmatched location">
+                                            <i class="bi bi-trash"></i> Delete
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                {% if page_obj.has_other_pages %}
+                    <div class="card-footer">
+                        <nav aria-label="Unmatched locations pagination">
+                            <ul class="pagination justify-content-center mb-0">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}{% if source_filter %}source={{ source_filter }}&{% endif %}page={{ page_obj.previous_page_number }}">
+                                            <i class="bi bi-chevron-left"></i> Previous
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                
+                                {% for num in page_obj.paginator.page_range %}
+                                    {% if page_obj.number == num %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ num }}</span>
+                                        </li>
+                                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}{% if source_filter %}source={{ source_filter }}&{% endif %}page={{ num }}">{{ num }}</a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}{% if source_filter %}source={{ source_filter }}&{% endif %}page={{ page_obj.next_page_number }}">
+                                            Next <i class="bi bi-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-exclamation-triangle fs-1 text-muted"></i>
+                <h5 class="mt-3 text-muted">No unmatched locations found</h5>
+                <p class="text-muted">
+                    {% if source_filter or search_query %}
+                        Try adjusting your search criteria or <a href="{% url 'location:unmatched_locations' %}">clear filters</a>.
+                    {% else %}
+                        All locations are currently matched! New unmatched locations will appear here as data is processed.
+                    {% endif %}
+                </p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="actionToast" class="toast" role="alert">
+        <div class="toast-header">
+            <strong class="me-auto">Action Result</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips (if Bootstrap is available)
+    try {
+        if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        }
+    } catch (error) {
+        // Silently ignore tooltip initialization errors
+    }
+
+    // Enable/disable "Add to Gazetteer" button based on selection
+    document.querySelectorAll('.location-dropdown').forEach(function(select) {
+        const unmatchedId = select.dataset.unmatchedId;
+        const addButton = document.querySelector(`.add-to-gazetteer-btn[data-unmatched-id="${unmatchedId}"]`);
+        
+        select.addEventListener('change', function() {
+            addButton.disabled = !this.value;
+        });
+    });
+
+    // Add to gazetteer functionality
+    document.querySelectorAll('.add-to-gazetteer-btn').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const unmatchedId = this.dataset.unmatchedId;
+            const locationSelect = document.querySelector(`#location-select-${unmatchedId}`);
+            const locationId = locationSelect.value;
+            
+            if (!locationId) {
+                showToast('Please select a location first.', 'error');
+                return;
+            }
+
+            const row = document.querySelector(`#unmatched-${unmatchedId}`);
+            row.classList.add('processing');
+
+            fetch('{% url "location:add_to_gazetteer_ajax" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    unmatched_id: unmatchedId,
+                    location_id: locationId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Remove the row from view without showing alert
+                    row.style.transition = 'opacity 0.3s';
+                    row.style.opacity = '0';
+                    setTimeout(() => {
+                        row.remove();
+                        checkForEmptyPage();
+                    }, 300);
+                } else {
+                    // Still show error alerts for debugging purposes
+                    showToast(data.error || 'An error occurred', 'error');
+                    row.classList.remove('processing');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Network error occurred', 'error');
+                row.classList.remove('processing');
+            });
+        });
+    });
+
+    // Delete unmatched location functionality
+    document.querySelectorAll('.delete-unmatched-btn').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const unmatchedId = this.dataset.unmatchedId;
+            const unmatchedName = this.dataset.unmatchedName;
+            
+            if (!confirm(`Are you sure you want to delete "${unmatchedName}"? This action cannot be undone.`)) {
+                return;
+            }
+
+            const row = document.querySelector(`#unmatched-${unmatchedId}`);
+            row.classList.add('processing');
+
+            fetch('{% url "location:delete_unmatched_ajax" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    unmatched_id: unmatchedId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Remove the row from view without showing alert
+                    row.style.transition = 'opacity 0.3s';
+                    row.style.opacity = '0';
+                    setTimeout(() => {
+                        row.remove();
+                        checkForEmptyPage();
+                    }, 300);
+                } else {
+                    // Still show error alerts for debugging purposes
+                    showToast(data.error || 'An error occurred', 'error');
+                    row.classList.remove('processing');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Network error occurred', 'error');
+                row.classList.remove('processing');
+            });
+        });
+    });
+
+    // Manual search input handling
+    document.querySelectorAll('.manual-search-input').forEach(function(input) {
+        const unmatchedId = input.dataset.unmatchedId;
+        let searchTimeout;
+        
+        input.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            const query = this.value.trim();
+            
+            if (query.length < 2) {
+                document.getElementById(`manual-results-${unmatchedId}`).style.display = 'none';
+                return;
+            }
+            
+            // Debounce the search
+            searchTimeout = setTimeout(() => {
+                performManualSearch(query, unmatchedId);
+            }, 300);
+        });
+        
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const query = this.value.trim();
+                if (query.length >= 2) {
+                    performManualSearch(query, unmatchedId);
+                }
+            }
+        });
+    });
+
+    function performManualSearch(query, unmatchedId) {
+        const resultsDiv = document.getElementById(`manual-results-${unmatchedId}`);
+        const inputField = document.querySelector(`[data-unmatched-id="${unmatchedId}"].manual-search-input`);
+        
+        // Position the fixed dropdown relative to the input field
+        const inputRect = inputField.getBoundingClientRect();
+        resultsDiv.style.left = inputRect.left + 'px';
+        resultsDiv.style.top = (inputRect.bottom + 1) + 'px';
+        resultsDiv.style.width = inputRect.width + 'px';
+        
+        resultsDiv.innerHTML = '<div class="text-center p-2"><i class="bi bi-arrow-clockwise spin"></i> Searching...</div>';
+        resultsDiv.style.display = 'block';
+        
+        fetch(`{% url "location:location_search_api" %}?q=${encodeURIComponent(query)}&limit=10`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.results.length > 0) {
+                    let html = '<div class="list-group list-group-flush">';
+                    data.results.forEach(result => {
+                        html += `<button type="button" class="list-group-item list-group-item-action p-2 manual-search-result" 
+                                        data-location-id="${result.id}" 
+                                        data-unmatched-id="${unmatchedId}"
+                                        style="font-size: 0.85em;">
+                                    <div class="fw-bold">${result.name}</div>
+                                    <div class="text-muted small">${result.hierarchy_text}</div>
+                                    <div class="text-muted small">
+                                        ${result.admin_level.name} (Level ${result.admin_level.code})
+                                        ${result.match_type === 'gazetteer_alias' ? ' • Via: ' + result.matched_name : ''}
+                                    </div>
+                                 </button>`;
+                    });
+                    html += '</div>';
+                    resultsDiv.innerHTML = html;
+                } else {
+                    resultsDiv.innerHTML = '<div class="text-muted p-2 text-center">No locations found</div>';
+                }
+            })
+            .catch(error => {
+                console.error('Search error:', error);
+                resultsDiv.innerHTML = '<div class="text-danger p-2 text-center">Search error occurred</div>';
+            });
+    }
+
+    // Hide search results when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.manual-search-input') && !e.target.closest('.manual-search-results')) {
+            document.querySelectorAll('.manual-search-results').forEach(div => {
+                div.style.display = 'none';
+            });
+        }
+        
+        // Handle manual search result selection
+        if (e.target.closest('.manual-search-result')) {
+            const button = e.target.closest('.manual-search-result');
+            const locationId = button.dataset.locationId;
+            const unmatchedId = button.dataset.unmatchedId;
+            const locationName = button.querySelector('.fw-bold').textContent;
+            
+            // Update the main dropdown
+            const mainSelect = document.getElementById(`location-select-${unmatchedId}`);
+            const option = document.createElement('option');
+            option.value = locationId;
+            option.textContent = locationName + ' (Manual selection)';
+            option.selected = true;
+            
+            // Add to top of dropdown
+            mainSelect.insertBefore(option, mainSelect.firstChild.nextSibling);
+            
+            // Clear the search input and hide results
+            const searchInput = document.querySelector(`[data-unmatched-id="${unmatchedId}"].manual-search-input`);
+            searchInput.value = '';
+            document.getElementById(`manual-results-${unmatchedId}`).style.display = 'none';
+            
+            // Enable add button
+            document.querySelector(`[data-unmatched-id="${unmatchedId}"].add-to-gazetteer-btn`).disabled = false;
+        }
+    });
+
+    // Utility functions
+    function showToast(message, type = 'info') {
+        const toast = document.getElementById('actionToast');
+        const toastBody = toast.querySelector('.toast-body');
+        const toastHeader = toast.querySelector('.toast-header strong');
+        
+        toastBody.textContent = message;
+        
+        // Set color based on type
+        toast.className = 'toast';
+        if (type === 'success') {
+            toast.classList.add('text-bg-success');
+            toastHeader.textContent = 'Success';
+        } else if (type === 'error') {
+            toast.classList.add('text-bg-danger'); 
+            toastHeader.textContent = 'Error';
+        } else {
+            toast.classList.add('text-bg-info');
+            toastHeader.textContent = 'Info';
+        }
+        
+        if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
+            const bsToast = new bootstrap.Toast(toast);
+            bsToast.show();
+        } else {
+            // Fallback: show a simple alert if Bootstrap is not available
+            alert(message);
+        }
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function checkForEmptyPage() {
+        // Check if there are no more rows visible on current page
+        const remainingRows = document.querySelectorAll('.unmatched-row').length;
+        if (remainingRows === 0) {
+            // Reload the page to refresh pagination
+            window.location.reload();
+        }
+    }
+});
+</script>
+{% endblock %}

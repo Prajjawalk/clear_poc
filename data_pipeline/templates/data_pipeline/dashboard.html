@@ -1,0 +1,273 @@
+{% extends "data_pipeline/base.html" %}
+{% load humanize %}
+
+{% block title %}Data Pipeline Dashboard{% endblock %}
+
+{% block main_content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="/">
+                        <i class="bi bi-house"></i> Home
+                    </a>
+                </li>
+                <li class="breadcrumb-item active">Data Pipeline</li>
+            </ol>
+        </nav>
+        <h1 class="nrc-heading mb-0">
+            <i class="bi bi-diagram-3 me-2 text-primary"></i>Data Pipeline Dashboard
+        </h1>
+    </div>
+    <div class="btn-group" role="group">
+        <a href="{% url 'data_pipeline:source_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus me-1"></i>New Source
+        </a>
+        <a href="{% url 'data_pipeline:variable_create' %}" class="btn btn-success">
+            <i class="bi bi-plus me-1"></i>New Variable
+        </a>
+    </div>
+</div>
+
+{% if db_error %}
+    <div class="alert alert-warning" role="alert">
+        <h5 class="alert-heading">Database Connection Issue</h5>
+        <p class="mb-0">Unable to load dashboard statistics: {{ db_error }}</p>
+    </div>
+{% else %}
+    <!-- Summary Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card stat-card text-center">
+                <div class="card-body">
+                    <i class="bi bi-database text-primary" style="font-size: 2rem;"></i>
+                    <h3 class="card-title mt-2">{{ total_sources|intcomma }}</h3>
+                    <p class="card-text text-muted">Data Sources</p>
+                    <a href="{% url 'data_pipeline:source_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card text-center">
+                <div class="card-body">
+                    <i class="bi bi-graph-up text-success" style="font-size: 2rem;"></i>
+                    <h3 class="card-title mt-2">{{ total_variables|intcomma }}</h3>
+                    <p class="card-text text-muted">Variables</p>
+                    <a href="{% url 'data_pipeline:variable_list' %}" class="btn btn-sm btn-outline-success">View All</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card text-center">
+                <div class="card-body">
+                    <i class="bi bi-bar-chart text-info" style="font-size: 2rem;"></i>
+                    <h3 class="card-title mt-2">{{ total_data_records|intcomma }}</h3>
+                    <p class="card-text text-muted">Data Records</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card text-center">
+                <div class="card-body">
+                    <i class="bi bi-clock text-warning" style="font-size: 2rem;"></i>
+                    <h3 class="card-title mt-2">{{ recent_data_count|intcomma }}</h3>
+                    <p class="card-text text-muted">Recent (7 days)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Top Sources -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Top Data Sources</h5>
+                    <a href="{% url 'data_pipeline:source_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if top_sources %}
+                        <div class="list-group list-group-flush">
+                            {% for source in top_sources %}
+                                <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            <a href="{% url 'data_pipeline:source_detail' source.id %}" 
+                                               class="text-decoration-none">{{ source.name }}</a>
+                                        </h6>
+                                        <small class="text-muted">
+                                            <span class="badge bg-secondary badge-type">{{ source.get_type_display }}</span>
+                                        </small>
+                                    </div>
+                                    <div class="text-end">
+                                        <small class="text-muted d-block">{{ source.variable_count }} variables</small>
+                                        <small class="text-muted">{{ source.data_count|intcomma }} records</small>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center py-3">No data sources configured yet.</p>
+                        <div class="text-center">
+                            <a href="{% url 'data_pipeline:source_create' %}" class="btn btn-primary">
+                                <i class="bi bi-plus me-1"></i>Create First Source
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Variables -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Top Variables by Data Volume</h5>
+                    <a href="{% url 'data_pipeline:variable_list' %}" class="btn btn-sm btn-outline-success">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if top_variables %}
+                        <div class="list-group list-group-flush">
+                            {% for variable in top_variables %}
+                                <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            <a href="{% url 'data_pipeline:variable_detail' variable.id %}" 
+                                               class="text-decoration-none">{{ variable.name }}</a>
+                                        </h6>
+                                        <small class="text-muted">{{ variable.source.name }}</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <small class="text-primary">{{ variable.data_count|intcomma }} records</small>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center py-3">No variables configured yet.</p>
+                        <div class="text-center">
+                            <a href="{% url 'data_pipeline:variable_create' %}" class="btn btn-success">
+                                <i class="bi bi-plus me-1"></i>Create First Variable
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Task Statistics -->
+    {% if recent_task_stats %}
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Recent Task Performance (Last 7 Days)</h5>
+                        <a href="{% url 'task_monitoring:dashboard' %}" class="btn btn-sm btn-outline-info">
+                            View Full Monitor
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Total Tasks</th>
+                                        <th>Success</th>
+                                        <th>Failures</th>
+                                        <th>Success Rate</th>
+                                        <th>Avg Duration</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for stat in recent_task_stats %}
+                                        <tr>
+                                            <td>{{ stat.date|date:"M d" }}</td>
+                                            <td>{{ stat.total_tasks }}</td>
+                                            <td><span class="text-success">{{ stat.success_count }}</span></td>
+                                            <td><span class="text-danger">{{ stat.failure_count }}</span></td>
+                                            <td>
+                                                {% if stat.success_rate %}
+                                                    <div class="progress" style="height: 20px; width: 60px; display: inline-block;">
+                                                        <div class="progress-bar bg-success" style="width: {{ stat.success_rate }}%"></div>
+                                                    </div>
+                                                    <span class="ms-2 small">{{ stat.success_rate|floatformat:1 }}%</span>
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if stat.avg_duration_seconds %}
+                                                    {{ stat.avg_duration_seconds|floatformat:1 }}s
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endif %}
+
+<!-- API Reference -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0 nrc-heading">
+                    <i class="bi bi-code-slash me-2"></i>API Endpoints
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="nrc-heading">Data Sources</h6>
+                        <ul class="list-unstyled">
+                            <li><a href="{% url 'data_pipeline:sources_api' %}" class="text-decoration-none" target="_blank">
+                                <i class="bi bi-link-45deg me-2"></i>GET /pipeline/api/sources/
+                            </a></li>
+                            <li><small class="nrc-text-muted">List all data sources with filtering</small></li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="nrc-heading">Variables</h6>
+                        <ul class="list-unstyled">
+                            <li><a href="{% url 'data_pipeline:variables_api' %}" class="text-decoration-none" target="_blank">
+                                <i class="bi bi-link-45deg me-2"></i>GET /pipeline/api/variables/
+                            </a></li>
+                            <li><small class="nrc-text-muted">List variables with source filtering</small></li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6 mt-3">
+                        <h6 class="nrc-heading">Data Query</h6>
+                        <ul class="list-unstyled">
+                            <li><a href="#" class="text-decoration-none text-muted">
+                                <i class="bi bi-link-45deg me-2"></i>GET /pipeline/api/data/
+                            </a></li>
+                            <li><small class="nrc-text-muted">Query data records (coming soon)</small></li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6 mt-3">
+                        <h6 class="nrc-heading">Statistics</h6>
+                        <ul class="list-unstyled">
+                            <li><a href="#" class="text-decoration-none text-muted">
+                                <i class="bi bi-link-45deg me-2"></i>GET /pipeline/api/statistics/
+                            </a></li>
+                            <li><small class="nrc-text-muted">Pipeline statistics (coming soon)</small></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

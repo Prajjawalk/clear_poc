@@ -1,0 +1,427 @@
+{% extends "alerts/base.html" %}
+{% load i18n %}
+{% load translation_tags %}
+
+{% block title %}
+    {% if object %}
+        {% trans "Edit Subscription" %} - NRC EWAS
+    {% else %}
+        {% trans "New Subscription" %} - NRC EWAS
+    {% endif %}
+{% endblock %}
+
+{% block main_content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="/">
+                        <i class="bi bi-house"></i> {% translate "Home" %}
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'alerts:alert_list' %}">{% translate "Alert System" %}</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'alerts:subscription_list' %}">Subscriptions</a>
+                </li>
+                <li class="breadcrumb-item active">
+                    {% if object %}Edit Subscription{% else %}New Subscription{% endif %}
+                </li>
+            </ol>
+        </nav>
+        <h1 class="nrc-heading mb-0">
+            <i class="bi bi-envelope me-2 text-danger"></i>
+            {% if object %}Edit Alert Subscription{% else %}New Alert Subscription{% endif %}
+        </h1>
+    </div>
+    <div class="btn-group" role="group">
+        <a href="{% url 'alerts:subscription_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back to List
+        </a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title mb-0">
+                    <i class="bi bi-bell me-2"></i>
+                    {% if object %}
+                        {% trans "Edit Alert Subscription" %}
+                    {% else %}
+                        {% trans "Create Alert Subscription" %}
+                    {% endif %}
+                </h3>
+            </div>
+
+            <div class="card-body">
+                <form method="post" id="subscription-form">
+                    {% csrf_token %}
+
+                    <!-- Delivery Settings -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="{{ form.method.id_for_label }}" class="form-label">
+                                <i class="bi bi-envelope me-1"></i>
+                                {{ form.method.label }}
+                            </label>
+                            {{ form.method }}
+                            {% if form.method.help_text %}
+                            <div class="form-text">{{ form.method.help_text }}</div>
+                            {% endif %}
+                            {% if form.method.errors %}
+                            <div class="text-danger">
+                                {% for error in form.method.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.frequency.id_for_label }}" class="form-label">
+                                <i class="bi bi-clock me-1"></i>
+                                {{ form.frequency.label }}
+                            </label>
+                            {{ form.frequency }}
+                            {% if form.frequency.help_text %}
+                            <div class="form-text">{{ form.frequency.help_text }}</div>
+                            {% endif %}
+                            {% if form.frequency.errors %}
+                            <div class="text-danger">
+                                {% for error in form.frequency.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Alert Types -->
+                    <div class="mb-4">
+                        <label class="form-label">
+                            <i class="bi bi-tags me-1"></i>
+                            {{ form.shock_types.label }}
+                        </label>
+                        <div class="mb-2">
+                            <button type="button" class="btn btn-sm btn-outline-primary me-2" id="select-all-types">
+                                <i class="bi bi-check-all me-1"></i>
+                                {% trans "Select All Types" %}
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="clear-all-types">
+                                <i class="bi bi-x-circle me-1"></i>
+                                {% trans "Clear All" %}
+                            </button>
+                        </div>
+                        <div class="row">
+                            {% for choice in form.shock_types %}
+                            <div class="col-md-6 col-lg-3 mb-2">
+                                <div class="card h-100">
+                                    <div class="card-body text-center p-3">
+                                        <div class="form-check">
+                                            {{ choice.tag }}
+                                            <label class="form-check-label w-100" for="{{ choice.id_for_label }}">
+                                                <div class="mb-2">
+                                                    {% if choice.choice_label == "Conflict" %}
+                                                        <span class="me-1">⚡</span>
+                                                        <span class="badge bg-conflict fs-6 text-white">
+                                                    {% elif choice.choice_label == "Natural disasters" %}
+                                                        <span class="me-1">💧</span>
+                                                        <span class="badge bg-natural fs-6 text-white">
+                                                    {% elif choice.choice_label == "Health emergencies" %}
+                                                        <span class="me-1">✚</span>
+                                                        <span class="badge bg-health fs-6 text-white">
+                                                    {% elif choice.choice_label == "Food security" %}
+                                                        <span class="me-1">🍽️</span>
+                                                        <span class="badge bg-foodsec fs-6 text-white">
+                                                    {% else %}
+                                                        <span class="me-1">📍</span>
+                                                        <span class="badge bg-secondary fs-6 text-white">
+                                                    {% endif %}
+                                                        {{ choice.choice_label }}
+                                                    </span>
+                                                </div>
+                                                <small class="text-muted">
+                                                    {% if choice.choice_label == "Conflict" %}
+                                                        {% trans "Armed conflicts and violence" %}
+                                                    {% elif choice.choice_label == "Natural disasters" %}
+                                                        {% trans "Floods, droughts, earthquakes" %}
+                                                    {% elif choice.choice_label == "Health emergencies" %}
+                                                        {% trans "Disease outbreaks, health crises" %}
+                                                    {% elif choice.choice_label == "Food security" %}
+                                                        {% trans "Population movements, refugee flows" %}
+                                                    {% endif %}
+                                                </small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% if form.shock_types.help_text %}
+                        <div class="form-text">{{ form.shock_types.help_text }}</div>
+                        {% endif %}
+                        {% if form.shock_types.errors %}
+                        <div class="text-danger">
+                            {% for error in form.shock_types.errors %}
+                                <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Locations -->
+                    <div class="mb-4">
+                        <label class="form-label">
+                            <i class="bi bi-geo-alt me-1"></i>
+                            {{ form.locations.label }}
+                        </label>
+                        <div class="mb-2">
+                            <button type="button" class="btn btn-sm btn-outline-primary me-2" id="select-all-locations">
+                                <i class="bi bi-check-all me-1"></i>
+                                {% trans "Select All" %}
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="clear-all-locations">
+                                <i class="bi bi-x-circle me-1"></i>
+                                {% trans "Clear All" %}
+                            </button>
+                        </div>
+                        <div class="row" style="max-height: 300px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 0.375rem; padding: 1rem;">
+                            {% for choice in form.locations %}
+                            <div class="col-md-6 col-lg-4 mb-2">
+                                <div class="form-check">
+                                    {{ choice.tag }}
+                                    <label class="form-check-label" for="{{ choice.id_for_label }}">
+                                        {{ choice.choice_label }}
+                                    </label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% if form.locations.help_text %}
+                        <div class="form-text">{{ form.locations.help_text }}</div>
+                        {% endif %}
+                        {% if form.locations.errors %}
+                        <div class="text-danger">
+                            {% for error in form.locations.errors %}
+                                <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Active Status -->
+                    <div class="mb-4">
+                        <div class="form-check form-switch">
+                            {{ form.active }}
+                            <label class="form-check-label" for="{{ form.active.id_for_label }}">
+                                <i class="bi bi-power me-1 ms-2"></i>
+                                {{ form.active.label }}
+                            </label>
+                        </div>
+                        {% if form.active.help_text %}
+                        <div class="form-text">{{ form.active.help_text }}</div>
+                        {% endif %}
+                        {% if form.active.errors %}
+                        <div class="text-danger">
+                            {% for error in form.active.errors %}
+                                <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Submit Buttons -->
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-1"></i>
+                            {% if object %}
+                                {% trans "Update Subscription" %}
+                            {% else %}
+                                {% trans "Create Subscription" %}
+                            {% endif %}
+                        </button>
+                        <a href="{% url 'alerts:subscription_list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle me-1"></i>
+                            {% trans "Cancel" %}
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Help Section -->
+        <div class="card mt-4 border-info">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-info-circle me-2"></i>
+                    {% trans "Subscription Help" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>{% trans "How It Works" %}</h6>
+                        <p class="small">
+                            {% trans "Your subscription will filter alerts based on the types and locations you select. You'll only receive notifications for alerts that match your criteria." %}
+                        </p>
+
+                        <h6>{% trans "Delivery Frequency" %}</h6>
+                        <ul class="list-unstyled small">
+                            <li><strong>{% trans "Immediate" %}:</strong> {% trans "Get notified as soon as alerts are published" %}</li>
+                            <li><strong>{% trans "Daily" %}:</strong> {% trans "Receive a daily digest of new alerts" %}</li>
+                            <li><strong>{% trans "Weekly" %}:</strong> {% trans "Get a weekly summary every Monday" %}</li>
+                            <li><strong>{% trans "Monthly" %}:</strong> {% trans "Monthly summary on the first day of each month" %}</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>{% trans "Best Practices" %}</h6>
+                        <ul class="small">
+                            <li>{% trans "Select only the alert types most relevant to your work" %}</li>
+                            <li>{% trans "Choose specific locations rather than subscribing to all areas" %}</li>
+                            <li>{% trans "Start with daily or weekly frequency to avoid notification overload" %}</li>
+                            <li>{% trans "You can always edit or disable your subscriptions later" %}</li>
+                        </ul>
+
+                        <div class="alert alert-warning mt-3">
+                            <small>
+                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                {% trans "Note: You must select at least one alert type and one location for your subscription to be active." %}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Alert types selection helpers
+    document.getElementById('select-all-types')?.addEventListener('click', function() {
+        document.querySelectorAll('input[name="shock_types"]').forEach(cb => cb.checked = true);
+    });
+
+    document.getElementById('clear-all-types')?.addEventListener('click', function() {
+        document.querySelectorAll('input[name="shock_types"]').forEach(cb => cb.checked = false);
+    });
+
+    // Location selection helpers
+    document.getElementById('select-all-locations')?.addEventListener('click', function() {
+        document.querySelectorAll('input[name="locations"]').forEach(cb => cb.checked = true);
+    });
+
+    document.getElementById('clear-all-locations')?.addEventListener('click', function() {
+        document.querySelectorAll('input[name="locations"]').forEach(cb => cb.checked = false);
+    });
+});
+</script>
+
+<style>
+.badge.bg-conflict { background-color: #dc3545 !important; }
+.badge.bg-natural { background-color: #fd7e14 !important; }
+.badge.bg-health { background-color: #20c997 !important; }
+.badge.bg-foodsec {
+    background-color: #6f42c1 !important;
+    color: #ffffff !important;
+}
+.badge.bg-secondary { background-color: #6c757d !important; }
+
+.form-check-input:checked ~ .form-check-label .badge {
+    transform: scale(1.1);
+    transition: transform 0.2s ease-in-out;
+}
+
+/* Fix shock type card positioning */
+#subscription-form .card {
+    transition: all 0.2s ease-in-out;
+    position: relative;
+    z-index: 1;
+}
+
+/* Only apply special positioning to shock type cards */
+#subscription-form .col-md-6.col-lg-3 > .card > .card-body > .form-check {
+    position: relative;
+}
+
+#subscription-form .col-md-6.col-lg-3 > .card > .card-body > .form-check > .form-check-input {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 10;
+}
+
+#subscription-form .form-check .card:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-color: #0d6efd;
+    z-index: 2;
+}
+
+#subscription-form .form-check-input:checked ~ .form-check-label .card {
+    border-color: #0d6efd;
+    background-color: #f8f9fa;
+}
+
+/* Fix location checkboxes alignment */
+.row[style*="max-height: 300px"] .form-check {
+    display: flex;
+    align-items: center;
+    padding: 0.25rem 0;
+}
+
+.row[style*="max-height: 300px"] .form-check-input {
+    margin-top: 0;
+    margin-right: 0.5rem;
+}
+
+.row[style*="max-height: 300px"] .form-check-label {
+    margin-bottom: 0;
+    line-height: 1.5;
+}
+
+.form-check {
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.15s ease-in-out;
+}
+
+.form-check:hover {
+    background-color: #e9ecef;
+}
+
+/* Active toggle switch positioning fix */
+.form-check.form-switch {
+    padding: 0.375rem 0 !important;
+    margin-left: 0;
+    display: flex;
+    align-items: center;
+}
+
+.form-check.form-switch:hover {
+    background-color: transparent !important;
+}
+
+.form-check.form-switch .form-check-input {
+    margin-left: 0 !important;
+    margin-top: 0 !important;
+    margin-right: 0.5rem !important;
+    position: relative !important;
+    float: left !important;
+}
+
+.form-check.form-switch .form-check-label {
+    padding-left: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    margin-bottom: 0;
+}
+</style>
+{% endblock %}

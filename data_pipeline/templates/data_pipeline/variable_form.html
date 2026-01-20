@@ -1,0 +1,230 @@
+{% extends "data_pipeline/base.html" %}
+
+{% block title %}{{ action }} Variable{% endblock %}
+
+{% block main_content %}
+<div class="mb-4">
+    <h1 class="h3">{{ action }} Variable</h1>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'data_pipeline:dashboard' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'data_pipeline:variable_list' %}">Variables</a></li>
+            {% if variable %}
+                <li class="breadcrumb-item"><a href="{% url 'data_pipeline:variable_detail' variable.id %}">{{ variable.name }}</a></li>
+            {% endif %}
+            <li class="breadcrumb-item active">{{ action }}</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">{{ action }} Variable</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    <!-- Basic Information -->
+                    <h6 class="mb-3">Basic Information</h6>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.source.id_for_label }}" class="form-label">
+                                {{ form.source.label }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ form.source }}
+                            {% if form.source.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.source.errors.0 }}
+                                </div>
+                            {% endif %}
+                            {% if form.source.help_text %}
+                                <div class="form-text">{{ form.source.help_text }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.type.id_for_label }}" class="form-label">
+                                {{ form.type.label }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ form.type }}
+                            {% if form.type.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.type.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">
+                                {{ form.name.label }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.name.errors.0 }}
+                                </div>
+                            {% endif %}
+                            {% if form.name.help_text %}
+                                <div class="form-text">{{ form.name.help_text }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.code.id_for_label }}" class="form-label">
+                                {{ form.code.label }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ form.code }}
+                            {% if form.code.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.code.errors.0 }}
+                                </div>
+                            {% endif %}
+                            {% if form.code.help_text %}
+                                <div class="form-text">{{ form.code.help_text }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Technical Configuration -->
+                    <hr class="my-4">
+                    <h6 class="mb-3">Data Configuration</h6>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.period.id_for_label }}" class="form-label">
+                                {{ form.period.label }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ form.period }}
+                            {% if form.period.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.period.errors.0 }}
+                                </div>
+                            {% endif %}
+                            {% if form.period.help_text %}
+                                <div class="form-text">{{ form.period.help_text }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.adm_level.id_for_label }}" class="form-label">
+                                {{ form.adm_level.label }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ form.adm_level }}
+                            {% if form.adm_level.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.adm_level.errors.0 }}
+                                </div>
+                            {% endif %}
+                            {% if form.adm_level.help_text %}
+                                <div class="form-text">{{ form.adm_level.help_text }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Description -->
+                    <hr class="my-4">
+                    <h6 class="mb-3">Description & Documentation</h6>
+                    
+                    <div class="mb-4">
+                        <label for="{{ form.text.id_for_label }}" class="form-label">
+                            {{ form.text.label }}
+                        </label>
+                        {{ form.text }}
+                        {% if form.text.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.text.errors.0 }}
+                            </div>
+                        {% endif %}
+                        {% if form.text.help_text %}
+                            <div class="form-text">{{ form.text.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Form Errors -->
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Actions -->
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check me-1"></i>{{ submit_text }}
+                        </button>
+                        <a href="{% if variable %}{% url 'data_pipeline:variable_detail' variable.id %}{% else %}{% url 'data_pipeline:variable_list' %}{% endif %}" 
+                           class="btn btn-outline-secondary">
+                            <i class="bi bi-x me-1"></i>Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Help Sidebar -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Help & Guidelines</h6>
+            </div>
+            <div class="card-body">
+                <h6>Variable Types</h6>
+                <ul class="small">
+                    <li><strong>Quantitative:</strong> Numeric data (counts, measurements)</li>
+                    <li><strong>Qualitative:</strong> Categorical data</li>
+                    <li><strong>Textual:</strong> Free text content</li>
+                    <li><strong>Categorical:</strong> Fixed set of categories</li>
+                </ul>
+                
+                <hr>
+                
+                <h6>Period Types</h6>
+                <ul class="small">
+                    <li><strong>Event:</strong> Single occurrences</li>
+                    <li><strong>Daily:</strong> Daily aggregated data</li>
+                    <li><strong>Weekly/Monthly:</strong> Periodic aggregations</li>
+                    <li><strong>Yearly:</strong> Annual summaries</li>
+                </ul>
+                
+                <hr>
+                
+                <h6>Admin Levels</h6>
+                <ul class="small">
+                    <li><strong>0:</strong> Country level</li>
+                    <li><strong>1:</strong> State/Province</li>
+                    <li><strong>2:</strong> County/District</li>
+                    <li><strong>3+:</strong> Lower administrative levels</li>
+                </ul>
+            </div>
+        </div>
+        
+        {% if variable %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">Current Statistics</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Data Records:</span>
+                        <span class="badge bg-info">{{ variable.data_records.count }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>Source:</span>
+                        <a href="{% url 'data_pipeline:source_detail' variable.source.id %}" 
+                           class="text-decoration-none">{{ variable.source.name }}</a>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

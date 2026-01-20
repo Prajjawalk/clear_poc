@@ -1,0 +1,133 @@
+{% extends "data_pipeline/base.html" %}
+
+{% block title %}Delete Variable - {{ variable.name }}{% endblock %}
+
+{% block main_content %}
+<div class="mb-4">
+    <h1 class="h3">Delete Variable</h1>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'data_pipeline:dashboard' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'data_pipeline:variable_list' %}">Variables</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'data_pipeline:variable_detail' variable.id %}">{{ variable.name }}</a></li>
+            <li class="breadcrumb-item active">Delete</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Confirm Deletion
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <strong>Warning:</strong> This action cannot be undone. Deleting this variable will also delete all associated data records.
+                </div>
+                
+                <p>Are you sure you want to delete the variable <strong>"{{ variable.name }}"</strong>?</p>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Variable Details</h6>
+                        <dl class="row">
+                            <dt class="col-4">Name:</dt>
+                            <dd class="col-8">{{ variable.name }}</dd>
+                            <dt class="col-4">Code:</dt>
+                            <dd class="col-8"><code>{{ variable.code }}</code></dd>
+                            <dt class="col-4">Source:</dt>
+                            <dd class="col-8">{{ variable.source.name }}</dd>
+                            <dt class="col-4">Type:</dt>
+                            <dd class="col-8">{{ variable.get_type_display }}</dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Impact Assessment</h6>
+                        <dl class="row">
+                            <dt class="col-6">Data Records:</dt>
+                            <dd class="col-6">
+                                <span class="badge bg-danger">{{ data_count }} will be deleted</span>
+                            </dd>
+                            <dt class="col-6">Period:</dt>
+                            <dd class="col-6">{{ variable.get_period_display }}</dd>
+                            <dt class="col-6">Admin Level:</dt>
+                            <dd class="col-6">{{ variable.adm_level }}</dd>
+                        </dl>
+                    </div>
+                </div>
+                
+                {% if variable.text %}
+                    <hr>
+                    <h6>Description</h6>
+                    <p class="text-muted">{{ variable.text }}</p>
+                {% endif %}
+                
+                <hr>
+                
+                <form method="post" class="d-inline">
+                    {% csrf_token %}
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash me-1"></i>
+                            Yes, Delete This Variable
+                        </button>
+                        <a href="{% url 'data_pipeline:variable_detail' variable.id %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x me-1"></i>
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Safety Information -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Deletion Impact</h6>
+            </div>
+            <div class="card-body">
+                <p class="small">Deleting this variable will permanently remove:</p>
+                <ul class="small">
+                    <li>The variable configuration</li>
+                    <li>{{ data_count }} data records</li>
+                    <li>Associated task execution records</li>
+                    <li>Historical data trends</li>
+                </ul>
+                
+                <div class="alert alert-info">
+                    <strong>Alternative:</strong> Consider editing the variable instead of deleting it to preserve historical data.
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">Source Information</h6>
+            </div>
+            <div class="card-body">
+                <p class="small">This variable belongs to:</p>
+                <p><strong>
+                    <a href="{% url 'data_pipeline:source_detail' variable.source.id %}" 
+                       class="text-decoration-none">{{ variable.source.name }}</a>
+                </strong></p>
+                <p class="small text-muted">{{ variable.source.get_type_display }} source</p>
+                
+                <hr>
+                
+                <div class="d-grid">
+                    <a href="{% url 'data_pipeline:source_detail' variable.source.id %}" 
+                       class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-database me-1"></i>View Source
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

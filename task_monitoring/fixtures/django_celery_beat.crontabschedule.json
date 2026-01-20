@@ -1,0 +1,98 @@
+[
+  {
+    "model": "django_celery_beat.crontabschedule",
+    "pk": 1,
+    "fields": {
+      "minute": "0",
+      "hour": "2",
+      "day_of_week": "*",
+      "day_of_month": "1",
+      "month_of_year": "*",
+      "timezone": "UTC"
+    }
+  },
+  {
+    "model": "django_celery_beat.crontabschedule",
+    "pk": 2,
+    "fields": {
+      "minute": "0",
+      "hour": "6",
+      "day_of_week": "*",
+      "day_of_month": "*",
+      "month_of_year": "*",
+      "timezone": "UTC"
+    }
+  },
+  {
+    "model": "django_celery_beat.crontabschedule",
+    "pk": 3,
+    "fields": {
+      "minute": "0",
+      "hour": "2",
+      "day_of_week": "*",
+      "day_of_month": "*",
+      "month_of_year": "*",
+      "timezone": "UTC"
+    }
+  },
+  {
+    "model": "django_celery_beat.crontabschedule",
+    "pk": 4,
+    "fields": {
+      "minute": "0",
+      "hour": "6,18",
+      "day_of_week": "*",
+      "day_of_month": "*",
+      "month_of_year": "*",
+      "timezone": "UTC"
+    }
+  },
+  {
+    "model": "django_celery_beat.crontabschedule",
+    "pk": 5,
+    "fields": {
+      "minute": "0",
+      "hour": "8,20",
+      "day_of_week": "*",
+      "day_of_month": "*",
+      "month_of_year": "*",
+      "timezone": "UTC"
+    }
+  },
+  {
+    "model": "django_celery_beat.crontabschedule",
+    "pk": 6,
+    "fields": {
+      "minute": "0",
+      "hour": "12",
+      "day_of_week": "*",
+      "day_of_month": "*",
+      "month_of_year": "*",
+      "timezone": "UTC"
+    }
+  },
+  {
+    "model": "django_celery_beat.crontabschedule",
+    "pk": 7,
+    "fields": {
+      "minute": "0",
+      "hour": "4",
+      "day_of_week": "*",
+      "day_of_month": "*",
+      "month_of_year": "*",
+      "timezone": "UTC"
+    }
+  },
+  {
+    "model": "django_celery_beat.crontabschedule",
+    "pk": 8,
+    "fields": {
+      "minute": "0",
+      "hour": "*",
+      "day_of_week": "*",
+      "day_of_month": "*",
+      "month_of_year": "*",
+      "timezone": "UTC"
+    }
+  }
+]

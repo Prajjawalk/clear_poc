@@ -1,0 +1,127 @@
+[
+  {
+    "model": "data_pipeline.source",
+    "pk": 1,
+    "fields": {
+      "name": "IOM - International Organization for Migration",
+      "description": "IOM's Displacement Tracking Matrix (DTM) provides data on internal displacement in Sudan, including IDP numbers at admin level 2.",
+      "type": "api",
+      "info_url": "https://dtm.iom.int/",
+      "base_url": "https://dtmapi.iom.int/",
+      "class_name": "IOM",
+      "comment": "Requires IOM_API_KEY and IOM_APP environment variables for API authentication",
+      "is_active": true
+    }
+  },
+  {
+    "model": "data_pipeline.source",
+    "pk": 2,
+    "fields": {
+      "name": "ReliefWeb",
+      "description": "Reliefweb diaster API",
+      "type": "api",
+      "class_name": "ReliefWeb",
+      "base_url": "https://api.reliefweb.int/v2",
+      "is_active": true,
+      "created_at": "2025-01-08T12:00:00Z",
+      "updated_at": "2025-01-08T12:00:00Z"
+    }
+  },
+  {
+    "model": "data_pipeline.source",
+    "pk": 3,
+    "fields": {
+      "name": "ACLED",
+      "description": "Conflict monitoring providing real-time data and analysis on violent conflict and protest.",
+      "type": "api",
+      "class_name": "ACLED",
+      "base_url": "https://api.acleddata.com",
+      "is_active": true,
+      "created_at": "2025-01-08T12:00:00Z",
+      "updated_at": "2025-01-08T12:00:00Z"
+    }
+  },
+  {
+    "model": "data_pipeline.source",
+    "pk": 4,
+    "fields": {
+      "name": "IDMC-GIDD - Global Internal Displacement Database",
+      "description": "IDMC Global Internal Displacement Database - Annual displacement data by location and cause",
+      "type": "api",
+      "info_url": "https://helix-tools-api.idmcdb.org/external-api/gidd/",
+      "base_url": "https://helix-tools-api.idmcdb.org/external-api/gidd/",
+      "class_name": "IDMCGIDD",
+      "comment": "GIDD endpoint - single API call for all displacement variables (conflict, disaster, total)",
+      "is_active": true
+    }
+  },
+  {
+    "model": "data_pipeline.source",
+    "pk": 5,
+    "fields": {
+      "name": "IDMC-IDU - Internal Displacement Updates",
+      "description": "IDMC Internal Displacement Updates - Real-time displacement events and updates",
+      "type": "api",
+      "info_url": "https://helix-tools-api.idmcdb.org/external-api/idus/",
+      "base_url": "https://helix-tools-api.idmcdb.org/external-api/idus/",
+      "class_name": "IDMCIDU",
+      "comment": "IDU endpoint - single API call for all displacement event variables (new, conflict, disaster)",
+      "is_active": true
+    }
+  },
+  {
+    "model": "data_pipeline.source",
+    "pk": 6,
+    "fields": {
+      "name": "Dataminr",
+      "description": "Dataminr FirstAlert API - Real-time alerts and early warning signals from social media and public information sources",
+      "type": "api",
+      "base_url": "https://firstalert-api.dataminr.com",
+      "class_name": "Dataminr",
+      "comment": "Requires DATAMINR_USERNAME and DATAMINR_API_KEY environment variables",
+      "is_active": true
+    }
+  },
+  {
+    "model": "data_pipeline.source",
+    "pk": 8,
+    "fields": {
+      "name": "FEWSNET - Famine Early Warning Systems Network",
+      "description": "FEWSNET provides food security data through IPC (Integrated Food Security Phase Classification) shapefiles. Performs spatial overlay with ADM2 boundaries to calculate area-weighted food insecurity indicators.",
+      "type": "api",
+      "info_url": "https://fews.net/",
+      "base_url": "https://fdw.fews.net/api/ipcpackage/country",
+      "class_name": "FEWSNET",
+      "comment": "Downloads monthly shapefiles (ML1) for food insecurity classification. No authentication required.",
+      "is_active": true
+    }
+  },
+  {
+    "model": "data_pipeline.source",
+    "pk": 9,
+    "fields": {
+      "name": "ACLED CAST - Conflict Alert System Tool",
+      "description": "ACLED CAST provides forecasted conflict event data aggregated at the state-month level. Includes predictions for battles, explosions/remote violence, and violence against civilians.",
+      "type": "api",
+      "info_url": "https://acleddata.com/api-documentation/cast-endpoint",
+      "base_url": "https://acleddata.com/api/cast/read",
+      "class_name": "ACLEDCAST",
+      "comment": "Requires ACLED_USERNAME and ACLED_API_KEY environment variables for OAuth authentication. Data provided at state level (ADM1) with location matching to local admin boundaries.",
+      "is_active": true
+    }
+  },
+  {
+    "model": "data_pipeline.source",
+    "pk": 10,
+    "fields": {
+      "name": "GloFAS - Global Flood Awareness System",
+      "description": "GloFAS Rapid Flood Mapping provides daily flood extent shapefiles from Copernicus Emergency Management Service. Downloads flood extents, overlays with ADM2 boundaries, and calculates affected population using GHSL population data.",
+      "type": "api",
+      "info_url": "https://confluence.ecmwf.int/display/CEMS/CEMS-Flood+flood+inundation+maps",
+      "base_url": "https://european-flood.emergency.copernicus.eu/api/fms/download/glofas",
+      "class_name": "GloFAS",
+      "comment": "Public API (no authentication required). Based on 90m resolution flood inundation maps from LISFLOOD-FP hydraulic modeling. Covers riverine flooding for rivers >500 km² upstream area. Does not include pluvial or coastal flooding.",
+      "is_active": true
+    }
+  }
+]

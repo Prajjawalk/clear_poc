@@ -1,0 +1,122 @@
+[
+    {
+        "model": "auth.user",
+        "pk": 2,
+        "fields": {
+            "password": "pbkdf2_sha256$1000000$fGV1VOmsjQjLmlXIujay86$Yme5EfzKHnHDO8pJjhfL74rOpVOzat49olPBoc/J5ko=",
+            "last_login": null,
+            "is_superuser": true,
+            "username": "emergency_manager",
+            "first_name": "Emergency",
+            "last_name": "Manager",
+            "email": "emergency.manager@nrc.no",
+            "is_staff": true,
+            "is_active": true,
+            "date_joined": "2024-08-01T10:00:00Z",
+            "groups": [
+                1
+            ],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "auth.user",
+        "pk": 3,
+        "fields": {
+            "password": "pbkdf2_sha256$1000000$fGV1VOmsjQjLmlXIujay86$Yme5EfzKHnHDO8pJjhfL74rOpVOzat49olPBoc/J5ko=",
+            "last_login": null,
+            "is_superuser": false,
+            "username": "head_operations",
+            "first_name": "Head",
+            "last_name": "Operations",
+            "email": "head.operations@nrc.no",
+            "is_staff": false,
+            "is_active": true,
+            "date_joined": "2024-08-01T10:00:00Z",
+            "groups": [
+                2
+            ],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "auth.user",
+        "pk": 4,
+        "fields": {
+            "password": "pbkdf2_sha256$1000000$fGV1VOmsjQjLmlXIujay86$Yme5EfzKHnHDO8pJjhfL74rOpVOzat49olPBoc/J5ko=",
+            "last_login": null,
+            "is_superuser": false,
+            "username": "project_manager",
+            "first_name": "Project",
+            "last_name": "Manager",
+            "email": "project.manager@nrc.no",
+            "is_staff": false,
+            "is_active": true,
+            "date_joined": "2024-08-01T10:00:00Z",
+            "groups": [
+                3
+            ],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "auth.user",
+        "pk": 5,
+        "fields": {
+            "password": "pbkdf2_sha256$1000000$fGV1VOmsjQjLmlXIujay86$Yme5EfzKHnHDO8pJjhfL74rOpVOzat49olPBoc/J5ko=",
+            "last_login": null,
+            "is_superuser": false,
+            "username": "field_coordinator",
+            "first_name": "Field",
+            "last_name": "Coordinator",
+            "email": "field.coordinator@nrc.no",
+            "is_staff": false,
+            "is_active": true,
+            "date_joined": "2024-08-01T10:00:00Z",
+            "groups": [
+                4
+            ],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "auth.user",
+        "pk": 6,
+        "fields": {
+            "password": "pbkdf2_sha256$1000000$fGV1VOmsjQjLmlXIujay86$Yme5EfzKHnHDO8pJjhfL74rOpVOzat49olPBoc/J5ko=",
+            "last_login": null,
+            "is_superuser": true,
+            "username": "system_admin",
+            "first_name": "System",
+            "last_name": "Administrator",
+            "email": "system.admin@nrc.no",
+            "is_staff": true,
+            "is_active": true,
+            "date_joined": "2024-08-01T10:00:00Z",
+            "groups": [
+                5
+            ],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "auth.user",
+        "pk": 7,
+        "fields": {
+            "password": "pbkdf2_sha256$1000000$fGV1VOmsjQjLmlXIujay86$Yme5EfzKHnHDO8pJjhfL74rOpVOzat49olPBoc/J5ko=",
+            "last_login": null,
+            "is_superuser": false,
+            "username": "external_viewer",
+            "first_name": "External",
+            "last_name": "Viewer",
+            "email": "external.viewer@donor.org",
+            "is_staff": false,
+            "is_active": true,
+            "date_joined": "2024-08-01T10:00:00Z",
+            "groups": [
+                6
+            ],
+            "user_permissions": []
+        }
+    }
+]

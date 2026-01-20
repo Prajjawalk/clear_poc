@@ -1,0 +1,52 @@
+{
+  "name": "nrc_ewas",
+  "version": "0.1.2",
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "dev": "npm run dev:all",
+    "dev:light": "concurrently --names \"Django,Vite\" --prefix-colors \"blue,green\" \"npm run dev:django\" \"npm run dev:vite\"",
+    "dev:django": "uv run manage.py runserver",
+    "dev:all": "concurrently --names \"Django,Vite,Celery,TiTiler\" --prefix-colors \"blue,green,yellow,magenta\" \"npm run dev:django\" \"npm run dev:vite\" \"npm run dev:celery\" \"npm run dev:titiler\"",
+    "dev:vite": "vite --host",
+    "dev:frontend-only": "vite",
+    "dev:celery": "UV_ENV_FILE=.env uv run celery -A app worker --pool=solo --loglevel=info --queues=celery,data_retrieval,data_processing,data_aggregation,pipeline",
+    "dev:titiler": "uv run python titiler_server.py",
+    "build": "vite build",
+    "build:prod": "NODE_ENV=production vite build",
+    "preview": "vite preview",
+    "watch": "vite build --watch",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/user-event": "^14.6.1",
+    "@vitest/ui": "^3.2.4",
+    "concurrently": "^9.2.0",
+    "happy-dom": "^19.0.2",
+    "jsdom": "^27.0.0",
+    "postcss": "^8.4.35",
+    "sass": "^1.70.0",
+    "vite": "^7.0.4",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "bootstrap": "^5.3.7",
+    "bootstrap-icons": "^1.13.1",
+    "chroma-js": "^3.2.0",
+    "leaflet": "^1.9.4",
+    "leaflet.markercluster": "^1.5.3"
+  },
+  "browserslist": [
+    "> 0.5%",
+    "last 2 versions",
+    "not dead"
+  ]
+}

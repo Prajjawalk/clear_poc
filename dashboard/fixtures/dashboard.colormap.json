@@ -1,0 +1,74 @@
+[
+  {
+    "model": "dashboard.colormap",
+    "pk": 1,
+    "fields": {
+      "name": "Reds",
+      "description": "Red color scheme for risk and emergency indicators",
+      "named_colormap": "Reds",
+      "color_start": null,
+      "color_end": null,
+      "is_active": true
+    }
+  },
+  {
+    "model": "dashboard.colormap",
+    "pk": 2,
+    "fields": {
+      "name": "Blues",
+      "description": "Blue color scheme for water and flood-related indicators",
+      "named_colormap": "Blues",
+      "color_start": null,
+      "color_end": null,
+      "is_active": true
+    }
+  },
+  {
+    "model": "dashboard.colormap",
+    "pk": 3,
+    "fields": {
+      "name": "Greens",
+      "description": "Green color scheme for environmental indicators",
+      "named_colormap": "Greens",
+      "color_start": null,
+      "color_end": null,
+      "is_active": true
+    }
+  },
+  {
+    "model": "dashboard.colormap",
+    "pk": 4,
+    "fields": {
+      "name": "Oranges",
+      "description": "Orange color scheme for warnings and alerts",
+      "named_colormap": "Oranges",
+      "color_start": null,
+      "color_end": null,
+      "is_active": true
+    }
+  },
+  {
+    "model": "dashboard.colormap",
+    "pk": 5,
+    "fields": {
+      "name": "YlOrRd",
+      "description": "Yellow-Orange-Red color scheme for heat and intensity",
+      "named_colormap": "YlOrRd",
+      "color_start": null,
+      "color_end": null,
+      "is_active": true
+    }
+  },
+  {
+    "model": "dashboard.colormap",
+    "pk": 6,
+    "fields": {
+      "name": "CustomReds",
+      "description": "Custom two-color scale from light gray to dark red",
+      "named_colormap": null,
+      "color_start": "#f0f0f0",
+      "color_end": "#a50f15",
+      "is_active": true
+    }
+  }
+]

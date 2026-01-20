@@ -1,0 +1,30 @@
+[
+    {
+        "model": "task_monitoring.tasktype",
+        "pk": 1,
+        "fields": {
+            "name": "retrieval"
+        }
+    },
+    {
+        "model": "task_monitoring.tasktype",
+        "pk": 2,
+        "fields": {
+            "name": "processing"
+        }
+    },
+    {
+        "model": "task_monitoring.tasktype",
+        "pk": 3,
+        "fields": {
+            "name": "aggregation"
+        }
+    },
+    {
+        "model": "task_monitoring.tasktype",
+        "pk": 4,
+        "fields": {
+            "name": "full_pipeline"
+        }
+    }
+]

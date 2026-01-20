@@ -1,0 +1,397 @@
+{% extends "users/base.html" %}
+{% load humanize %}
+{% load i18n %}
+
+{% block title %}{% trans "Manage Users" %}{% endblock %}
+
+{% block main_content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="/">
+                        <i class="bi bi-house"></i> {% trans "Home" %}
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'users:profile' %}">{% trans "User Management" %}</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'users:admin_dashboard' %}">{% trans "Admin Dashboard" %}</a>
+                </li>
+                <li class="breadcrumb-item active">{% trans "Manage Users" %}</li>
+            </ol>
+        </nav>
+        <h1 class="nrc-heading mb-0">
+            <i class="bi bi-people me-2 text-success"></i>{% trans "Manage Users" %}
+        </h1>
+    </div>
+    <div class="btn-group" role="group">
+        <a href="{% url 'users:admin_user_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus me-1"></i>{% trans "New User" %}
+        </a>
+        <a href="{% url 'users:admin_dashboard' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-speedometer2 me-1"></i>{% trans "Dashboard" %}
+        </a>
+    </div>
+</div>
+
+<!-- Filters and Search -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label for="search" class="form-label">{% trans "Search" %}</label>
+                <input type="text" class="form-control" id="search" name="search"
+                       value="{{ current_filters.search }}"
+                       placeholder="{% trans 'Username, email, name...' %}">
+            </div>
+            <div class="col-md-3">
+                <label for="verified" class="form-label">{% trans "Email Status" %}</label>
+                <select class="form-select" id="verified" name="verified">
+                    <option value="">{% trans "All Users" %}</option>
+                    <option value="true" {% if current_filters.verified == 'true' %}selected{% endif %}>
+                        {% trans "Verified" %}
+                    </option>
+                    <option value="false" {% if current_filters.verified == 'false' %}selected{% endif %}>
+                        {% trans "Unverified" %}
+                    </option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="notifications" class="form-label">{% trans "Notifications" %}</label>
+                <select class="form-select" id="notifications" name="notifications">
+                    <option value="">{% trans "All Users" %}</option>
+                    <option value="true" {% if current_filters.notifications == 'true' %}selected{% endif %}>
+                        {% trans "Enabled" %}
+                    </option>
+                    <option value="false" {% if current_filters.notifications == 'false' %}selected{% endif %}>
+                        {% trans "Disabled" %}
+                    </option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <div class="d-grid gap-1">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search me-1"></i>{% trans "Filter" %}
+                    </button>
+                    <a href="{% url 'users:admin_user_list' %}" class="btn btn-outline-secondary btn-sm">
+                        {% trans "Clear" %}
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Bulk Actions -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="post" action="{% url 'users:admin_bulk_action' %}" id="bulkActionForm">
+            {% csrf_token %}
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="selectAll">
+                    <label class="form-check-label" for="selectAll">
+                        {% trans "Select All" %}
+                    </label>
+                </div>
+                <div class="d-flex gap-2">
+                    <select class="form-select form-select-sm" name="action" id="bulkAction" style="width: auto;">
+                        <option value="">{% trans "Bulk Actions" %}</option>
+                        <option value="enable_notifications">{% trans "Enable Email Notifications" %}</option>
+                        <option value="disable_notifications">{% trans "Disable Email Notifications" %}</option>
+                        <option value="verify_emails">{% trans "Mark Emails as Verified" %}</option>
+                        <option value="send_verification">{% trans "Send Verification Emails" %}</option>
+                    </select>
+                    <button type="submit" class="btn btn-sm btn-outline-primary" id="bulkActionBtn" disabled>
+                        {% trans "Apply" %}
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Users Table -->
+<div class="card">
+    <div class="card-body p-0">
+        {% if users %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th width="40">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="headerSelectAll">
+                            </div>
+                        </th>
+                        <th>{% trans "User" %}</th>
+                        <th>{% trans "Email" %}</th>
+                        <th>{% trans "Status" %}</th>
+                        <th>{% trans "Notifications" %}</th>
+                        <th>{% trans "Joined" %}</th>
+                        <th>{% trans "Last Login" %}</th>
+                        <th width="100">{% trans "Actions" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>
+                            <div class="form-check">
+                                <input class="form-check-input user-checkbox" type="checkbox"
+                                       name="user_ids" value="{{ user.id }}" form="bulkActionForm">
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-sm rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2">
+                                    {{ user.username|first|upper }}
+                                </div>
+                                <div>
+                                    <div class="fw-bold">{{ user.username }}</div>
+                                    {% if user.first_name or user.last_name %}
+                                    <small class="text-muted">{{ user.first_name }} {{ user.last_name }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div>
+                                {{ user.email }}
+                                {% if user.profile.email_verified %}
+                                    <i class="bi bi-check-circle text-success ms-1" title="{% trans 'Verified' %}"></i>
+                                {% else %}
+                                    <i class="bi bi-exclamation-circle text-warning ms-1" title="{% trans 'Unverified' %}"></i>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex gap-1 flex-wrap">
+                                {% if user.is_active %}
+                                    <span class="badge bg-success">{% trans "Active" %}</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{% trans "Inactive" %}</span>
+                                {% endif %}
+                                {% if user.is_staff %}
+                                    <span class="badge bg-warning">{% trans "Staff" %}</span>
+                                {% endif %}
+                                {% if user.is_superuser %}
+                                    <span class="badge bg-danger">{% trans "Admin" %}</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            {% if user.profile.email_notifications_enabled %}
+                                <span class="badge bg-info">
+                                    <i class="bi bi-bell me-1"></i>{% trans "Enabled" %}
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary">
+                                    <i class="bi bi-bell-slash me-1"></i>{% trans "Disabled" %}
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <small>{{ user.date_joined|date:"M d, Y" }}</small>
+                        </td>
+                        <td>
+                            {% if user.last_login %}
+                                <small>{{ user.last_login|date:"M d, Y" }}</small>
+                            {% else %}
+                                <small class="text-muted">{% trans "Never" %}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a href="/admin/auth/user/{{ user.id }}/change/" class="btn btn-outline-primary btn-sm" title="{% trans 'Edit' %}">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {% if not user.profile.email_verified %}
+                                <button type="button" class="btn btn-outline-warning btn-sm" title="{% trans 'Send Verification' %}"
+                                        onclick="sendVerification({{ user.id }})">
+                                    <i class="bi bi-envelope"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <div class="card-footer">
+            <nav aria-label="User pagination">
+                <ul class="pagination pagination-sm justify-content-center mb-0">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.verified %}&verified={{ request.GET.verified }}{% endif %}{% if request.GET.notifications %}&notifications={{ request.GET.notifications }}{% endif %}">
+                            <i class="bi bi-chevron-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.verified %}&verified={{ request.GET.verified }}{% endif %}{% if request.GET.notifications %}&notifications={{ request.GET.notifications }}{% endif %}">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">
+                            {% trans "Page" %} {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.verified %}&verified={{ request.GET.verified }}{% endif %}{% if request.GET.notifications %}&notifications={{ request.GET.notifications }}{% endif %}">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.verified %}&verified={{ request.GET.verified }}{% endif %}{% if request.GET.notifications %}&notifications={{ request.GET.notifications }}{% endif %}">
+                            <i class="bi bi-chevron-double-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+
+            <div class="text-center mt-2">
+                <small class="text-muted">
+                    {% trans "Showing" %} {{ page_obj.start_index }}-{{ page_obj.end_index }}
+                    {% trans "of" %} {{ page_obj.paginator.count }} {% trans "users" %}
+                </small>
+            </div>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-people text-muted" style="font-size: 4rem;"></i>
+            <h5 class="mt-3 text-muted">{% trans "No users found" %}</h5>
+            <p class="text-muted">{% trans "Try adjusting your search criteria or create a new user." %}</p>
+            <a href="{% url 'users:admin_user_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus me-1"></i>{% trans "Create First User" %}
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAllTop = document.getElementById('selectAll');
+    const selectAllHeader = document.getElementById('headerSelectAll');
+    const userCheckboxes = document.querySelectorAll('.user-checkbox');
+    const bulkActionSelect = document.getElementById('bulkAction');
+    const bulkActionBtn = document.getElementById('bulkActionBtn');
+    const bulkActionForm = document.getElementById('bulkActionForm');
+
+    // Synchronize select all checkboxes
+    function updateSelectAll() {
+        const checkedCount = document.querySelectorAll('.user-checkbox:checked').length;
+        const totalCount = userCheckboxes.length;
+
+        selectAllTop.checked = checkedCount === totalCount && totalCount > 0;
+        selectAllHeader.checked = checkedCount === totalCount && totalCount > 0;
+        selectAllTop.indeterminate = checkedCount > 0 && checkedCount < totalCount;
+        selectAllHeader.indeterminate = checkedCount > 0 && checkedCount < totalCount;
+
+        // Enable bulk action button if users are selected and action is chosen
+        bulkActionBtn.disabled = checkedCount === 0 || !bulkActionSelect.value;
+    }
+
+    // Handle select all functionality
+    [selectAllTop, selectAllHeader].forEach(selectAllCheckbox => {
+        selectAllCheckbox.addEventListener('change', function() {
+            userCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+            updateSelectAll();
+        });
+    });
+
+    // Handle individual checkbox changes
+    userCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectAll);
+    });
+
+    // Handle bulk action selection
+    bulkActionSelect.addEventListener('change', updateSelectAll);
+
+    // Handle bulk action form submission
+    bulkActionForm.addEventListener('submit', function(e) {
+        const checkedUsers = document.querySelectorAll('.user-checkbox:checked');
+        const action = bulkActionSelect.value;
+
+        if (checkedUsers.length === 0) {
+            e.preventDefault();
+            alert('{% trans "Please select at least one user." %}');
+            return;
+        }
+
+        if (!action) {
+            e.preventDefault();
+            alert('{% trans "Please select an action." %}');
+            return;
+        }
+
+        const actionText = bulkActionSelect.options[bulkActionSelect.selectedIndex].text;
+        const userCount = checkedUsers.length;
+
+        if (!confirm(`{% trans "Are you sure you want to" %} ${actionText.toLowerCase()} {% trans "for" %} ${userCount} {% trans "user(s)?" %}`)) {
+            e.preventDefault();
+        }
+    });
+
+    // Initialize
+    updateSelectAll();
+});
+
+// Send verification email function
+function sendVerification(userId) {
+    if (confirm('{% trans "Send verification email to this user?" %}')) {
+        const form = document.createElement('form');
+        form.method = 'post';
+        form.action = '{% url "users:admin_bulk_action" %}';
+
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        const actionInput = document.createElement('input');
+        actionInput.type = 'hidden';
+        actionInput.name = 'action';
+        actionInput.value = 'send_verification';
+
+        const userInput = document.createElement('input');
+        userInput.type = 'hidden';
+        userInput.name = 'user_ids';
+        userInput.value = userId;
+
+        form.appendChild(csrfInput);
+        form.appendChild(actionInput);
+        form.appendChild(userInput);
+
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
+
+<style>
+.avatar-sm {
+    width: 2rem;
+    height: 2rem;
+    font-size: 0.875rem;
+}
+</style>
+{% endblock %}

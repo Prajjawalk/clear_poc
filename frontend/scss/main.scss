@@ -1,0 +1,394 @@
+// ============================================================================
+// MAIN STYLESHEET - NRC EWAS SUDAN
+// ============================================================================
+// This file imports all partials in the correct order
+
+// 1. Import SASS utilities and custom variables first
+@use "sass:meta";
+@use "sass:color";
+@use "variables" as *;
+
+// 2. Import Bootstrap with NRC customizations
+@use "bootstrap/scss/bootstrap";
+
+// 3. Import Bootstrap Icons with Django-served fonts
+@use "bootstrap-icons";
+
+// 4. Import custom partials (must come before any other rules)
+@use "layout";
+@use "header";
+@use "components";
+@use "navigation";
+@use "leaflet";
+@use "notifications";
+@use "rtl";
+
+// 5. Import Leaflet CSS libraries (imported here once for all map modules)
+@include meta.load-css("leaflet/dist/leaflet.css");
+@include meta.load-css("leaflet.markercluster/dist/MarkerCluster.css");
+@include meta.load-css("leaflet.markercluster/dist/MarkerCluster.Default.css");
+
+// 6. Import Google Fonts for NRC Roboto typography
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap');
+
+// ============================================================================
+// NRC BRAND COMPONENT STYLES (remaining base styles)
+// ============================================================================
+
+// NRC Header and Branding
+.nrc-header {
+    background: linear-gradient(135deg, $nrc-orange 0%, color.scale($nrc-orange, $lightness: -10%) 100%);
+    color: $nrc-white;
+    padding: 0.5rem 0;
+    box-shadow: 0 2px 4px rgba($nrc-black, 0.1);
+
+    .nrc-logo-desktop {
+        max-height: 80px;
+        width: auto;
+        margin-top: -20px;
+    }
+
+    .nrc-logo-mobile {
+        max-height: 50px;
+        width: 50px;
+        margin-top: -5px;
+    }
+
+    .nrc-brand-text {
+        font-family: 'Roboto', sans-serif;
+        font-weight: 500;
+        color: $nrc-white;
+        text-decoration: none;
+
+        &:hover {
+            color: $nrc-white;
+            text-decoration: none;
+        }
+
+        @media (max-width: 800px) {
+            font-size: 1rem !important;
+            font-weight: 600 !important;
+            line-height: 1.2;
+            display: block !important;
+        }
+    }
+
+    // Mobile header adjustments
+    @media (max-width: 800px) {
+        padding: 0.15rem 0;
+
+        .navbar {
+            padding-bottom: 0 !important;
+        }
+
+        .container-fluid {
+            padding: 0 0.75rem !important;
+            align-items: center !important;
+            min-height: auto !important;
+        }
+
+        .navbar-brand {
+            padding-bottom: 0 !important;
+            margin-bottom: 0 !important;
+            flex: 1;
+            min-width: 0; // Allow text to shrink
+            margin-right: 0.5rem;
+            flex-wrap: nowrap; // Prevent wrapping
+            align-items: center;
+
+            .nrc-brand-text {
+                font-size: 1rem !important;
+                font-weight: 600 !important;
+                line-height: 1.1 !important;
+                white-space: nowrap !important;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 100%;
+                display: block !important;
+                color: $nrc-white !important;
+                margin: 20px 0 0 0 !important;
+                padding-bottom: 0 !important;
+            }
+            
+            // Logo styles
+            .nrc-logo-desktop, .nrc-logo-mobile {
+                flex-shrink: 0;
+                height: auto;
+                max-height: 40px; // Limit logo height
+                filter: brightness(1) contrast(1); // Ensure proper visibility
+                opacity: 1; // Ensure no transparency issues
+                background-color: transparent;
+            }
+        }
+
+        .navbar-toggler {
+            padding: 0.1rem;
+            font-size: 1rem;
+            border: none;
+            flex-shrink: 0;
+        }
+    }
+
+    // Apps dropdown menu styling
+    .dropdown-menu {
+        border: 1px solid rgba($nrc-orange, 0.2);
+        border-radius: 0.375rem;
+        box-shadow: 0 0.5rem 1rem rgba($nrc-black, 0.15);
+
+        .dropdown-item {
+            color: $nrc-cool-grey-11;
+            padding: 0.5rem 1rem;
+            display: flex;
+            align-items: center;
+
+            &:hover {
+                background-color: rgba($nrc-orange, 0.08);
+                color: $nrc-orange;
+            }
+
+            &.active {
+                background-color: $nrc-orange;
+                color: $nrc-white;
+                font-weight: 500;
+
+                &:hover {
+                    background-color: color.scale($nrc-orange, $lightness: -10%);
+                    color: $nrc-white;
+                }
+            }
+
+            i {
+                width: 1.2rem;
+                flex-shrink: 0;
+            }
+        }
+    }
+}
+
+// NRC Sidebar Navigation
+.sidebar {
+    background-color: $sidebar-bg;
+    border-right: 1px solid $sidebar-border;
+    min-height: calc(100vh - 120px);
+    box-shadow: 2px 0 4px rgba($nrc-black, 0.05);
+
+    .sidebar-heading {
+        color: $nrc-orange;
+        font-family: 'Roboto', sans-serif;
+        font-weight: 500;
+        border-bottom: 1px solid $sidebar-border;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+    }
+}
+
+// NRC Statistics Cards
+.stat-card {
+    border: 1px solid $card-border-color;
+    border-radius: $btn-border-radius;
+    box-shadow: 0 2px 8px rgba($nrc-black, 0.1);
+    transition: all 0.3s ease;
+
+    &:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 4px 16px rgba($nrc-black, 0.15);
+    }
+
+    // NRC brand colored stat cards
+    &.bg-primary {
+        background: linear-gradient(135deg, $nrc-orange 0%, color.scale($nrc-orange, $lightness: -10%) 100%);
+    }
+
+    &.bg-success {
+        background: linear-gradient(135deg, $nrc-perspective-blue 0%, color.scale($nrc-perspective-blue, $lightness: -10%) 100%);
+    }
+
+    &.bg-info {
+        background: linear-gradient(135deg, $nrc-expert-blue 0%, color.scale($nrc-expert-blue, $lightness: -10%) 100%);
+    }
+
+    &.bg-warning {
+        background: linear-gradient(135deg, $nrc-optimistic-yellow 0%, color.scale($nrc-optimistic-yellow, $lightness: -10%) 100%);
+        color: $nrc-cool-grey-11 !important;
+    }
+}
+
+// NRC Buttons
+.btn-primary {
+    background: linear-gradient(135deg, $nrc-orange 0%, color.scale($nrc-orange, $lightness: -8%) 100%);
+    border-color: $nrc-orange;
+
+    &:hover, &:focus {
+        background: linear-gradient(135deg, color.scale($nrc-orange, $lightness: -8%) 0%, color.scale($nrc-orange, $lightness: -15%) 100%);
+        border-color: color.scale($nrc-orange, $lightness: -8%);
+    }
+}
+
+.btn-outline-primary {
+    color: $nrc-orange;
+    border-color: $nrc-orange;
+
+    &:hover, &:focus {
+        background-color: $nrc-orange;
+        border-color: $nrc-orange;
+    }
+}
+
+// NRC Tables
+.table {
+    font-family: 'Roboto', sans-serif;
+
+    th {
+        background-color: $card-cap-bg;
+        color: $nrc-cool-grey-11;
+        font-weight: 500;
+        border-bottom: 2px solid $nrc-cool-grey-3;
+    }
+}
+
+.table-actions {
+    white-space: nowrap;
+
+    .btn-group-sm .btn {
+        border-radius: $btn-border-radius;
+    }
+}
+
+// NRC Search and Filters
+.search-filters {
+    background-color: $pipeline-bg;
+    border: 1px solid $pipeline-border;
+    border-radius: $btn-border-radius;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 1px 3px rgba($nrc-black, 0.1);
+}
+
+// NRC Cards
+.card {
+    border-color: $card-border-color;
+    border-radius: $btn-border-radius;
+    box-shadow: 0 2px 8px rgba($nrc-black, 0.08);
+
+    .card-header {
+        background-color: $card-cap-bg;
+        border-bottom: 1px solid $card-border-color;
+        font-family: 'Roboto', sans-serif;
+        font-weight: 500;
+        color: $nrc-cool-grey-11;
+    }
+}
+
+// NRC Badges
+.badge {
+    font-family: 'Roboto', sans-serif;
+    font-weight: 400;
+
+    &.badge-type {
+        font-size: 0.75em;
+    }
+}
+
+// NRC Alerts
+.alert {
+    border: none;
+    border-radius: $btn-border-radius;
+    font-family: 'Roboto', sans-serif;
+
+    &.alert-success {
+        background-color: rgba($nrc-perspective-blue, 0.1);
+        color: color.scale($nrc-perspective-blue, $lightness: -20%);
+        border-left: 4px solid $nrc-perspective-blue;
+    }
+
+    &.alert-warning {
+        background-color: rgba($nrc-optimistic-yellow, 0.15);
+        color: color.scale($nrc-optimistic-yellow, $lightness: -30%);
+        border-left: 4px solid $nrc-optimistic-yellow;
+    }
+
+    &.alert-danger {
+        background-color: rgba($nrc-crisis-red, 0.1);
+        color: color.scale($nrc-crisis-red, $lightness: -20%);
+        border-left: 4px solid $nrc-crisis-red;
+    }
+
+    &.alert-info {
+        background-color: rgba($nrc-expert-blue, 0.1);
+        color: color.scale($nrc-expert-blue, $lightness: -20%);
+        border-left: 4px solid $nrc-expert-blue;
+    }
+}
+
+// NRC Forms
+.form-control {
+    border-color: $input-border-color;
+    border-radius: $btn-border-radius;
+    font-family: 'Roboto', sans-serif;
+
+    &:focus {
+        border-color: $input-focus-border-color;
+        box-shadow: 0 0 0 0.2rem rgba($nrc-orange, 0.25);
+    }
+}
+
+.form-select {
+    border-color: $input-border-color;
+    border-radius: $btn-border-radius;
+    font-family: 'Roboto', sans-serif;
+
+    &:focus {
+        border-color: $input-focus-border-color;
+        box-shadow: 0 0 0 0.2rem rgba($nrc-orange, 0.25);
+    }
+}
+
+// NRC Typography Classes
+.nrc-heading {
+    font-family: 'Roboto', sans-serif;
+    font-weight: 500;
+    color: $nrc-cool-grey-11;
+}
+
+.nrc-text {
+    font-family: 'Roboto', sans-serif;
+    color: $nrc-cool-grey-11;
+}
+
+.nrc-text-muted {
+    color: $nrc-cool-grey-7;
+}
+
+// NRC Breadcrumb
+.breadcrumb {
+    background-color: transparent;
+    padding: 0;
+    margin-bottom: 1rem;
+    font-family: 'Roboto', sans-serif;
+
+    .breadcrumb-item {
+        a {
+            color: $nrc-orange;
+            text-decoration: none;
+
+            &:hover {
+                color: color.scale($nrc-orange, $lightness: -10%);
+                text-decoration: underline;
+            }
+        }
+
+        &.active {
+            color: $nrc-cool-grey-7;
+        }
+    }
+}
+
+// Loading spinner animation
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}

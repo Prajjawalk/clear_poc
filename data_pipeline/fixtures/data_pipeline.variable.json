@@ -1,0 +1,344 @@
+[
+  {
+    "model": "data_pipeline.variable",
+    "pk": 1,
+    "fields": {
+      "source": 4,
+      "code": "idmc_gidd_conflict_displacement",
+      "name": "GIDD - Conflict Displacement",
+      "period": "year",
+      "adm_level": 0,
+      "type": "quantitative",
+      "unit": "persons",
+      "text": "New internal displacements due to conflict and violence (annual figures). Dataset: GIDD, Trigger: conflict/violence, Type: new displacements"
+    }
+  },
+  {
+    "model": "data_pipeline.variable",
+    "pk": 2,
+    "fields": {
+      "source": 4,
+      "code": "idmc_gidd_disaster_displacement",
+      "name": "GIDD - Disaster Displacement",
+      "period": "year",
+      "adm_level": 0,
+      "type": "quantitative",
+      "unit": "persons",
+      "text": "New internal displacements due to disasters (annual figures). Dataset: GIDD, Trigger: disaster, Type: new displacements"
+    }
+  },
+  {
+    "model": "data_pipeline.variable",
+    "pk": 3,
+    "fields": {
+      "source": 4,
+      "code": "idmc_gidd_total_displacement",
+      "name": "GIDD - Total Displacement",
+      "period": "year",
+      "adm_level": 0,
+      "type": "quantitative",
+      "unit": "persons",
+      "text": "Total new internal displacements (conflict + disaster, annual). Dataset: GIDD, Trigger: all, Type: new displacements combined"
+    }
+  },
+  {
+    "model": "data_pipeline.variable",
+    "pk": 4,
+    "fields": {
+      "source": 5,
+      "code": "idmc_idu_new_displacements",
+      "name": "IDU - New Displacements",
+      "period": "event",
+      "adm_level": 1,
+      "type": "quantitative",
+      "unit": "persons",
+      "text": "New displacement events reported in IDMC updates. Dataset: IDU, Trigger: all, Type: real-time displacement events"
+    }
+  },
+  {
+    "model": "data_pipeline.variable",
+    "pk": 5,
+    "fields": {
+      "source": 5,
+      "code": "idmc_idu_conflict_displacements",
+      "name": "IDU - Conflict Displacements",
+      "period": "event",
+      "adm_level": 1,
+      "type": "quantitative",
+      "unit": "persons",
+      "text": "New displacement events due to conflict and violence. Dataset: IDU, Trigger: conflict/violence, Type: real-time events"
+    }
+  },
+  {
+    "model": "data_pipeline.variable",
+    "pk": 6,
+    "fields": {
+      "source": 5,
+      "code": "idmc_idu_disaster_displacements",
+      "name": "IDU - Disaster Displacements",
+      "period": "event",
+      "adm_level": 1,
+      "type": "quantitative",
+      "unit": "persons",
+      "text": "New displacement events due to natural disasters. Dataset: IDU, Trigger: disaster, Type: real-time events"
+    }
+  },
+  {
+    "model": "data_pipeline.variable",
+    "pk": 7,
+    "fields": {
+      "source": 1,
+      "code": "iom_dtm_displacement",
+      "name": "Displacement Data",
+      "period": "day",
+      "adm_level": 2,
+      "type": "mixed",
+      "unit": "persons",
+      "text": "Combined displacement data: number of IDPs in value field and displacement reason in text field"
+    }
+  },
+  {
+    "model": "data_pipeline.variable",
+    "pk": 8,
+    "fields": {
+      "source": 2,
+      "code": "reliefweb_flood_events",
+      "name": "Flood Events",
+      "text": "Flood-related disasters in Sudan",
+      "type": "textual",
+      "unit": "events",
+      "period": "day",
+      "adm_level": 0,
+      "created_at": "2025-01-08T12:00:00Z",
+      "updated_at": "2025-01-08T12:00:00Z"
+    }
+  },
+  {
+    "model": "data_pipeline.variable",
+    "pk": 9,
+    "fields": {
+      "source": 2,
+      "code": "reliefweb_drought_events",
+      "name": "Drought Events",
+      "text": "Drought-related disasters in Sudan",
+      "type": "textual",
+      "unit": "events",
+      "period": "day",
+      "adm_level": 0,
+      "created_at": "2025-01-08T12:00:00Z",
+      "updated_at": "2025-01-08T12:00:00Z"
+    }
+  },
+  {
+    "model": "data_pipeline.variable",
+    "pk": 10,
+    "fields": {
+      "source": 2,
+      "code": "reliefweb_conflict_events",
+      "name": "Conflict-Related Disasters",
+      "text": "Conflict or violence-related disasters in Sudan",
+      "type": "textual",
+      "unit": "events",
+      "period": "day",
+      "adm_level": 0,
+      "created_at": "2025-01-08T12:00:00Z",
+      "updated_at": "2025-01-08T12:00:00Z"
+    }
+  },
+  {
+    "model": "data_pipeline.variable",
+    "pk": 11,
+    "fields": {
+      "source": 3,
+      "code": "acled_total_events",
+      "name": "Total Events",
+      "period": "day",
+      "adm_level": 2,
+      "type": "quantitative",
+      "unit": "events",
+      "text": "Total number of conflict events recorded by ACLED"
+    }
+  },
+  {
+    "model": "data_pipeline.variable",
+    "pk": 12,
+    "fields": {
+      "source": 3,
+      "code": "acled_fatalities",
+      "name": "Fatalities",
+      "period": "day",
+      "adm_level": 2,
+      "type": "quantitative",
+      "unit": "persons",
+      "text": "Total fatalities from conflict events recorded by ACLED"
+    }
+  },
+  {
+    "model": "data_pipeline.variable",
+    "pk": 13,
+    "fields": {
+      "source": 3,
+      "code": "acled_battles",
+      "name": "Battles",
+      "period": "day",
+      "adm_level": 2,
+      "type": "quantitative",
+      "unit": "events",
+      "text": "Number of battle/armed clash events recorded by ACLED"
+    }
+  },
+  {
+    "model": "data_pipeline.variable",
+    "pk": 14,
+    "fields": {
+      "source": 3,
+      "code": "acled_violence_civilians",
+      "name": "Violence Against Civilians",
+      "period": "day",
+      "adm_level": 2,
+      "type": "quantitative",
+      "unit": "events",
+      "text": "Number of violence against civilians events recorded by ACLED"
+    }
+  },
+  {
+    "model": "data_pipeline.variable",
+    "pk": 15,
+    "fields": {
+      "source": 3,
+      "code": "acled_explosions",
+      "name": "Explosions/Remote Violence",
+      "period": "day",
+      "adm_level": 2,
+      "type": "quantitative",
+      "unit": "events",
+      "text": "Number of explosion/remote violence events recorded by ACLED"
+    }
+  },
+  {
+    "model": "data_pipeline.variable",
+    "pk": 16,
+    "fields": {
+      "source": 3,
+      "code": "acled_riots",
+      "name": "Riots/Demonstrations",
+      "period": "day",
+      "adm_level": 2,
+      "type": "quantitative",
+      "unit": "events",
+      "text": "Number of riot/demonstration events recorded by ACLED"
+    }
+  },
+  {
+    "model": "data_pipeline.variable",
+    "pk": 17,
+    "fields": {
+      "source": 3,
+      "code": "acled_strategic_developments",
+      "name": "Strategic Developments",
+      "period": "day",
+      "adm_level": 2,
+      "type": "quantitative",
+      "unit": "events",
+      "text": "Number of strategic development events recorded by ACLED"
+    }
+  },
+  {
+    "model": "data_pipeline.variable",
+    "pk": 19,
+    "fields": {
+      "source": 6,
+      "code": "dataminr_alerts",
+      "name": "Crisis Alerts",
+      "period": "day",
+      "adm_level": 0,
+      "type": "textual",
+      "unit": "alerts",
+      "text": "Real-time crisis alerts and early warning signals from Dataminr FirstAlert API, including breaking news and emerging risk intelligence from social media and public information sources"
+    }
+  },
+  {
+    "model": "data_pipeline.variable",
+    "pk": 20,
+    "fields": {
+      "source": 8,
+      "code": "fewsnet_food_insecurity",
+      "name": "Food Insecurity (IPC)",
+      "period": "month",
+      "adm_level": 2,
+      "type": "quantitative",
+      "unit": "ipc_phase",
+      "text": "IPC food insecurity phase classification (1-5 scale): 1=Minimal, 2=Stressed, 3=Crisis, 4=Emergency, 5=Famine. Area-weighted aggregation to ADM2 level from FEWSNET ML1 shapefiles."
+    }
+  },
+  {
+    "model": "data_pipeline.variable",
+    "pk": 21,
+    "fields": {
+      "source": 9,
+      "code": "acled_cast_battles_forecast",
+      "name": "CAST - Forecasted Battles",
+      "period": "month",
+      "adm_level": 1,
+      "type": "quantitative",
+      "unit": "events",
+      "text": "ACLED CAST forecasted number of battles/armed clashes for the month (state-level prediction)"
+    }
+  },
+  {
+    "model": "data_pipeline.variable",
+    "pk": 22,
+    "fields": {
+      "source": 9,
+      "code": "acled_cast_erv_forecast",
+      "name": "CAST - Forecasted Explosions/Remote Violence",
+      "period": "month",
+      "adm_level": 1,
+      "type": "quantitative",
+      "unit": "events",
+      "text": "ACLED CAST forecasted number of explosions/remote violence events for the month (state-level prediction)"
+    }
+  },
+  {
+    "model": "data_pipeline.variable",
+    "pk": 23,
+    "fields": {
+      "source": 9,
+      "code": "acled_cast_vac_forecast",
+      "name": "CAST - Forecasted Violence Against Civilians",
+      "period": "month",
+      "adm_level": 1,
+      "type": "quantitative",
+      "unit": "events",
+      "text": "ACLED CAST forecasted number of violence against civilians events for the month (state-level prediction)"
+    }
+  },
+  {
+    "model": "data_pipeline.variable",
+    "pk": 24,
+    "fields": {
+      "source": 9,
+      "code": "acled_cast_forecast",
+      "name": "CAST - Total Forecasted Conflicts",
+      "period": "month",
+      "adm_level": 1,
+      "type": "quantitative",
+      "unit": "events",
+      "text": "ACLED CAST total forecasted number of conflicts for the month (state-level prediction)"
+    }
+  },
+  {
+    "model": "data_pipeline.variable",
+    "pk": 25,
+    "fields": {
+      "source": 10,
+      "code": "glofas_flood_population",
+      "name": "GloFAS - Population Affected",
+      "period": "day",
+      "adm_level": 2,
+      "type": "quantitative",
+      "unit": "people",
+      "text": "Estimated population with at high risk of being affected by forecasted floods. Based on GloFAS Rapid Flood Mapping overlaid with population data at ADM2 level."
+    }
+  }
+]

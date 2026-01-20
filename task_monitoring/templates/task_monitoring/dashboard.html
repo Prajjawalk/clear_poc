@@ -1,0 +1,330 @@
+{% extends "task_monitoring/base.html" %}
+{% load i18n %}
+
+{% block title %}NRC EWAS - Task Monitoring Dashboard{% endblock %}
+
+{% block main_content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="/">
+                        <i class="bi bi-house"></i> Home
+                    </a>
+                </li>
+                <li class="breadcrumb-item active">Task Monitoring</li>
+            </ol>
+        </nav>
+        <h1 class="nrc-heading mb-0">
+            <i class="bi bi-activity me-2 text-warning"></i>Task Monitoring Dashboard
+        </h1>
+    </div>
+    <div class="d-flex align-items-center">
+        <a href="/healthcheck/" class="btn btn-outline-success btn-sm me-2" target="_blank">
+            <i class="bi bi-heart-pulse me-1"></i>Health Check
+        </a>
+        <a href="{% url 'admin:index' %}" class="btn btn-outline-primary btn-sm" target="_blank">
+            <i class="bi bi-gear me-1"></i>Admin
+        </a>
+    </div>
+</div>
+
+{% if db_error %}
+<div class="alert alert-warning">
+    <i class="bi bi-exclamation-triangle me-2"></i>
+    <strong>Database Connection Issue:</strong> Some features may not be available.
+    <small class="d-block mt-1">{{ db_error }}</small>
+</div>
+{% endif %}
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card stat-card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="mb-0">{{ total_tasks }}</h4>
+                        <p class="mb-0">Total Tasks</p>
+                    </div>
+                    <i class="bi bi-list-task display-6 opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="mb-0">{{ recent_task_count }}</h4>
+                        <p class="mb-0">Recent Tasks (7 days)</p>
+                    </div>
+                    <i class="bi bi-calendar-week display-6 opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="mb-0">{{ task_types.count }}</h4>
+                        <p class="mb-0">Task Types</p>
+                    </div>
+                    <i class="bi bi-stack display-6 opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Task Types Overview -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0 nrc-heading">
+                    <i class="bi bi-list-ul me-2"></i>Task Types Overview
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if task_types %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Task Type</th>
+                                <th>Total Executions</th>
+                                <th>Successful</th>
+                                <th>Success Rate</th>
+                                <th>Avg Duration</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for task_type in task_types %}
+                            <tr>
+                                <td>
+                                    <i class="bi bi-gear me-2 text-primary"></i>
+                                    <strong>{{ task_type.name }}</strong>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ task_type.total_executions }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-success">{{ task_type.successful_executions }}</span>
+                                </td>
+                                <td>
+                                    {% if task_type.total_executions > 0 %}
+                                        {% widthratio task_type.successful_executions task_type.total_executions 100 as success_rate %}
+                                        <div class="progress" style="width: 100px;">
+                                            <div class="progress-bar {% if success_rate >= 80 %}bg-success{% elif success_rate >= 60 %}bg-warning{% else %}bg-danger{% endif %}"
+                                                 role="progressbar"
+                                                 style="width: {{ success_rate }}%"
+                                                 aria-valuenow="{{ success_rate }}"
+                                                 aria-valuemin="0"
+                                                 aria-valuemax="100">
+                                                {{ success_rate }}%
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if task_type.avg_duration %}
+                                        <span class="badge bg-info">{{ task_type.avg_duration|floatformat:1 }}s</span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="table-actions">
+                                    <button class="btn btn-sm btn-outline-primary"
+                                            onclick="viewTaskType({{ task_type.id }}, '{{ task_type.name }}')">
+                                        <i class="bi bi-eye"></i> View
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-inbox display-1 text-muted mb-3"></i>
+                    <p class="text-muted">No task types found. Tasks will appear here once they start executing.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- API Endpoints Section -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0 nrc-heading">
+                    <i class="bi bi-code-slash me-2"></i>API Endpoints
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="nrc-heading">Task Executions</h6>
+                        <ul class="list-unstyled">
+                            <li><a href="{% url 'task_monitoring:executions_api' %}" class="text-decoration-none" target="_blank">
+                                <i class="bi bi-link-45deg me-2"></i>GET /tasks/api/executions/
+                            </a></li>
+                            <li><small class="nrc-text-muted">List all task executions with filtering</small></li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="nrc-heading">Task Types</h6>
+                        <ul class="list-unstyled">
+                            <li><a href="{% url 'task_monitoring:types_api' %}" class="text-decoration-none" target="_blank">
+                                <i class="bi bi-link-45deg me-2"></i>GET /tasks/api/types/
+                            </a></li>
+                            <li><small class="nrc-text-muted">List task types with statistics</small></li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6 mt-3">
+                        <h6 class="nrc-heading">Statistics</h6>
+                        <ul class="list-unstyled">
+                            <li><a href="{% url 'task_monitoring:statistics_api' %}" class="text-decoration-none" target="_blank">
+                                <i class="bi bi-link-45deg me-2"></i>GET /tasks/api/statistics/
+                            </a></li>
+                            <li><small class="nrc-text-muted">Get task execution statistics</small></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Task Type Details Modal -->
+<div class="modal fade" id="taskTypeModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title nrc-heading">Task Type Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="taskTypeContent">
+                    <div class="text-center">
+                        <i class="bi bi-arrow-clockwise spin display-4"></i>
+                        <p class="mt-2">Loading task details...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+        function viewTaskType(taskTypeId, taskTypeName) {
+            const modal = new bootstrap.Modal(document.getElementById('taskTypeModal'));
+            const contentDiv = document.getElementById('taskTypeContent');
+
+            // Update modal title
+            document.querySelector('#taskTypeModal .modal-title').textContent = `Task Type: ${taskTypeName}`;
+
+            // Reset content
+            contentDiv.innerHTML = `
+                <div class="text-center">
+                    <i class="bi bi-arrow-clockwise spin display-4"></i>
+                    <p class="mt-2">Loading task executions...</p>
+                </div>
+            `;
+
+            modal.show();
+
+            // Fetch task executions for this type
+            fetch(`{% url 'task_monitoring:executions_api' %}?task_type=${taskTypeId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.data.length > 0) {
+                        const executions = data.data;
+                        let html = `
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Task ID</th>
+                                            <th>Status</th>
+                                            <th>Duration</th>
+                                            <th>Created</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                        `;
+
+                        executions.slice(0, 10).forEach(execution => {
+                            const statusBadge = getStatusBadge(execution.status);
+                            const duration = execution.duration_seconds ? `${execution.duration_seconds.toFixed(1)}s` : '-';
+                            const createdAt = new Date(execution.created_at).toLocaleString();
+
+                            html += `
+                                <tr>
+                                    <td><code>${execution.task_id.substring(0, 8)}...</code></td>
+                                    <td>${statusBadge}</td>
+                                    <td>${duration}</td>
+                                    <td>${createdAt}</td>
+                                </tr>
+                            `;
+                        });
+
+                        html += '</tbody></table></div>';
+
+                        if (executions.length > 10) {
+                            html += `<p class="text-muted">Showing 10 of ${executions.length} executions.</p>`;
+                        }
+
+                        contentDiv.innerHTML = html;
+                    } else {
+                        contentDiv.innerHTML = `
+                            <div class="text-center">
+                                <i class="bi bi-inbox display-1 text-muted mb-3"></i>
+                                <p class="text-muted">No executions found for this task type.</p>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching task executions:', error);
+                    contentDiv.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Error loading task executions. Please try again.
+                        </div>
+                    `;
+                });
+        }
+
+        function getStatusBadge(status) {
+            const badges = {
+                'success': '<span class="badge bg-success">Success</span>',
+                'failure': '<span class="badge bg-danger">Failure</span>',
+                'pending': '<span class="badge bg-warning">Pending</span>',
+                'started': '<span class="badge bg-info">Started</span>',
+                'retry': '<span class="badge bg-warning">Retry</span>',
+                'revoked': '<span class="badge bg-secondary">Revoked</span>'
+            };
+            return badges[status] || `<span class="badge bg-secondary">${status}</span>`;
+        }
+
+        // Auto-refresh page every 30 seconds
+        setInterval(() => {
+            location.reload();
+        }, 30000);
+</script>
+{% endblock %}

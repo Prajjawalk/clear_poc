@@ -1,0 +1,350 @@
+{% load translation_tags %}
+
+<!-- Language Switcher Component -->
+<div class="language-switcher" data-style="{{ style }}">
+    {% if style == "dropdown" %}
+        <!-- Bootstrap Dropdown Style -->
+        <div class="dropdown">
+            <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="languageDropdown{{ forloop.counter0|default:'' }}" data-bs-toggle="dropdown" aria-expanded="false">
+                🌐 {{ current_language.name }}
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="languageDropdown{{ forloop.counter0|default:'' }}">
+                {% for code, name in available_languages %}
+                    <li>
+                        <a class="dropdown-item {% if code == current_language.code %}active{% endif %}"
+                           href="{{ switch_urls|dict_get:code }}"
+                           onclick="switchLanguage('{{ code }}'); return false;">
+                            {% if code == current_language.code %}
+                                ✓
+                            {% endif %}
+                            {{ name }}
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+    {% elif style == "pills" %}
+        <!-- Bootstrap Pills Style -->
+        <div class="language-pills">
+            <small class="text-muted d-block mb-2">Language:</small>
+            <div class="btn-group" role="group" aria-label="Language selection">
+                {% for code, name in available_languages %}
+                    <a href="{{ switch_urls|dict_get:code }}"
+                       class="btn btn-sm {% if code == current_language.code %}btn-primary{% else %}btn-outline-primary{% endif %}"
+                       onclick="switchLanguage('{{ code }}'); return false;">
+                        {{ code|upper }}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+
+    {% elif style == "flags" %}
+        <!-- Compact Flag Dropdown Style -->
+        <div class="language-flags-dropdown">
+            <div class="dropdown">
+                <button class="btn btn-sm btn-outline-light dropdown-toggle flag-dropdown-btn"
+                        type="button"
+                        id="flagDropdown{{ forloop.counter0|default:'' }}"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                        title="{{ current_language.name }}">
+                    <img src="https://flagcdn.com/20x15/{{ current_language.code|language_flag }}.png"
+                         alt="{{ current_language.name }} flag"
+                         class="current-flag-image"
+                         onerror="handleFlagError(this)">
+                    <span class="current-flag-fallback" style="display: none;">{{ current_language.code|upper }}</span>
+                </button>
+                <ul class="dropdown-menu flag-dropdown-menu" aria-labelledby="flagDropdown{{ forloop.counter0|default:'' }}">
+                    {% for code, name in available_languages %}
+                        <li>
+                            <a class="dropdown-item flag-dropdown-item {% if code == current_language.code %}active{% endif %}"
+                               href="{{ switch_urls|dict_get:code }}"
+                               title="{{ name }}"
+                               onclick="switchLanguage('{{ code }}'); return false;">
+                                <img src="https://flagcdn.com/20x15/{{ code|language_flag }}.png"
+                                     alt="{{ name }} flag"
+                                     class="flag-menu-image"
+                                     onerror="handleFlagError(this)">
+                                <span class="flag-menu-fallback" style="display: none;">{{ code|upper }}</span>
+                                <span class="flag-menu-text">{{ name }}</span>
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+    {% elif style == "select" %}
+        <!-- Select Dropdown Style -->
+        <div class="language-select">
+            <label for="languageSelect" class="form-label">
+                <i class="bi bi-globe" aria-hidden="true"></i> Language:
+            </label>
+            <select class="form-select form-select-sm" id="languageSelect" onchange="switchLanguageSelect(this)">
+                {% for code, name in available_languages %}
+                    <option value="{{ code }}" {% if code == current_language.code %}selected{% endif %}>
+                        {{ name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+    {% elif style == "minimal" %}
+        <!-- Minimal Style -->
+        <div class="language-minimal">
+            {% for code, name in available_languages %}
+                {% if not forloop.first %} | {% endif %}
+                {% if code == current_language.code %}
+                    <strong>{{ code|upper }}</strong>
+                {% else %}
+                    <a href="{{ switch_urls|dict_get:code }}"
+                       class="text-decoration-none"
+                       onclick="switchLanguage('{{ code }}'); return false;">
+                        {{ code|upper }}
+                    </a>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+    {% else %}
+        <!-- Default: Simple Links -->
+        <div class="language-links">
+            <span class="text-muted">Language:</span>
+            {% for code, name in available_languages %}
+                {% if not forloop.first %} • {% endif %}
+                {% if code == current_language.code %}
+                    <strong>{{ name }}</strong>
+                {% else %}
+                    <a href="{{ switch_urls|dict_get:code }}"
+                       onclick="switchLanguage('{{ code }}'); return false;">
+                        {{ name }}
+                    </a>
+                {% endif %}
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+
+<!-- Language Switcher JavaScript -->
+<script>
+
+    function handleFlagError(img) {
+        // Hide the image and show the fallback text
+        img.style.display = 'none';
+        const fallback = img.nextElementSibling;
+        if (fallback) {
+            fallback.style.display = 'inline-block';
+        }
+    }
+
+    function switchLanguage(languageCode) {
+        // Find the switch URL from the href attribute
+        const linkElement = document.querySelector(`a[onclick*="${languageCode}"]`);
+        if (linkElement && linkElement.href && linkElement.href !== '#') {
+            // Use the pregenerated URL from the template
+            window.location.href = linkElement.href;
+        } else {
+            // Fallback: construct the URL manually
+            const currentPath = window.location.pathname + window.location.search;
+            const switchUrl = `/translation/set-language/?language=${languageCode}&next=${encodeURIComponent(currentPath)}`;
+            window.location.href = switchUrl;
+        }
+    }
+
+    function switchLanguageSelect(selectElement) {
+        const languageCode = selectElement.value;
+        switchLanguage(languageCode);
+    }
+
+</script>
+
+<!-- Custom filter to get dictionary values -->
+{% load translation_tags %}
+<script>
+    // Add dict_get filter functionality via JavaScript if needed
+    function getDictValue(dict, key) {
+        return dict[key] || '#';
+    }
+</script>
+
+<!-- Add custom CSS for language switcher -->
+<style>
+    .language-switcher {
+        font-size: 0.9rem;
+        position: relative;
+    }
+
+    .language-switcher .dropdown {
+        position: relative;
+    }
+
+    .language-switcher .dropdown-toggle {
+        border: 1px solid #dee2e6;
+        font-size: 0.875rem;
+        background: white;
+    }
+
+    .language-switcher .dropdown-toggle:focus {
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+
+    .language-switcher .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 1000;
+        display: none;
+        min-width: 160px;
+        padding: 0.5rem 0;
+        margin: 0.125rem 0 0;
+        font-size: 0.875rem;
+        color: #212529;
+        text-align: left;
+        background-color: #fff;
+        background-clip: padding-box;
+        border: 1px solid rgba(0, 0, 0, 0.15);
+        border-radius: 0.375rem;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+
+    .language-switcher .dropdown-menu.show {
+        display: block;
+    }
+
+    .language-switcher .dropdown-item {
+        display: block;
+        width: 100%;
+        padding: 0.375rem 1rem;
+        clear: both;
+        font-weight: 400;
+        color: #212529;
+        text-align: inherit;
+        text-decoration: none;
+        white-space: nowrap;
+        background-color: transparent;
+        border: 0;
+        cursor: pointer;
+    }
+
+    .language-switcher .dropdown-item:hover,
+    .language-switcher .dropdown-item:focus {
+        background-color: #f8f9fa;
+    }
+
+    .language-switcher .dropdown-item.active {
+        background-color: #0d6efd;
+        color: #fff;
+    }
+
+    .language-pills .btn-group .btn {
+        min-width: 40px;
+    }
+
+    .language-flags-dropdown {
+        position: relative;
+    }
+
+    .language-flags-dropdown .flag-dropdown-btn {
+        padding: 0.375rem 0.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        background: transparent;
+        color: rgba(255, 255, 255, 0.9);
+        min-width: 40px;
+        min-height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+
+    .language-flags-dropdown .flag-dropdown-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.8);
+        color: white;
+    }
+
+    .language-flags-dropdown .flag-dropdown-btn:focus {
+        box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.25);
+        border-color: rgba(255, 255, 255, 0.8);
+    }
+
+    .language-flags-dropdown .current-flag-image,
+    .language-flags-dropdown .flag-menu-image {
+        width: 20px;
+        height: 15px;
+        border-radius: 2px;
+        object-fit: cover;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    .language-flags-dropdown .current-flag-fallback,
+    .language-flags-dropdown .flag-menu-fallback {
+        display: inline-block;
+        width: 20px;
+        height: 15px;
+        background: #6c757d;
+        color: white;
+        font-size: 0.5rem;
+        font-weight: bold;
+        text-align: center;
+        line-height: 15px;
+        border-radius: 2px;
+    }
+
+    .language-flags-dropdown .flag-dropdown-menu {
+        min-width: 140px;
+        padding: 0.25rem 0;
+    }
+
+    .language-flags-dropdown .flag-dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.375rem 0.75rem;
+        white-space: nowrap;
+    }
+
+    .language-flags-dropdown .flag-dropdown-item:hover {
+        background-color: #f8f9fa;
+    }
+
+    .language-flags-dropdown .flag-dropdown-item.active {
+        background-color: #0d6efd;
+        color: white;
+    }
+
+    .language-flags-dropdown .flag-menu-text {
+        font-size: 0.875rem;
+        font-weight: 400;
+    }
+
+    .language-minimal a:hover {
+        text-decoration: underline !important;
+    }
+
+    .language-select .form-select {
+        max-width: 150px;
+    }
+
+    @media (max-width: 576px) {
+        .language-switcher {
+            font-size: 0.8rem;
+        }
+
+        .language-pills .btn-group {
+            flex-wrap: wrap;
+        }
+
+        .language-flags-dropdown .flag-dropdown-btn {
+            min-width: 35px;
+            padding: 0.25rem 0.375rem;
+        }
+
+        .language-flags-dropdown .current-flag-image,
+        .language-flags-dropdown .flag-menu-image {
+            width: 18px;
+            height: 13px;
+        }
+    }
+</style>

@@ -1,0 +1,91 @@
+[
+    {
+        "model": "alert_framework.alerttemplate",
+        "pk": 1,
+        "fields": {
+            "name": "Conflict Surge Alert",
+            "shock_type": 1,
+            "detector_type": "ConflictSurgeDetector",
+            "title": "Conflict Surge Detected{% if location %} in {{ location.name }}{% endif %}",
+            "text": "A significant increase in conflict events has been detected in {{ location.name }}.\n\nDetails:\n- Confidence Score: {{ confidence_score }}\n- Detection Time: {{ detection_timestamp }}\n- Affected Locations: {{ locations|join:', ' }}\n\nPlease review this alert and take appropriate action.",
+            "variables": {
+                "location": "Location object with name property",
+                "confidence_score": "Float between 0-1",
+                "detection_timestamp": "DateTime of detection",
+                "locations": "List of affected location names"
+            },
+            "active": true,
+            "created_at": "2025-01-01T00:00:00Z",
+            "updated_at": "2025-01-01T00:00:00Z",
+            "created_at": "2025-01-01T00:00:00Z",
+            "updated_at": "2025-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "alert_framework.alerttemplate",
+        "pk": 2,
+        "fields": {
+            "name": "Displacement Surge Alert",
+            "shock_type": 2,
+            "detector_type": "DisplacementSurgeDetector",
+            "title": "Displacement Surge{% if location %} in {{ location.name }}{% endif %}",
+            "text": "A significant increase in displacement has been detected.\n\nDetails:\n- Affected Area: {{ location.name }}\n- Confidence Score: {{ confidence_score }}\n- Detection Time: {{ detection_timestamp }}\n- Type: {{ shock_type }}\n\nThis may require immediate humanitarian response coordination.",
+            "variables": {
+                "location": "Location object with name property",
+                "confidence_score": "Float between 0-1",
+                "detection_timestamp": "DateTime of detection",
+                "shock_type": "Type of shock/displacement"
+            },
+            "active": true,
+            "created_at": "2025-01-01T00:00:00Z",
+            "updated_at": "2025-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "alert_framework.alerttemplate",
+        "pk": 3,
+        "fields": {
+            "name": "Z-Score Anomaly Alert - Critical",
+            "shock_type": 1,
+            "detector_type": "ZScoreDetector",
+            "title": "Critical Anomaly Detected: {{ alert_level_name }} Alert{% if location %} in {{ location.name }}{% endif %}",
+            "text": "A {{ alert_level_name }} level anomaly has been detected in {{ location.name }}.\n\nAnomaly Details:\n- Z-Score: {{ zscore|floatformat:2 }}\n- Current Value: {{ current_value }}\n- Baseline Mean: {{ baseline_mean|floatformat:2 }}\n- Deviation: {{ percent_deviation|floatformat:1 }}%\n- Direction: {{ alert_direction }}\n- Confidence: {{ confidence_score|floatformat:2 }}\n\nThis represents a {{ threshold_exceeded }} standard deviation from the historical baseline.",
+            "variables": {
+                "alert_level_name": "Alert severity level",
+                "location": "Location object with name property",
+                "zscore": "Statistical z-score value",
+                "current_value": "Current measured value",
+                "baseline_mean": "Historical baseline mean",
+                "percent_deviation": "Percentage deviation from baseline",
+                "alert_direction": "Direction of deviation (above/below)",
+                "confidence_score": "Detection confidence score",
+                "threshold_exceeded": "Number of standard deviations"
+            },
+            "active": true,
+            "created_at": "2025-01-01T00:00:00Z",
+            "updated_at": "2025-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "alert_framework.alerttemplate",
+        "pk": 4,
+        "fields": {
+            "name": "Z-Score Anomaly Alert - Medium",
+            "shock_type": 1,
+            "detector_type": "ZScoreDetector",
+            "title": "{{ alert_level_name }} Anomaly{% if location %} in {{ location.name }}{% endif %}",
+            "text": "A {{ alert_level_name }} level anomaly has been detected.\n\nLocation: {{ location.name }}\nZ-Score: {{ zscore|floatformat:2 }}\nDeviation: {{ percent_deviation|floatformat:1 }}% {{ alert_direction }}\nConfidence: {{ confidence_score|floatformat:2 }}",
+            "variables": {
+                "alert_level_name": "Alert severity level",
+                "location": "Location object with name property",
+                "zscore": "Statistical z-score value",
+                "percent_deviation": "Percentage deviation from baseline",
+                "alert_direction": "Direction of deviation (above/below)",
+                "confidence_score": "Detection confidence score"
+            },
+            "active": true,
+            "created_at": "2025-01-01T00:00:00Z",
+            "updated_at": "2025-01-01T00:00:00Z"
+        }
+    }
+]

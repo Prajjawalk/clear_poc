@@ -1,0 +1,264 @@
+{% extends "alert_framework/base.html" %}
+{% load humanize %}
+{% load i18n %}
+
+{% block title %}{% trans "Edit Detector" %}: {{ detector.name }}{% endblock %}
+
+{% block main_content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="/">
+                        <i class="bi bi-house"></i> {% trans "Home" %}
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'alert_framework:dashboard' %}">{% trans "Alert Framework" %}</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'alert_framework:detector_list' %}">{% trans "Detectors" %}</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'alert_framework:detector_detail' detector.pk %}">{{ detector.name }}</a>
+                </li>
+                <li class="breadcrumb-item active">{% trans "Edit" %}</li>
+            </ol>
+        </nav>
+        <h1 class="nrc-heading mb-0">
+            <i class="bi bi-pencil me-2 text-primary"></i>{% trans "Edit Detector" %}: {{ detector.name }}
+        </h1>
+    </div>
+    <div class="btn-group" role="group">
+        <a href="{% url 'alert_framework:detector_detail' detector.pk %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>{% trans "Back to Detector" %}
+        </a>
+    </div>
+</div>
+
+<!-- Configuration Help -->
+{% if config_help %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-info">
+            <div class="card-header bg-info bg-opacity-10">
+                <h5 class="mb-0 text-info">
+                    <i class="bi bi-info-circle me-2"></i>{% trans "Configuration Help" %}: {{ detector_class_name }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-3"><strong>{% trans "Description" %}:</strong> {{ config_help.description }}</p>
+
+                {% if config_help.config_schema %}
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>{% trans "Configuration Schema" %}</h6>
+                        <dl class="small">
+                            {% for key, description in config_help.config_schema.items %}
+                            <dt><code>{{ key }}</code></dt>
+                            <dd>{{ description }}</dd>
+                            {% endfor %}
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>{% trans "Example Configuration" %}</h6>
+                        <pre class="bg-light p-3 rounded small"><code>{{ config_help.example|pprint }}</code></pre>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Edit Form -->
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">{% trans "Detector Settings" %}</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    <!-- Name Field -->
+                    <div class="mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">
+                            {% trans "Name" %} *
+                        </label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.name.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        {% if form.name.help_text %}
+                            <div class="form-text">{{ form.name.help_text }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Description Field -->
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">
+                            {% trans "Description" %}
+                        </label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.description.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        {% if form.description.help_text %}
+                            <div class="form-text">{{ form.description.help_text }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Active Field -->
+                    <div class="mb-3">
+                        <div class="form-check">
+                            {{ form.active }}
+                            <label for="{{ form.active.id_for_label }}" class="form-check-label">
+                                {% trans "Active" %}
+                            </label>
+                            {% if form.active.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.active.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            {% if form.active.help_text %}
+                                <div class="form-text">{{ form.active.help_text }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Configuration JSON Field -->
+                    <div class="mb-3">
+                        <label for="{{ form.configuration_json.id_for_label }}" class="form-label">
+                            {% trans "Configuration" %} *
+                        </label>
+                        {{ form.configuration_json }}
+                        {% if form.configuration_json.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.configuration_json.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        {% if form.configuration_json.help_text %}
+                            <div class="form-text">{{ form.configuration_json.help_text }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'alert_framework:detector_detail' detector.pk %}" class="btn btn-outline-secondary me-md-2">
+                            {% trans "Cancel" %}
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i>{% trans "Save Changes" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Detector Info -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0">{% trans "Detector Information" %}</h6>
+            </div>
+            <div class="card-body">
+                <dl class="mb-0 small">
+                    <dt>{% trans "Class Name" %}</dt>
+                    <dd><code class="small">{{ detector.class_name }}</code></dd>
+
+                    <dt>{% trans "Created" %}</dt>
+                    <dd>{{ detector.created_at|naturaltime }}</dd>
+
+                    <dt>{% trans "Last Modified" %}</dt>
+                    <dd>{{ detector.updated_at|naturaltime }}</dd>
+
+                    <dt>{% trans "Run Count" %}</dt>
+                    <dd>{{ detector.run_count }}</dd>
+
+                    <dt>{% trans "Detection Count" %}</dt>
+                    <dd>{{ detector.detection_count }}</dd>
+                </dl>
+            </div>
+        </div>
+
+        <!-- Configuration Tips -->
+        <div class="card border-warning">
+            <div class="card-header bg-warning bg-opacity-10">
+                <h6 class="mb-0 text-warning">
+                    <i class="bi bi-lightbulb me-1"></i>{% trans "Configuration Tips" %}
+                </h6>
+            </div>
+            <div class="card-body small">
+                <ul class="mb-0">
+                    <li>{% trans "Configuration must be valid JSON format" %}</li>
+                    <li>{% trans "Use the example above as a starting point" %}</li>
+                    <li>{% trans "Test changes carefully in a development environment" %}</li>
+                    <li>{% trans "Deactivate the detector while making significant changes" %}</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for JSON validation and formatting -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const configTextarea = document.getElementById('{{ form.configuration_json.id_for_label }}');
+
+    if (configTextarea) {
+        // Add JSON formatting helper
+        const formatButton = document.createElement('button');
+        formatButton.type = 'button';
+        formatButton.className = 'btn btn-sm btn-outline-secondary mt-2';
+        formatButton.innerHTML = '<i class="bi bi-code me-1"></i>{% trans "Format JSON" %}';
+
+        formatButton.addEventListener('click', function() {
+            try {
+                const parsed = JSON.parse(configTextarea.value);
+                configTextarea.value = JSON.stringify(parsed, null, 2);
+                configTextarea.classList.remove('is-invalid');
+            } catch (e) {
+                alert('{% trans "Invalid JSON format. Please check your syntax." %}');
+                configTextarea.classList.add('is-invalid');
+            }
+        });
+
+        configTextarea.parentNode.appendChild(formatButton);
+
+        // Real-time JSON validation
+        configTextarea.addEventListener('blur', function() {
+            if (this.value.trim()) {
+                try {
+                    JSON.parse(this.value);
+                    this.classList.remove('is-invalid');
+                    this.classList.add('is-valid');
+                } catch (e) {
+                    this.classList.remove('is-valid');
+                    this.classList.add('is-invalid');
+                }
+            } else {
+                this.classList.remove('is-invalid', 'is-valid');
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

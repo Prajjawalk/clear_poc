@@ -1,0 +1,233 @@
+{% extends "alert_framework/base.html" %}
+{% load humanize %}
+{% load i18n %}
+
+{% block title %}{% trans "Detectors" %}{% endblock %}
+
+{% block main_content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="/">
+                        <i class="bi bi-house"></i> {% trans "Home" %}
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'alert_framework:dashboard' %}">{% trans "Alert Framework" %}</a>
+                </li>
+                <li class="breadcrumb-item active">{% trans "Detectors" %}</li>
+            </ol>
+        </nav>
+        <h1 class="nrc-heading mb-0">
+            <i class="bi bi-search me-2 text-primary"></i>{% trans "Alert Framework Detectors" %}
+        </h1>
+    </div>
+</div>
+
+<!-- Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-primary">{{ stats.total_detectors }}</h5>
+                <p class="card-text">Total Detectors</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-success">{{ stats.active_detectors }}</h5>
+                <p class="card-text">Active</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-warning">{{ stats.pending_detections }}</h5>
+                <p class="card-text">Pending Detections</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-info">{{ stats.recent_runs }}</h5>
+                <p class="card-text">Recent Runs</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filters -->
+<div class="search-filters">
+    <form method="get" class="row g-3">
+        <div class="col-md-6">
+            <input type="text" class="form-control" name="search" value="{{ search }}" 
+                   placeholder="{% trans 'Search detectors by name, description, or class...' %}">
+        </div>
+        <div class="col-md-3">
+            <select class="form-select" name="status">
+                <option value="">{% trans "All Statuses" %}</option>
+                <option value="active" {% if status_filter == 'active' %}selected{% endif %}>{% trans "Active Only" %}</option>
+                <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>{% trans "Inactive Only" %}</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <div class="d-grid d-md-flex gap-2">
+                <button type="submit" class="btn btn-outline-primary">
+                    <i class="bi bi-search me-1"></i>{% trans "Search" %}
+                </button>
+                {% if search or status_filter %}
+                    <a href="{% url 'alert_framework:detector_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle me-1"></i>{% trans "Clear" %}
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Results Summary -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <span class="text-muted">
+        {% if page_obj %}
+            {% blocktrans with start=page_obj.start_index end=page_obj.end_index total=page_obj.paginator.count %}Showing {{ start }}-{{ end }} of {{ total }} detectors{% endblocktrans %}
+        {% else %}
+            {% blocktrans count counter=stats.total_detectors %}{{ counter }} detector total{% plural %}{{ counter }} detectors total{% endblocktrans %}
+        {% endif %}
+    </span>
+</div>
+
+<!-- Detector List -->
+{% if detectors %}
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>{% trans "Name" %}</th>
+                        <th>{% trans "Status" %}</th>
+                        <th>{% trans "Class" %}</th>
+                        <th>{% trans "Last Run" %}</th>
+                        <th>{% trans "Detections" %}</th>
+                        <th>{% trans "Success Rate" %}</th>
+                        <th class="table-actions">{% trans "Actions" %}</th>
+                    </tr>
+                </thead>
+                    <tbody>
+                        {% for detector in detectors %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'alert_framework:detector_detail' detector.pk %}">
+                                        <strong>{{ detector.name }}</strong>
+                                    </a>
+                                    {% if detector.description %}
+                                        <br><small class="text-muted">{{ detector.description|truncatechars:60 }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if detector.active %}success{% else %}secondary{% endif %}">
+                                        {% if detector.active %}Active{% else %}Inactive{% endif %}
+                                    </span>
+                                    {% if detector.schedule %}
+                                        <br><small class="text-muted">Scheduled</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <code class="small">{{ detector.class_name }}</code>
+                                </td>
+                                <td>
+                                    {% if detector.last_run %}
+                                        {{ detector.last_run|naturaltime }}
+                                    {% else %}
+                                        <span class="text-muted">Never</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="text-primary">{{ detector.total_detections }}</span>
+                                    {% if detector.pending_detections %}
+                                        <br><small class="text-warning">{{ detector.pending_detections }} pending</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if detector.success_rate %}
+                                        {{ detector.success_rate|floatformat:1 }}%
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="table-actions">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{% url 'alert_framework:detector_detail' detector.pk %}" 
+                                           class="btn btn-outline-primary" title="{% trans 'View Details' %}">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        {% if detector.active %}
+                                            <form method="post" action="{% url 'alert_framework:detector_run' detector.pk %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-outline-success" title="{% trans 'Run Detector' %}">
+                                                    <i class="bi bi-play"></i>
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+                <nav aria-label="Detectors pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">Previous</a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">Next</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+    </div>
+{% else %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-search text-muted" style="font-size: 3rem;"></i>
+            <h4 class="mt-3">{% trans "No Detectors Found" %}</h4>
+            {% if search or status_filter %}
+                <p class="text-muted">{% trans "No detectors match your current filters." %}</p>
+                <a href="{% url 'alert_framework:detector_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle me-1"></i>{% trans "Clear Filters" %}
+                </a>
+            {% else %}
+                <p class="text-muted">{% trans "No detectors have been configured yet." %}</p>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

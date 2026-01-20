@@ -1,0 +1,12 @@
+<style>
+{% for shock_type in shock_types %}
+.badge.bg-{{ shock_type.css_class }} {
+    background-color: {{ shock_type.color }} !important;
+    color: white !important;
+}
+
+.popup-alert-meta .badge.bg-{{ shock_type.css_class }} {
+    background-color: {{ shock_type.color }} !important;
+}
+{% endfor %}
+</style>

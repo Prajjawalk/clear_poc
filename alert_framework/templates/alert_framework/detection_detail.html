@@ -1,0 +1,259 @@
+{% extends "alert_framework/base.html" %}
+{% load humanize %}
+{% load i18n %}
+
+{% block title %}{% trans "Detection" %} #{{ detection.id }}{% endblock %}
+
+{% block main_content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="/">
+                        <i class="bi bi-house"></i> {% trans "Home" %}
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'alert_framework:dashboard' %}">{% trans "Alert Framework" %}</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'alert_framework:detection_list' %}">{% trans "Detections" %}</a>
+                </li>
+                <li class="breadcrumb-item active">{% trans "Detection" %} #{{ detection.id }}</li>
+            </ol>
+        </nav>
+        <h1 class="nrc-heading mb-0">
+            <i class="bi bi-exclamation-triangle me-2 text-warning"></i>{% trans "Detection" %} #{{ detection.id }}
+        </h1>
+    </div>
+    <div class="btn-group" role="group">
+        <a href="{% url 'alert_framework:detection_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>{% trans "Back to List" %}
+        </a>
+        {% if detection.status == 'pending' %}
+            <form method="post" action="{% url 'alert_framework:detection_action' detection.pk %}" class="d-inline">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="process">
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-check me-1"></i>{% trans "Process" %}
+                </button>
+            </form>
+            <form method="post" action="{% url 'alert_framework:detection_action' detection.pk %}" class="d-inline">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="dismiss">
+                <button type="submit" class="btn btn-danger">
+                    <i class="bi bi-x me-1"></i>{% trans "Dismiss" %}
+                </button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <!-- Detection Information -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">{% trans "Detection Information" %}</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-3">{% trans "ID" %}</dt>
+                    <dd class="col-sm-9">#{{ detection.id }}</dd>
+
+                    <dt class="col-sm-3">{% trans "Detector" %}</dt>
+                    <dd class="col-sm-9">
+                        <a href="{% url 'alert_framework:detector_detail' detection.detector.pk %}">
+                            {{ detection.detector.name }}
+                        </a>
+                    </dd>
+
+                    <dt class="col-sm-3">{% trans "Timestamp" %}</dt>
+                    <dd class="col-sm-9">
+                        {{ detection.detection_timestamp|date:"Y-m-d H:i:s" }}
+                        <small class="text-muted">({{ detection.detection_timestamp|naturaltime }})</small>
+                    </dd>
+
+                    <dt class="col-sm-3">{% trans "Status" %}</dt>
+                    <dd class="col-sm-9">
+                        <span class="badge bg-{% if detection.status == 'pending' %}warning{% elif detection.status == 'processed' %}success{% elif detection.status == 'dismissed' %}secondary{% else %}primary{% endif %}">
+                            {{ detection.get_status_display }}
+                        </span>
+                    </dd>
+
+                    <dt class="col-sm-3">{% trans "Shock Type" %}</dt>
+                    <dd class="col-sm-9">
+                        {% if detection.shock_type %}
+                            {{ detection.shock_type.name }}
+                        {% else %}
+                            <span class="text-muted">{% trans "Unknown" %}</span>
+                        {% endif %}
+                    </dd>
+
+                    <dt class="col-sm-3">{% trans "Confidence" %}</dt>
+                    <dd class="col-sm-9">
+                        {% if detection.confidence_score %}
+                            {{ detection.confidence_score|floatformat:2 }}
+                            <div class="progress mt-1" style="height: 8px;">
+                                <div class="progress-bar bg-{% if detection.confidence_score >= 0.8 %}success{% elif detection.confidence_score >= 0.6 %}warning{% else %}danger{% endif %}" 
+                                     style="width: {{ detection.confidence_score|floatformat:0 }}%"></div>
+                            </div>
+                        {% else %}
+                            <span class="text-muted">{% trans "Not available" %}</span>
+                        {% endif %}
+                    </dd>
+
+                    {% if detection.duplicate_of %}
+                    <dt class="col-sm-3">{% trans "Duplicate Of" %}</dt>
+                    <dd class="col-sm-9">
+                        <a href="{% url 'alert_framework:detection_detail' detection.duplicate_of.pk %}" class="btn btn-sm btn-outline-info">
+                            {% trans "Detection" %} #{{ detection.duplicate_of.id }}
+                        </a>
+                    </dd>
+                    {% endif %}
+
+                    <dt class="col-sm-3">{% trans "Locations" %}</dt>
+                    <dd class="col-sm-9">
+                        {% for location in detection.locations.all %}
+                            <span class="badge bg-secondary me-1 mb-1">{{ location.name }}</span>
+                        {% empty %}
+                            <span class="text-muted">{% trans "No locations specified" %}</span>
+                        {% endfor %}
+                    </dd>
+
+                    {% if detection.processing_duration %}
+                    <dt class="col-sm-3">{% trans "Processing Duration" %}</dt>
+                    <dd class="col-sm-9">{{ detection.processing_duration }}</dd>
+                    {% endif %}
+                </dl>
+            </div>
+        </div>
+
+        <!-- Detection Data -->
+        {% if detection.data %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">{% trans "Detection Data" %}</h5>
+            </div>
+            <div class="card-body">
+                <pre class="bg-light p-3 rounded small">{{ detection.data|pprint }}</pre>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Raw Signal Data -->
+        {% if detection.raw_signal_data %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">{% trans "Raw Signal Data" %}</h5>
+            </div>
+            <div class="card-body">
+                <pre class="bg-light p-3 rounded small" style="max-height: 300px; overflow-y: auto;">{{ detection.raw_signal_data|pprint }}</pre>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Source Data Point -->
+        {% include 'includes/data_point_detail.html' %}
+    </div>
+
+    <div class="col-md-4">
+        <!-- Processing Information -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5 class="mb-0">{% trans "Processing Information" %}</h5>
+            </div>
+            <div class="card-body">
+                <dl class="mb-0">
+                    <dt>{% trans "Created" %}</dt>
+                    <dd>{{ detection.created_at|date:"Y-m-d H:i:s" }}</dd>
+
+                    {% if detection.processed_at %}
+                    <dt>{% trans "Processed" %}</dt>
+                    <dd>{{ detection.processed_at|date:"Y-m-d H:i:s" }}</dd>
+                    {% endif %}
+
+                    {% if processing_info.duration %}
+                    <dt>{% trans "Duration" %}</dt>
+                    <dd>{{ processing_info.duration }}</dd>
+                    {% endif %}
+
+                    <dt>{% trans "Is Duplicate" %}</dt>
+                    <dd>
+                        {% if processing_info.is_duplicate %}
+                            <span class="badge bg-warning">{% trans "Yes" %}</span>
+                        {% else %}
+                            <span class="badge bg-success">{% trans "No" %}</span>
+                        {% endif %}
+                    </dd>
+                </dl>
+            </div>
+        </div>
+
+        <!-- Original Detection (if this is a duplicate) -->
+        {% if original_detection %}
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5 class="mb-0">{% trans "Original Detection" %}</h5>
+            </div>
+            <div class="card-body">
+                <p>
+                    <a href="{% url 'alert_framework:detection_detail' original_detection.pk %}" class="btn btn-outline-primary btn-sm">
+                        {% trans "Detection" %} #{{ original_detection.id }}
+                    </a>
+                </p>
+                <small class="text-muted">
+                    {{ original_detection.detection_timestamp|naturaltime }} - {{ original_detection.detector.name }}
+                </small>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Duplicate Detections (if this is original) -->
+        {% if duplicates %}
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5 class="mb-0">{% trans "Duplicate Detections" %}</h5>
+            </div>
+            <div class="card-body">
+                {% for duplicate in duplicates %}
+                    <p class="mb-2">
+                        <a href="{% url 'alert_framework:detection_detail' duplicate.pk %}" class="btn btn-outline-secondary btn-sm">
+                            {% trans "Detection" %} #{{ duplicate.id }}
+                        </a>
+                        <br>
+                        <small class="text-muted">
+                            {{ duplicate.detection_timestamp|naturaltime }} - {{ duplicate.detector.name }}
+                        </small>
+                    </p>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Related Detections (other duplicates of the same original) -->
+        {% if related_detections %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">{% trans "Related Detections" %}</h5>
+            </div>
+            <div class="card-body">
+                {% for related in related_detections %}
+                    <p class="mb-2">
+                        <a href="{% url 'alert_framework:detection_detail' related.pk %}" class="btn btn-outline-info btn-sm">
+                            {% trans "Detection" %} #{{ related.id }}
+                        </a>
+                        <br>
+                        <small class="text-muted">
+                            {{ related.detection_timestamp|naturaltime }} - {{ related.detector.name }}
+                        </small>
+                    </p>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

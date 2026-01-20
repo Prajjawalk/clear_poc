@@ -1,0 +1,436 @@
+{% extends "alerts/base.html" %}
+{% load i18n %}
+{% load translation_tags %}
+
+{% block title %}
+    {% if object %}
+        {% trans "Edit Alert" %} - NRC EWAS
+    {% else %}
+        {% trans "Create Alert" %} - NRC EWAS
+    {% endif %}
+{% endblock %}
+
+{% block main_content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="/">
+                        <i class="bi bi-house"></i> {% translate "Home" %}
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'alerts:alert_list' %}">{% translate "Alert System" %}</a>
+                </li>
+                <li class="breadcrumb-item active">
+                    {% if object %}Edit Alert{% else %}Create Alert{% endif %}
+                </li>
+            </ol>
+        </nav>
+        <h1 class="nrc-heading mb-0">
+            <i class="bi bi-plus-circle me-2 text-danger"></i>
+            {% if object %}Edit Alert{% else %}Create Alert{% endif %}
+        </h1>
+    </div>
+    <div class="btn-group" role="group">
+        <a href="{% url 'alerts:alert_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back to List
+        </a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title mb-0">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    {% if object %}
+                        {% trans "Edit Alert" %}
+                    {% else %}
+                        {% trans "Create New Alert" %}
+                    {% endif %}
+                </h3>
+                <small class="text-muted">
+                    {% trans "Create alerts to notify subscribers about emergency situations" %}
+                </small>
+            </div>
+
+            <div class="card-body">
+                <form method="post" id="alert-form">
+                    {% csrf_token %}
+
+                    <!-- Alert Content -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="bi bi-file-text me-2"></i>
+                                {% trans "Alert Content" %}
+                            </h5>
+                        </div>
+
+                        <div class="col-12 mb-3">
+                            <label for="{{ form.title.id_for_label }}" class="form-label required">
+                                {{ form.title.label }}
+                            </label>
+                            {{ form.title }}
+                            {% if form.title.help_text %}
+                            <div class="form-text">{{ form.title.help_text }}</div>
+                            {% endif %}
+                            {% if form.title.errors %}
+                            <div class="text-danger">
+                                {% for error in form.title.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-12 mb-3">
+                            <label for="{{ form.text.id_for_label }}" class="form-label required">
+                                {{ form.text.label }}
+                            </label>
+                            {{ form.text }}
+                            {% if form.text.help_text %}
+                            <div class="form-text">{{ form.text.help_text }}</div>
+                            {% endif %}
+                            {% if form.text.errors %}
+                            <div class="text-danger">
+                                {% for error in form.text.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Alert Classification -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="bi bi-tags me-2"></i>
+                                {% trans "Classification" %}
+                            </h5>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.shock_type.id_for_label }}" class="form-label required">
+                                {{ form.shock_type.label }}
+                            </label>
+                            {{ form.shock_type }}
+                            {% if form.shock_type.help_text %}
+                            <div class="form-text">{{ form.shock_type.help_text }}</div>
+                            {% endif %}
+                            {% if form.shock_type.errors %}
+                            <div class="text-danger">
+                                {% for error in form.shock_type.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.severity.id_for_label }}" class="form-label required">
+                                {{ form.severity.label }}
+                            </label>
+                            {{ form.severity }}
+                            <div class="form-text">
+                                1=Low, 2=Moderate, 3=High, 4=Very High, 5=Critical
+                            </div>
+                            {% if form.severity.errors %}
+                            <div class="text-danger">
+                                {% for error in form.severity.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.data_source.id_for_label }}" class="form-label required">
+                                {{ form.data_source.label }}
+                            </label>
+                            {{ form.data_source }}
+                            {% if form.data_source.help_text %}
+                            <div class="form-text">{{ form.data_source.help_text }}</div>
+                            {% endif %}
+                            {% if form.data_source.errors %}
+                            <div class="text-danger">
+                                {% for error in form.data_source.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.shock_date.id_for_label }}" class="form-label required">
+                                {{ form.shock_date.label }}
+                            </label>
+                            {{ form.shock_date }}
+                            {% if form.shock_date.help_text %}
+                            <div class="form-text">{{ form.shock_date.help_text }}</div>
+                            {% endif %}
+                            {% if form.shock_date.errors %}
+                            <div class="text-danger">
+                                {% for error in form.shock_date.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Validity Period -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="bi bi-clock me-2"></i>
+                                {% trans "Validity Period" %}
+                            </h5>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.valid_from.id_for_label }}" class="form-label required">
+                                {{ form.valid_from.label }}
+                            </label>
+                            {{ form.valid_from }}
+                            {% if form.valid_from.help_text %}
+                            <div class="form-text">{{ form.valid_from.help_text }}</div>
+                            {% endif %}
+                            {% if form.valid_from.errors %}
+                            <div class="text-danger">
+                                {% for error in form.valid_from.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.valid_until.id_for_label }}" class="form-label required">
+                                {{ form.valid_until.label }}
+                            </label>
+                            {{ form.valid_until }}
+                            {% if form.valid_until.help_text %}
+                            <div class="form-text">{{ form.valid_until.help_text }}</div>
+                            {% endif %}
+                            {% if form.valid_until.errors %}
+                            <div class="text-danger">
+                                {% for error in form.valid_until.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Geographic Scope -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="bi bi-geo-alt me-2"></i>
+                                {% trans "Geographic Scope" %}
+                            </h5>
+                        </div>
+
+                        <div class="col-12 mb-3">
+                            <label class="form-label">
+                                {{ form.locations.label }}
+                            </label>
+                            <div class="mb-2">
+                                <button type="button" class="btn btn-sm btn-outline-primary me-2" id="select-all-locations">
+                                    <i class="bi bi-check-all me-1"></i>
+                                    {% trans "Select All" %}
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="clear-all-locations">
+                                    <i class="bi bi-x-circle me-1"></i>
+                                    {% trans "Clear All" %}
+                                </button>
+                            </div>
+                            <div class="row" style="max-height: 300px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 0.375rem; padding: 1rem;">
+                                {% for choice in form.locations %}
+                                <div class="col-md-6 col-lg-4 mb-2">
+                                    <div class="form-check">
+                                        {{ choice.tag }}
+                                        <label class="form-check-label" for="{{ choice.id_for_label }}">
+                                            {{ choice.choice_label }}
+                                        </label>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% if form.locations.help_text %}
+                            <div class="form-text">{{ form.locations.help_text }}</div>
+                            {% endif %}
+                            {% if form.locations.errors %}
+                            <div class="text-danger">
+                                {% for error in form.locations.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+
+                    <!-- Submit Buttons -->
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-circle me-1"></i>
+                            {% if object %}
+                                {% trans "Update Alert" %}
+                            {% else %}
+                                {% trans "Create Alert" %}
+                            {% endif %}
+                        </button>
+                        <a href="{% url 'alerts:alert_list' %}" class="btn btn-outline-secondary btn-lg">
+                            <i class="bi bi-x-circle me-1"></i>
+                            {% trans "Cancel" %}
+                        </a>
+                        {% if object %}
+                        <a href="{% url 'alerts:alert_detail' object.id %}" class="btn btn-outline-info btn-lg">
+                            <i class="bi bi-eye me-1"></i>
+                            {% trans "Preview" %}
+                        </a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Help Section -->
+        <div class="card mt-4 border-info">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-question-circle me-2"></i>
+                    {% trans "Alert Creation Guidelines" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>{% trans "Writing Effective Alerts" %}</h6>
+                        <ul class="small">
+                            <li>{% trans "Use clear, concise language" %}</li>
+                            <li>{% trans "Include specific location names" %}</li>
+                            <li>{% trans "Provide actionable information when possible" %}</li>
+                            <li>{% trans "Verify information from reliable sources" %}</li>
+                            <li>{% trans "Use appropriate severity levels" %}</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>{% trans "Severity Levels" %}</h6>
+                        <ul class="list-unstyled small">
+                            <li><span class="badge severity-1 me-2">1</span> {% trans "Low - Minor incidents, limited impact" %}</li>
+                            <li><span class="badge severity-2 me-2">2</span> {% trans "Moderate - Local impact, some disruption" %}</li>
+                            <li><span class="badge severity-3 me-2">3</span> {% trans "High - Significant impact, widespread concern" %}</li>
+                            <li><span class="badge severity-4 me-2">4</span> {% trans "Very High - Major crisis, urgent response needed" %}</li>
+                            <li><span class="badge severity-5 me-2">5</span> {% trans "Critical - Extreme situation, immediate action required" %}</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning mt-3">
+                    <small>
+                        <i class="bi bi-exclamation-triangle me-1"></i>
+                        <strong>{% trans "Important:" %}</strong>
+                        {% trans "Always review your alert carefully before creating it. Once created and distributed, alerts cannot be easily recalled." %}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Location selection helpers
+    document.getElementById('select-all-locations')?.addEventListener('click', function() {
+        document.querySelectorAll('input[name="locations"]').forEach(cb => cb.checked = true);
+    });
+
+    document.getElementById('clear-all-locations')?.addEventListener('click', function() {
+        document.querySelectorAll('input[name="locations"]').forEach(cb => cb.checked = false);
+    });
+
+    // Form validation
+    document.getElementById('alert-form').addEventListener('submit', function(e) {
+        const title = document.querySelector('input[name="title"]').value.trim();
+        const text = document.querySelector('textarea[name="text"]').value.trim();
+        const shockType = document.querySelector('select[name="shock_type"]').value;
+        const severity = document.querySelector('select[name="severity"]').value;
+        const validFrom = document.querySelector('input[name="valid_from"]').value;
+        const validUntil = document.querySelector('input[name="valid_until"]').value;
+
+        let errors = [];
+
+        if (!title) errors.push('{% trans "Alert title is required" %}');
+        if (!text) errors.push('{% trans "Alert content is required" %}');
+        if (!shockType) errors.push('{% trans "Shock type is required" %}');
+        if (!severity) errors.push('{% trans "Severity level is required" %}');
+        if (!validFrom) errors.push('{% trans "Valid from date is required" %}');
+        if (!validUntil) errors.push('{% trans "Valid until date is required" %}');
+
+        if (validFrom && validUntil && new Date(validFrom) >= new Date(validUntil)) {
+            errors.push('{% trans "Valid until date must be after valid from date" %}');
+        }
+
+        const selectedLocations = document.querySelectorAll('input[name="locations"]:checked');
+        if (selectedLocations.length === 0) {
+            errors.push('{% trans "At least one location must be selected" %}');
+        }
+
+        if (errors.length > 0) {
+            e.preventDefault();
+            alert('{% trans "Please fix the following errors" %}:\n\n' + errors.join('\n'));
+            return false;
+        }
+    });
+
+    // Auto-set valid_until when valid_from changes
+    const validFromInput = document.querySelector('input[name="valid_from"]');
+    const validUntilInput = document.querySelector('input[name="valid_until"]');
+
+    validFromInput?.addEventListener('change', function() {
+        if (this.value && !validUntilInput.value) {
+            const fromDate = new Date(this.value);
+            fromDate.setDate(fromDate.getDate() + 7); // Add 7 days
+            validUntilInput.value = fromDate.toISOString().slice(0, 16);
+        }
+    });
+});
+</script>
+
+<style>
+.required::after {
+    content: " *";
+    color: #dc3545;
+}
+
+.severity-1 { background-color: #d4edda; color: #155724; }
+.severity-2 { background-color: #fff3cd; color: #856404; }
+.severity-3 { background-color: #f8d7da; color: #721c24; }
+.severity-4 { background-color: #f5c6cb; color: #721c24; }
+.severity-5 { background-color: #dc3545; color: white; }
+
+.form-check {
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.15s ease-in-out;
+}
+
+.form-check:hover {
+    background-color: #e9ecef;
+}
+
+.card {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+</style>
+{% endblock %}

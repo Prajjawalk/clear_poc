@@ -1,0 +1,507 @@
+{% extends "data_pipeline/base.html" %}
+{% load humanize %}
+{% load vite_tags %}
+
+{% block title %}{{ variable.name }} - Variable Details{% endblock %}
+
+{% block main_content %}
+{% csrf_token %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3">{{ variable.name }}</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'data_pipeline:dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'data_pipeline:variable_list' %}">Variables</a></li>
+                <li class="breadcrumb-item active">{{ variable.name }}</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="btn-group" role="group">
+        <a href="{% url 'data_pipeline:variable_edit' variable.id %}" class="btn btn-outline-primary">
+            <i class="bi bi-pencil me-1"></i>Edit
+        </a>
+        <a href="{% url 'data_pipeline:variable_delete' variable.id %}" class="btn btn-outline-danger">
+            <i class="bi bi-trash me-1"></i>Delete
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Variable Information -->
+    <div class="col-lg-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Variable Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-4">Source:</dt>
+                            <dd class="col-8">
+                                <a href="{% url 'data_pipeline:source_detail' variable.source.id %}" 
+                                   class="text-decoration-none">{{ variable.source.name }}</a>
+                            </dd>
+                            
+                            <dt class="col-4">Code:</dt>
+                            <dd class="col-8"><code>{{ variable.code }}</code></dd>
+                            
+                            <dt class="col-4">Type:</dt>
+                            <dd class="col-8">
+                                <span class="badge bg-light text-dark">{{ variable.get_type_display }}</span>
+                            </dd>
+                            
+                            <dt class="col-4">Period:</dt>
+                            <dd class="col-8">{{ variable.get_period_display }}</dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-4">Admin Level:</dt>
+                            <dd class="col-8">{{ variable.adm_level }}</dd>
+                            
+                            <dt class="col-4">Created:</dt>
+                            <dd class="col-8">{{ variable.created_at|date:"M d, Y H:i" }}</dd>
+                            
+                            <dt class="col-4">Updated:</dt>
+                            <dd class="col-8">{{ variable.updated_at|date:"M d, Y H:i" }}</dd>
+                            
+                            <dt class="col-4">Data Records:</dt>
+                            <dd class="col-8">
+                                <span class="badge bg-info">{{ total_records|intcomma }}</span>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+                
+                {% if variable.text %}
+                    <hr>
+                    <h6>Description</h6>
+                    <p>{{ variable.text }}</p>
+                {% endif %}
+                
+                <!-- Data Range and Statistics -->
+                {% if date_range.earliest or date_range.latest %}
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Date Range</h6>
+                            {% if date_range.earliest %}
+                                <p><strong>From:</strong> {{ date_range.earliest|date:"M d, Y" }}</p>
+                            {% endif %}
+                            {% if date_range.latest %}
+                                <p><strong>To:</strong> {{ date_range.latest|date:"M d, Y" }}</p>
+                            {% endif %}
+                        </div>
+                        {% if value_stats %}
+                            <div class="col-md-6">
+                                <h6>Value Statistics</h6>
+                                <p><strong>Min:</strong> {{ value_stats.min_value|floatformat:2 }}</p>
+                                <p><strong>Max:</strong> {{ value_stats.max_value|floatformat:2 }}</p>
+                                <p><strong>Average:</strong> {{ value_stats.avg_value|floatformat:2 }}</p>
+                                <p><strong>Total:</strong> {{ value_stats.sum_value|floatformat:2 }}</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Data Records -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Data Records ({{ total_records|intcomma }})</h5>
+                <div class="btn-group btn-group-sm" role="group">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" 
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-download me-1"></i>Export
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" onclick="exportData('csv')">
+                            <i class="bi bi-filetype-csv me-2"></i>Export as CSV
+                        </a></li>
+                        <li><a class="dropdown-item" href="#" onclick="exportData('json')">
+                            <i class="bi bi-filetype-json me-2"></i>Export as JSON
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if page_obj %}
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Location</th>
+                                    <th>Period</th>
+                                    <th>Admin Level</th>
+                                    <th>Value</th>
+                                    <th>Text</th>
+                                    <th>Created</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in page_obj %}
+                                    <tr class="data-row" style="cursor: pointer;"
+                                        data-location="{{ record.gid.name }}"
+                                        data-geo-id="{{ record.gid.geo_id }}"
+                                        data-start-date="{{ record.start_date|date:'M d, Y' }}"
+                                        data-end-date="{{ record.end_date|date:'M d, Y' }}"
+                                        data-adm-level="{{ record.adm_level.name }}"
+                                        data-value="{{ record.value|default:'' }}"
+                                        data-text="{{ record.text|default:'' }}"
+                                        data-raw-data="{{ record.raw_data|json_escape }}"
+                                        data-created-at="{{ record.created_at|date:'M d, Y H:i' }}">
+                                        <td>
+                                            <strong>{{ record.gid.name }}</strong>
+                                            <br><small class="text-muted">{{ record.gid.geo_id }}</small>
+                                        </td>
+                                        <td>
+                                            {{ record.start_date|date:"M d, Y" }}
+                                            {% if record.end_date != record.start_date %}
+                                                <br><small class="text-muted">to {{ record.end_date|date:"M d, Y" }}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ record.adm_level.name }}</td>
+                                        <td>
+                                            {% if record.value is not None %}
+                                                <span class="badge bg-primary">{{ record.value|floatformat:2 }}</span>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if record.text %}
+                                                <span class="raw-data-tooltip" style="cursor: help;"
+                                                      data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true"
+                                                      data-raw-data="{{ record.raw_data|json_escape }}">
+                                                    {{ record.text|truncatechars:50 }}
+                                                </span>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">{{ record.created_at|date:"M d H:i" }}</small>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if page_obj.has_other_pages %}
+                        <nav aria-label="Data records pagination" class="mt-4">
+                            <ul class="pagination justify-content-center">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1">First</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                                    </li>
+                                {% endif %}
+                                
+                                <li class="page-item active">
+                                    <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                                </li>
+                                
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    {% endif %}
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-bar-chart text-muted" style="font-size: 2rem;"></i>
+                        <h6 class="mt-2">No Data Records Yet</h6>
+                        <p class="text-muted">Data will appear here after the first successful data retrieval.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-6">
+        <!-- Actions -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">Actions</h6>
+            </div>
+            <div class="card-body d-grid gap-2">
+                <a href="{% url 'data_pipeline:variable_edit' variable.id %}" class="btn btn-outline-primary">
+                    <i class="bi bi-pencil me-1"></i>Edit Variable
+                </a>
+                <a href="{% url 'data_pipeline:source_detail' variable.source.id %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-database me-1"></i>View Source
+                </a>
+                <hr class="my-3">
+                <div class="d-grid gap-2">
+                    <h6 class="text-muted mb-2">Data Management</h6>
+                    {% if total_records > 0 %}
+                        <button class="btn btn-outline-warning" onclick="confirmRemoveVariableData('{{ variable.name }}', {{ total_records }}, '{% url 'data_pipeline:remove_variable_data' variable.id %}')">
+                            <i class="bi bi-trash me-1"></i>Remove Variable Data
+                            <small class="d-block text-muted">{{ total_records|intcomma }} records</small>
+                        </button>
+                    {% else %}
+                        <button class="btn btn-outline-secondary" disabled>
+                            <i class="bi bi-trash me-1"></i>No Data to Remove
+                        </button>
+                    {% endif %}
+                </div>
+                <hr class="my-3">
+                <a href="{% url 'data_pipeline:variable_list' %}?source={{ variable.source.id }}"
+                   class="btn btn-outline-info">
+                    <i class="bi bi-list me-1"></i>Other Variables
+                </a>
+            </div>
+        </div>
+
+        <!-- Data Point Details -->
+        <div class="card" id="dataPointDetails" style="display: none;">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Data Point Details</h6>
+                <button type="button" class="btn-close btn-sm" onclick="closeDataPointDetails()" aria-label="Close"></button>
+            </div>
+            <div class="card-body" id="dataPointDetailsContent">
+                <!-- Details will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Initialize tooltips with formatted raw data
+function initializeRawDataTooltips() {
+    // Check if Bootstrap is available
+    if (typeof bootstrap === 'undefined') {
+        console.warn('Bootstrap is not available. Raw data tooltips will not be initialized.');
+        return;
+    }
+
+    // Initialize raw data tooltips
+    const tooltipElements = document.querySelectorAll('.raw-data-tooltip:not([data-tooltip-initialized])');
+    tooltipElements.forEach(function(element) {
+        try {
+            const rawDataEscaped = element.getAttribute('data-raw-data');
+            if (rawDataEscaped && rawDataEscaped !== '{}') {
+                // Decode HTML entities
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = rawDataEscaped;
+                const rawData = tempDiv.textContent || tempDiv.innerText || '';
+
+                const parsedData = JSON.parse(rawData);
+                const formattedData = JSON.stringify(parsedData, null, 2);
+
+                // Create formatted HTML for tooltip
+                const tooltipContent = `<pre style="font-size: 11px; margin: 0; max-width: 400px; white-space: pre-wrap; word-wrap: break-word; max-height: 300px; overflow-y: auto; overflow-x: hidden;">${formattedData}</pre>`;
+
+                new bootstrap.Tooltip(element, {
+                    title: tooltipContent,
+                    html: true,
+                    placement: 'auto',
+                    trigger: 'hover focus',
+                    container: 'body',
+                    customClass: 'raw-data-tooltip-container'
+                });
+            } else {
+                new bootstrap.Tooltip(element, {
+                    title: 'No raw data available',
+                    placement: 'top',
+                    customClass: 'raw-data-tooltip-container'
+                });
+            }
+
+            // Mark as initialized to avoid double initialization
+            element.setAttribute('data-tooltip-initialized', 'true');
+        } catch (e) {
+            console.error('Error initializing raw data tooltip:', e);
+            // If JSON parsing fails, show raw text
+            const rawData = element.getAttribute('data-raw-data') || 'No raw data available';
+            try {
+                new bootstrap.Tooltip(element, {
+                    title: rawData,
+                    placement: 'top'
+                });
+                element.setAttribute('data-tooltip-initialized', 'true');
+            } catch (bootstrapError) {
+                console.error('Error creating Bootstrap tooltip:', bootstrapError);
+            }
+        }
+    });
+}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    // Wait a bit for Bootstrap to be fully loaded
+    setTimeout(initializeRawDataTooltips, 100);
+
+    // Add click handlers to data rows
+    initializeDataRowClickHandlers();
+});
+
+// Fallback: also try to initialize when window loads
+window.addEventListener('load', function() {
+    initializeRawDataTooltips();
+});
+
+// Initialize click handlers for data rows
+function initializeDataRowClickHandlers() {
+    const dataRows = document.querySelectorAll('.data-row');
+    dataRows.forEach(function(row) {
+        row.addEventListener('click', function(e) {
+            // Don't trigger if clicking on tooltip
+            if (e.target.closest('.raw-data-tooltip')) {
+                return;
+            }
+            showDataPointDetails(this);
+        });
+    });
+}
+
+// Show data point details in sidebar
+function showDataPointDetails(row) {
+    const detailsCard = document.getElementById('dataPointDetails');
+    const detailsContent = document.getElementById('dataPointDetailsContent');
+
+    // Highlight selected row
+    document.querySelectorAll('.data-row').forEach(r => r.classList.remove('table-active'));
+    row.classList.add('table-active');
+
+    // Extract data from row
+    const location = row.getAttribute('data-location');
+    const geoId = row.getAttribute('data-geo-id');
+    const startDate = row.getAttribute('data-start-date');
+    const endDate = row.getAttribute('data-end-date');
+    const admLevel = row.getAttribute('data-adm-level');
+    const value = row.getAttribute('data-value');
+    const text = row.getAttribute('data-text');
+    const rawDataEscaped = row.getAttribute('data-raw-data');
+    const createdAt = row.getAttribute('data-created-at');
+
+    // Format raw data
+    let rawDataFormatted = '';
+    try {
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = rawDataEscaped;
+        const rawData = tempDiv.textContent || tempDiv.innerText || '';
+        const parsedData = JSON.parse(rawData);
+        rawDataFormatted = JSON.stringify(parsedData, null, 2);
+    } catch (e) {
+        rawDataFormatted = 'No raw data available';
+    }
+
+    // Build HTML content
+    let html = '<dl class="row mb-0">';
+
+    html += '<dt class="col-5">Location:</dt>';
+    html += `<dd class="col-7"><strong>${location}</strong><br><small class="text-muted">${geoId}</small></dd>`;
+
+    html += '<dt class="col-5">Period:</dt>';
+    html += `<dd class="col-7">${startDate}`;
+    if (startDate !== endDate) {
+        html += `<br><small class="text-muted">to ${endDate}</small>`;
+    }
+    html += '</dd>';
+
+    html += '<dt class="col-5">Admin Level:</dt>';
+    html += `<dd class="col-7">${admLevel}</dd>`;
+
+    html += '<dt class="col-5">Value:</dt>';
+    if (value) {
+        html += `<dd class="col-7"><span class="badge bg-primary">${parseFloat(value).toFixed(2)}</span></dd>`;
+    } else {
+        html += '<dd class="col-7"><span class="text-muted">-</span></dd>';
+    }
+
+    if (text) {
+        html += '<dt class="col-5">Text:</dt>';
+        html += `<dd class="col-7">${text}</dd>`;
+    }
+
+    html += '<dt class="col-5">Created:</dt>';
+    html += `<dd class="col-7"><small class="text-muted">${createdAt}</small></dd>`;
+
+    html += '</dl>';
+
+    // Add raw data section
+    if (rawDataFormatted !== 'No raw data available') {
+        html += '<hr class="my-3">';
+        html += '<h6 class="mb-2">Raw Data</h6>';
+        html += `<pre class="bg-light p-2 rounded" style="font-size: 11px; max-height: 300px; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word;">${rawDataFormatted}</pre>`;
+    }
+
+    detailsContent.innerHTML = html;
+    detailsCard.style.display = 'block';
+
+    // Scroll to details card on mobile
+    if (window.innerWidth < 992) {
+        detailsCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+}
+
+// Close data point details
+function closeDataPointDetails() {
+    const detailsCard = document.getElementById('dataPointDetails');
+    detailsCard.style.display = 'none';
+    document.querySelectorAll('.data-row').forEach(r => r.classList.remove('table-active'));
+}
+
+function exportData(format) {
+    const variableId = {{ variable.id }};
+    const url = `/pipeline/api/data/?variable=${variableId}&page_size=1000&format=${format}`;
+    
+    fetch(url)
+        .then(response => response.blob())
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = `{{ variable.code }}_data.${format}`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+        })
+        .catch(error => {
+            console.error('Export failed:', error);
+            alert('Export failed. Please try again.');
+        });
+}
+
+function confirmRemoveVariableData(variableName, recordCount, actionUrl) {
+    const message = `Are you sure you want to remove all ${recordCount.toLocaleString()} data records from variable "${variableName}"?\n\nThis action cannot be undone.`;
+    
+    if (confirm(message)) {
+        // Create a form and submit it
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = actionUrl;
+        
+        // Add CSRF token
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+
+</script>
+{% endblock %}

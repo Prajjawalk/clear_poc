@@ -1,0 +1,52 @@
+[
+  {
+    "model": "dashboard.theme",
+    "pk": 1,
+    "fields": {
+      "code": "risk_monitoring",
+      "name": "Risk Monitoring",
+      "description": "Multi-hazard risk monitoring combining flood risk, violence forecast, and food insecurity indicators",
+      "colormap": 6,
+      "icon": "bi-exclamation-triangle-fill",
+      "is_active": true,
+      "is_combined": false,
+      "order": 10
+    }
+  },
+  {
+    "model": "dashboard.themevariable",
+    "pk": 1,
+    "fields": {
+      "theme": 1,
+      "variable": 25,
+      "order": 1,
+      "min_value": 0.0,
+      "max_value": 1000.0,
+      "opacity": 0.7
+    }
+  },
+  {
+    "model": "dashboard.themevariable",
+    "pk": 2,
+    "fields": {
+      "theme": 1,
+      "variable": 24,
+      "order": 2,
+      "min_value": 0.0,
+      "max_value": 20.0,
+      "opacity": 0.7
+    }
+  },
+  {
+    "model": "dashboard.themevariable",
+    "pk": 3,
+    "fields": {
+      "theme": 1,
+      "variable": 20,
+      "order": 3,
+      "min_value": 1.0,
+      "max_value": 5.0,
+      "opacity": 0.7
+    }
+  }
+]

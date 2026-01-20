@@ -1,0 +1,167 @@
+{% extends "layout.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "NRC EWAS - Location Management" %}{% endblock %}
+{% block description %}Norwegian Refugee Council Early Warning and Alert System Solution for Sudan - Location and Gazetteer Management{% endblock %}
+{% block header_subtitle %}{% trans "Location Management" %}{% endblock %}
+{% block app_class %}app-location{% endblock %}
+
+{% block sidebar_icon %}bi bi-geo-alt{% endblock %}
+{% block sidebar_color %}success{% endblock %}
+{% block sidebar_heading %}{% trans "Location Management" %}{% endblock %}
+
+{% block mobile_sidebar_icon %}bi bi-geo-alt{% endblock %}
+{% block mobile_sidebar_color %}success{% endblock %}
+{% block mobile_sidebar_heading %}{% trans "Location Management" %}{% endblock %}
+
+{% block sidebar_nav %}
+<ul class="nav nav-pills flex-column">
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+           href="{% url 'location:dashboard' %}" title="{% trans 'Dashboard' %}">
+            <i class="bi bi-speedometer2"></i>
+            <span class="nav-text ms-2">{% trans "Dashboard" %}</span>
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if 'location' in request.resolver_match.url_name and 'gazetteer' not in request.resolver_match.url_name and 'unmatched' not in request.resolver_match.url_name %}active{% endif %}"
+           href="{% url 'location:location_list' %}" title="{% trans 'Locations' %}">
+            <i class="bi bi-geo-alt"></i>
+            <span class="nav-text ms-2">{% trans "Locations" %}</span>
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if 'gazetteer' in request.resolver_match.url_name %}active{% endif %}"
+           href="{% url 'location:gazetteer_list' %}" title="{% trans 'Gazetteer' %}">
+            <i class="bi bi-book"></i>
+            <span class="nav-text ms-2">{% trans "Gazetteer" %}</span>
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if request.resolver_match.url_name == 'location_matcher' %}active{% endif %}"
+           href="{% url 'location:location_matcher' %}" title="{% trans 'Location Matcher' %}">
+            <i class="bi bi-search"></i>
+            <span class="nav-text ms-2">{% trans "Location Matcher" %}</span>
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if request.resolver_match.url_name == 'location_browser' %}active{% endif %}"
+           href="{% url 'location:location_browser' %}" title="{% trans 'Location Browser' %}">
+            <i class="bi bi-map"></i>
+            <span class="nav-text ms-2">{% trans "Location Browser" %}</span>
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if request.resolver_match.url_name == 'unmatched_locations' %}active{% endif %}"
+           href="{% url 'location:unmatched_locations' %}" title="{% trans 'Unmatched Locations' %}">
+            <i class="bi bi-exclamation-triangle"></i>
+            <span class="nav-text ms-2">{% trans "Unmatched Locations" %}</span>
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'data_pipeline:dashboard' %}" title="{% trans 'Data Pipeline' %}">
+            <i class="bi bi-diagram-3"></i>
+            <span class="nav-text ms-2">{% trans "Data Pipeline" %}</span>
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'task_monitoring:dashboard' %}" title="{% trans 'Task Monitor' %}">
+            <i class="bi bi-activity"></i>
+            <span class="nav-text ms-2">{% trans "Task Monitor" %}</span>
+        </a>
+    </li>
+</ul>
+{% endblock %}
+
+{% block mobile_sidebar_nav %}
+<ul class="nav nav-pills flex-column">
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+           href="{% url 'location:dashboard' %}">
+            <i class="bi bi-speedometer2 me-2"></i>
+            {% trans "Dashboard" %}
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if 'location' in request.resolver_match.url_name and 'gazetteer' not in request.resolver_match.url_name and 'unmatched' not in request.resolver_match.url_name %}active{% endif %}"
+           href="{% url 'location:location_list' %}">
+            <i class="bi bi-geo-alt me-2"></i>
+            {% trans "Locations" %}
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if 'gazetteer' in request.resolver_match.url_name %}active{% endif %}"
+           href="{% url 'location:gazetteer_list' %}">
+            <i class="bi bi-book me-2"></i>
+            {% trans "Gazetteer" %}
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if request.resolver_match.url_name == 'location_matcher' %}active{% endif %}"
+           href="{% url 'location:location_matcher' %}">
+            <i class="bi bi-search me-2"></i>
+            {% trans "Location Matcher" %}
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if request.resolver_match.url_name == 'location_browser' %}active{% endif %}"
+           href="{% url 'location:location_browser' %}">
+            <i class="bi bi-map me-2"></i>
+            {% trans "Location Browser" %}
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if request.resolver_match.url_name == 'unmatched_locations' %}active{% endif %}"
+           href="{% url 'location:unmatched_locations' %}">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            {% trans "Unmatched Locations" %}
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'data_pipeline:dashboard' %}">
+            <i class="bi bi-diagram-3 me-2"></i>
+            {% trans "Data Pipeline" %}
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'task_monitoring:dashboard' %}">
+            <i class="bi bi-activity me-2"></i>
+            {% trans "Task Monitor" %}
+        </a>
+    </li>
+</ul>
+{% endblock %}
+
+{% block sidebar_actions %}
+<hr class="my-3">
+
+<h6 class="sidebar-heading nrc-heading mb-3">
+    <i class="bi bi-lightning me-2 text-warning"></i>
+    <span class="sidebar-text">{% trans "Quick Actions" %}</span>
+</h6>
+<div class="d-grid gap-2">
+    <a href="{% url 'location:location_create' %}" class="btn btn-outline-primary btn-sm" title="{% trans 'New Location' %}">
+        <i class="bi bi-plus"></i><span class="nav-text ms-1">{% trans "New Location" %}</span>
+    </a>
+    <a href="{% url 'location:gazetteer_create' %}" class="btn btn-outline-success btn-sm" title="{% trans 'New Gazetteer Entry' %}">
+        <i class="bi bi-plus"></i><span class="nav-text ms-1">{% trans "New Gazetteer Entry" %}</span>
+    </a>
+</div>
+{% endblock %}
+
+{% block mobile_sidebar_actions %}
+<hr class="my-3">
+
+<h6 class="sidebar-heading nrc-heading mb-3">
+    <i class="bi bi-lightning me-2 text-warning"></i>
+    {% trans "Quick Actions" %}
+</h6>
+<div class="d-grid gap-2">
+    <a href="{% url 'location:location_create' %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-plus me-1"></i>{% trans "New Location" %}
+    </a>
+    <a href="{% url 'location:gazetteer_create' %}" class="btn btn-outline-success btn-sm">
+        <i class="bi bi-plus me-1"></i>{% trans "New Gazetteer Entry" %}
+    </a>
+</div>
+{% endblock %}

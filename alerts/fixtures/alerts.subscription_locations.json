@@ -1,0 +1,18 @@
+[
+  {
+    "model": "alerts.subscription_locations",
+    "pk": 1,
+    "fields": {
+      "subscription": 1,
+      "location": 9
+    }
+  },
+  {
+    "model": "alerts.subscription_locations",
+    "pk": 2,
+    "fields": {
+      "subscription": 1,
+      "location": 10
+    }
+  }
+]

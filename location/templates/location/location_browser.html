@@ -1,0 +1,829 @@
+{% extends "location/base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}Location Browser{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+    .location-browser-container {
+        height: calc(100vh - 220px);
+        min-height: 600px;
+    }
+    
+    .map-container {
+        height: 100%;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    #map {
+        height: 100%;
+        border-radius: 8px;
+    }
+    
+    .sidebar-content {
+        height: 100%;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        overflow-y: auto;
+    }
+    
+    .breadcrumb {
+        background-color: #f8f9fa;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        margin-bottom: 0;
+    }
+    
+    .breadcrumb-item a {
+        color: #0d6efd;
+        text-decoration: none;
+    }
+    
+    .breadcrumb-item a:hover {
+        text-decoration: underline;
+    }
+    
+    .breadcrumb-item.active {
+        color: #6c757d;
+    }
+    
+    .location-info {
+        background-color: #f8f9fa;
+        border-radius: 6px;
+        padding: 12px;
+        margin-bottom: 16px;
+    }
+    
+    .location-info h6 {
+        color: #495057;
+        margin-bottom: 8px;
+        font-weight: 600;
+    }
+    
+    .location-info p {
+        margin-bottom: 4px;
+        font-size: 0.9rem;
+    }
+    
+    .children-list {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    .children-list .list-group-item {
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        border-left: 3px solid transparent;
+        font-size: 0.9rem;
+    }
+    
+    .children-list .list-group-item:hover {
+        background-color: #e3f2fd;
+        border-left-color: #0d6efd;
+    }
+    
+    .alternate-names {
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    
+    .alternate-names .badge {
+        font-size: 0.75rem;
+        margin-right: 4px;
+        margin-bottom: 4px;
+    }
+    
+    .loading-spinner {
+        text-align: center;
+        padding: 20px;
+        color: #6c757d;
+    }
+    
+    .no-data {
+        text-align: center;
+        padding: 20px;
+        color: #6c757d;
+        font-style: italic;
+    }
+    
+    .section-header {
+        background-color: #e9ecef;
+        padding: 8px 12px;
+        margin: 0 -12px 12px -12px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #495057;
+    }
+    
+    .admin-level-info {
+        display: inline-block;
+        background-color: #e3f2fd;
+        color: #1976d2;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        margin-left: 8px;
+    }
+    
+    /* Custom tooltip styling */
+    .custom-tooltip {
+        background-color: rgba(0, 0, 0, 0.9) !important;
+        color: white !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-size: 0.85rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        max-width: 200px;
+    }
+    
+    .custom-tooltip::before {
+        border-top-color: rgba(0, 0, 0, 0.9);
+    }
+    
+    .tooltip-content h6 {
+        color: #ffffff !important;
+        font-weight: 600;
+        margin-bottom: 4px;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+    }
+    
+    .tooltip-content p {
+        margin-bottom: 2px;
+        font-size: 0.8rem;
+        line-height: 1.3;
+        color: #ffffff !important;
+    }
+    
+    .tooltip-content p:last-child {
+        margin-bottom: 0;
+        font-style: italic;
+        color: #e3f2fd !important;
+    }
+    
+    .tooltip-content strong {
+        color: #ffffff !important;
+    }
+    
+    /* Parent boundary tooltip styling */
+    .parent-tooltip {
+        background-color: rgba(108, 117, 125, 0.9) !important;
+        color: white !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        font-size: 0.8rem;
+    }
+    
+    .parent-tooltip .tooltip-content h6 {
+        color: #ffffff !important;
+        font-size: 0.85rem;
+        margin-bottom: 2px;
+    }
+    
+    /* Prevent selection artifacts and black bounding boxes */
+    .leaflet-clickable {
+        outline: none !important;
+    }
+    
+    .leaflet-interactive {
+        outline: none !important;
+        border: none !important;
+    }
+    
+    /* Hide any selection rectangles or bounding boxes */
+    .leaflet-zoom-animated .leaflet-interactive:focus {
+        outline: none !important;
+        box-shadow: none !important;
+    }
+    
+    /* Prevent SVG path selection artifacts */
+    .leaflet-overlay-pane svg path {
+        outline: none !important;
+    }
+    
+    .leaflet-overlay-pane svg path:focus {
+        outline: none !important;
+        stroke-dasharray: none !important;
+    }
+    
+    /* Prevent any selection highlighting */
+    .leaflet-container {
+        -webkit-tap-highlight-color: transparent;
+    }
+</style>
+{% endblock %}
+
+{% block main_content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="/">
+                        <i class="bi bi-house"></i> Home
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'location:dashboard' %}">Location Management</a>
+                </li>
+                <li class="breadcrumb-item active">Location Browser</li>
+            </ol>
+        </nav>
+        <h1 class="nrc-heading mb-0">
+            <i class="bi bi-map me-2 text-success"></i>{% trans "Location Browser" %}
+        </h1>
+        <p class="text-muted mt-1">{% trans "Interactive map for browsing administrative boundaries" %}</p>
+    </div>
+</div>
+    
+    <div class="location-browser-container">
+        <div class="row h-100 g-3">
+            <!-- Map Column -->
+            <div class="col-lg-8">
+                <div class="map-container">
+                    <div id="map"></div>
+                </div>
+            </div>
+            
+            <!-- Sidebar Column -->
+            <div class="col-lg-4">
+                <div class="sidebar-content p-3">
+                    <!-- Breadcrumbs -->
+                    <div class="section-header">
+                        {% trans "Navigation" %}
+                    </div>
+                    <nav aria-label="breadcrumb" class="mb-3">
+                        <ol class="breadcrumb" id="breadcrumbs">
+                            <li class="breadcrumb-item">
+                                <a href="#" data-location-id="null" data-admin-level="0">
+                                    <i class="bi bi-house-door me-1"></i>{% trans "Countries" %}
+                                </a>
+                            </li>
+                        </ol>
+                    </nav>
+                    
+                    <!-- Location Info -->
+                    <div id="location-info" style="display: none;">
+                        <div class="section-header">
+                            {% trans "Location Details" %}
+                        </div>
+                        <div class="location-info">
+                            <h6 id="location-name">-</h6>
+                            <p><strong>{% trans "ID:" %}</strong> <span id="location-geo-id">-</span></p>
+                            <p><strong>{% trans "Level:" %}</strong> <span id="location-admin-level">-</span></p>
+                            <p id="location-comment" style="display: none;"><strong>{% trans "Note:" %}</strong> <span id="location-comment-text">-</span></p>
+                        </div>
+                    </div>
+                    
+                    <!-- Children Locations -->
+                    <div id="children-section">
+                        <div class="section-header">
+                            <span id="children-title">{% trans "Countries" %}</span>
+                            <span class="badge bg-primary ms-2" id="children-count">0</span>
+                        </div>
+                        <div id="children-loading" class="loading-spinner">
+                            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                            {% trans "Loading locations..." %}
+                        </div>
+                        <div id="children-list" class="children-list">
+                            <div class="list-group list-group-flush" id="children-items">
+                                <!-- Children will be populated by JavaScript -->
+                            </div>
+                        </div>
+                        <div id="children-empty" class="no-data" style="display: none;">
+                            {% trans "No sub-locations available" %}
+                        </div>
+                    </div>
+                    
+                    <!-- Alternate Names -->
+                    <div id="alternate-names-section" style="display: none;">
+                        <div class="section-header">
+                            {% trans "Alternate Names" %}
+                        </div>
+                        <div id="alternate-names" class="alternate-names">
+                            <!-- Alternate names will be populated by JavaScript -->
+                        </div>
+                        <div id="alternate-names-empty" class="no-data" style="display: none;">
+                            {% trans "No alternate names available" %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// Fix Leaflet marker icon paths and make icons smaller
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+    iconUrl: '{% static "leaflet/images/marker-icon.png" %}',
+    iconRetinaUrl: '{% static "leaflet/images/marker-icon-2x.png" %}', 
+    shadowUrl: '{% static "leaflet/images/marker-shadow.png" %}',
+    iconSize: [15, 25],         // Default is [25, 41] - making it 60% smaller
+    iconAnchor: [7, 25],        // Default is [12, 41] - adjusted proportionally
+    popupAnchor: [1, -22],      // Default is [1, -34] - adjusted proportionally
+    shadowSize: [25, 25],       // Default is [41, 41] - keeping shadow proportional
+    shadowAnchor: [6, 25]       // Default is [12, 41] - adjusted proportionally
+});
+
+class LocationBrowser {
+    constructor() {
+        this.map = null;
+        this.currentLayer = null;
+        this.parentLayer = null;
+        this.currentAdminLevel = 0;
+        this.currentParentId = null;
+        this.currentLocationId = null;
+        this.breadcrumbs = [];
+        this.featureClickedRecently = false;
+        
+        this.initializeMap();
+        this.loadLocations(0, null);
+    }
+    
+    initializeMap() {
+        // Initialize the map centered on Sudan
+        this.map = L.map('map').setView([14.5, 30.0], 6);
+        
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(this.map);
+        
+        // Add click handler for map background (outside polygons)
+        this.map.on('click', (e) => {
+            // Check if the click was directly on the map (not on a feature)
+            const target = e.originalEvent?.target;
+            const isMapClick = !target || 
+                              target.classList.contains('leaflet-zoom-animated') ||
+                              target.classList.contains('leaflet-container') ||
+                              target.tagName === 'DIV';
+            
+            if (isMapClick && !this.featureClickedRecently) {
+                this.goUpOneLevel();
+            }
+            
+            // Reset the flag for next click
+            this.featureClickedRecently = false;
+        });
+    }
+    
+    async loadLocations(adminLevel, parentId) {
+        try {
+            this.showChildrenLoading(true);
+            
+            const params = new URLSearchParams({
+                admin_level: adminLevel.toString()
+            });
+            
+            if (parentId) {
+                params.set('parent_id', parentId.toString());
+            }
+            
+            const response = await fetch(`/location/api/browser/locations/?${params}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                // Update current state before displaying locations
+                this.currentAdminLevel = adminLevel;
+                this.currentParentId = parentId;
+                
+                this.displayLocations(data);
+                this.updateChildrenList(data.features);
+            } else {
+                console.error('Failed to load locations:', data.error);
+            }
+            
+        } catch (error) {
+            console.error('Error loading locations:', error);
+        } finally {
+            this.showChildrenLoading(false);
+        }
+    }
+    
+    displayLocations(geojsonData) {
+        // Store reference to old layers for smooth transition
+        const oldCurrentLayer = this.currentLayer;
+        const oldParentLayer = this.parentLayer;
+        
+        // Create new current layer first
+        this.currentLayer = L.geoJSON(geojsonData, {
+            style: (feature) => ({
+                fillColor: '#0d6efd',
+                weight: 2,
+                opacity: 0.8,
+                color: '#0a58ca',
+                fillOpacity: 0.3
+            }),
+            onEachFeature: (feature, layer) => {
+                const props = feature.properties;
+                
+                // Create tooltip content
+                const tooltipContent = `
+                    <div class="tooltip-content">
+                        <h6 class="mb-1">${props.name}</h6>
+                        <p class="mb-1"><strong>ID:</strong> ${props.geo_id}</p>
+                        <p class="mb-1"><strong>Level:</strong> ${props.admin_level.name}</p>
+                        ${props.has_children ? '<p class="mb-0"><em>Click to explore sub-locations</em></p>' : ''}
+                    </div>
+                `;
+                
+                // Bind tooltip that shows on hover
+                layer.bindTooltip(tooltipContent, {
+                    permanent: false,
+                    direction: 'auto',
+                    className: 'custom-tooltip'
+                });
+                
+                // Handle click events
+                layer.on('click', (e) => {
+                    // Prevent default selection behavior that causes black bounding box
+                    if (e.originalEvent) {
+                        e.originalEvent.preventDefault();
+                    }
+                    
+                    this.featureClickedRecently = true;
+                    this.selectLocation(props.id);
+                });
+                
+                // Hover effects
+                layer.on('mouseover', (e) => {
+                    if (layer.setStyle && typeof layer.setStyle === 'function') {
+                        layer.setStyle({
+                            weight: 3,
+                            fillOpacity: 0.5
+                        });
+                    }
+                });
+                
+                layer.on('mouseout', (e) => {
+                    if (layer.setStyle && typeof layer.setStyle === 'function') {
+                        layer.setStyle({
+                            weight: 2,
+                            fillOpacity: 0.3
+                        });
+                    }
+                });
+            }
+        }).addTo(this.map);
+        
+        // Load parent level boundaries if we're not at the top level
+        if (this.currentAdminLevel > 0) {
+            this.loadParentBoundaries();
+        }
+        
+        // Remove old layers after new ones are added
+        if (oldCurrentLayer) {
+            this.map.removeLayer(oldCurrentLayer);
+        }
+        if (oldParentLayer) {
+            this.map.removeLayer(oldParentLayer);
+        }
+        
+        // Fit map to bounds if locations exist
+        if (geojsonData.features && geojsonData.features.length > 0) {
+            this.map.fitBounds(this.currentLayer.getBounds(), { padding: [10, 10] });
+        }
+    }
+    
+    async loadParentBoundaries() {
+        try {
+            // Determine parent admin level
+            const parentAdminLevel = this.currentAdminLevel - 1;
+            let parentParentId = null;
+            
+            // Get the parent's parent ID from breadcrumbs
+            if (this.breadcrumbs.length > 1) {
+                parentParentId = this.breadcrumbs[this.breadcrumbs.length - 2].id;
+            }
+            
+            const params = new URLSearchParams({
+                admin_level: parentAdminLevel.toString()
+            });
+            
+            if (parentParentId) {
+                params.set('parent_id', parentParentId.toString());
+            }
+            
+            const response = await fetch(`/location/api/browser/locations/?${params}`);
+            const data = await response.json();
+            
+            if (data.success && data.features && data.features.length > 0) {
+                // Clear old parent layer before creating new one
+                if (this.parentLayer) {
+                    this.map.removeLayer(this.parentLayer);
+                }
+                
+                // Add parent boundaries as stroke-only polygons
+                this.parentLayer = L.geoJSON(data, {
+                    style: (feature) => ({
+                        fillColor: 'transparent',
+                        weight: 2,
+                        opacity: 0.8,
+                        color: '#495057',
+                        fillOpacity: 0,
+                        dashArray: '10, 5'
+                    }),
+                    onEachFeature: (feature, layer) => {
+                        const props = feature.properties;
+                        
+                        // Simple tooltip for parent boundaries
+                        const tooltipContent = `
+                            <div class="tooltip-content">
+                                <h6 class="mb-1">${props.name}</h6>
+                                <p class="mb-0"><small>${props.admin_level.name}</small></p>
+                            </div>
+                        `;
+                        
+                        layer.bindTooltip(tooltipContent, {
+                            permanent: false,
+                            direction: 'auto',
+                            className: 'custom-tooltip parent-tooltip'
+                        });
+                        
+                        // No click interaction for parent boundaries
+                    }
+                }).addTo(this.map);
+                
+                // Move parent layer to back
+                if (this.parentLayer) {
+                    this.parentLayer.bringToBack();
+                }
+                
+            }
+            
+        } catch (error) {
+            console.error('Error loading parent boundaries:', error);
+        }
+    }
+    
+    async selectLocation(locationId) {
+        try {
+            const response = await fetch(`/location/api/browser/location/${locationId}/`);
+            const data = await response.json();
+            
+            if (data.success) {
+                this.showLocationDetails(data);
+                
+                // Check if location has children
+                if (data.children && data.children.length > 0) {
+                    // Navigate to children
+                    const location = data.location;
+                    const nextAdminLevel = parseInt(location.admin_level.code) + 1;
+                    
+                    this.addToBreadcrumbs(location);
+                    this.loadLocations(nextAdminLevel, locationId);
+                    
+                    this.currentAdminLevel = nextAdminLevel;
+                    this.currentParentId = locationId;
+                    this.currentLocationId = locationId;
+                } else {
+                    // No children - just update the selected location info without navigation
+                    // This is normal for the lowest administrative level (counties)
+                }
+            } else {
+                console.error('Failed to load location details:', data.error);
+            }
+            
+        } catch (error) {
+            console.error('Error loading location details:', error);
+        }
+    }
+    
+    showLocationDetails(data) {
+        const location = data.location;
+        
+        // Update location info
+        document.getElementById('location-name').textContent = location.name;
+        document.getElementById('location-geo-id').textContent = location.geo_id;
+        document.getElementById('location-admin-level').textContent = location.admin_level.name;
+        
+        if (location.comment) {
+            document.getElementById('location-comment-text').textContent = location.comment;
+            document.getElementById('location-comment').style.display = 'block';
+        } else {
+            document.getElementById('location-comment').style.display = 'none';
+        }
+        
+        document.getElementById('location-info').style.display = 'block';
+        
+        // Update alternate names
+        this.showAlternateNames(data.alternate_names);
+        
+        // Update children title
+        if (data.children && data.children.length > 0) {
+            const nextLevel = parseInt(location.admin_level.code) + 1;
+            const nextLevelName = this.getAdminLevelName(nextLevel);
+            document.getElementById('children-title').textContent = nextLevelName;
+        }
+    }
+    
+    showAlternateNames(alternateNames) {
+        const container = document.getElementById('alternate-names');
+        const emptyDiv = document.getElementById('alternate-names-empty');
+        const section = document.getElementById('alternate-names-section');
+        
+        if (alternateNames && alternateNames.length > 0) {
+            container.innerHTML = '';
+            
+            alternateNames.forEach(name => {
+                const badge = document.createElement('span');
+                badge.className = 'badge bg-secondary';
+                badge.innerHTML = `${name.name} <small>(${name.source})</small>`;
+                container.appendChild(badge);
+            });
+            
+            emptyDiv.style.display = 'none';
+            container.style.display = 'block';
+        } else {
+            container.style.display = 'none';
+            emptyDiv.style.display = 'block';
+        }
+        
+        section.style.display = 'block';
+    }
+    
+    updateChildrenList(features) {
+        const container = document.getElementById('children-items');
+        const emptyDiv = document.getElementById('children-empty');
+        const countBadge = document.getElementById('children-count');
+        
+        container.innerHTML = '';
+        
+        if (features && features.length > 0) {
+            features.forEach(feature => {
+                const props = feature.properties;
+                const item = document.createElement('div');
+                item.className = 'list-group-item list-group-item-action';
+                item.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">${props.name}</h6>
+                            <small class="text-muted">${props.geo_id}</small>
+                        </div>
+                        <span class="admin-level-info">${props.admin_level.name}</span>
+                    </div>
+                `;
+                
+                item.addEventListener('click', () => {
+                    this.selectLocation(props.id);
+                });
+                
+                container.appendChild(item);
+            });
+            
+            countBadge.textContent = features.length;
+            emptyDiv.style.display = 'none';
+            container.style.display = 'block';
+        } else {
+            countBadge.textContent = '0';
+            container.style.display = 'none';
+            emptyDiv.style.display = 'block';
+        }
+    }
+    
+    addToBreadcrumbs(location) {
+        this.breadcrumbs.push({
+            id: location.id,
+            name: location.name,
+            adminLevel: location.admin_level.code
+        });
+        
+        this.updateBreadcrumbs();
+    }
+    
+    updateBreadcrumbs() {
+        const container = document.getElementById('breadcrumbs');
+        container.innerHTML = `
+            <li class="breadcrumb-item">
+                <a href="#" data-location-id="null" data-admin-level="0">
+                    <i class="bi bi-house-door me-1"></i>{% trans "Countries" %}
+                </a>
+            </li>
+        `;
+        
+        this.breadcrumbs.forEach((crumb, index) => {
+            const li = document.createElement('li');
+            li.className = 'breadcrumb-item';
+            
+            if (index === this.breadcrumbs.length - 1) {
+                li.className += ' active';
+                li.textContent = crumb.name;
+            } else {
+                li.innerHTML = `
+                    <a href="#" data-location-id="${crumb.id}" data-admin-level="${parseInt(crumb.adminLevel) + 1}">
+                        ${crumb.name}
+                    </a>
+                `;
+            }
+            
+            container.appendChild(li);
+        });
+        
+        // Add click handlers for breadcrumbs
+        container.addEventListener('click', (e) => {
+            if (e.target.tagName === 'A') {
+                e.preventDefault();
+                const locationId = e.target.dataset.locationId;
+                const adminLevel = parseInt(e.target.dataset.adminLevel);
+                
+                this.navigateToLevel(locationId === 'null' ? null : parseInt(locationId), adminLevel);
+            }
+        });
+    }
+    
+    navigateToLevel(parentId, adminLevel) {
+        // Update breadcrumbs
+        if (parentId === null) {
+            this.breadcrumbs = [];
+        } else {
+            const targetIndex = this.breadcrumbs.findIndex(b => b.id === parentId);
+            if (targetIndex >= 0) {
+                this.breadcrumbs = this.breadcrumbs.slice(0, targetIndex + 1);
+            }
+        }
+        
+        this.currentAdminLevel = adminLevel;
+        this.currentParentId = parentId;
+        
+        if (parentId === null) {
+            document.getElementById('location-info').style.display = 'none';
+            document.getElementById('alternate-names-section').style.display = 'none';
+            document.getElementById('children-title').textContent = 'Countries';
+        }
+        
+        this.updateBreadcrumbs();
+        this.loadLocations(adminLevel, parentId);
+    }
+    
+    goUpOneLevel() {
+        // Don't go up if already at the top level (countries)
+        if (this.currentAdminLevel <= 0) {
+            return;
+        }
+        
+        // Determine the parent admin level and location ID
+        let parentAdminLevel = this.currentAdminLevel - 1;
+        let parentLocationId = null;
+        
+        // If we have breadcrumbs, get the parent from there
+        if (this.breadcrumbs.length > 0) {
+            if (this.breadcrumbs.length === 1) {
+                // Going back to countries (admin level 0)
+                parentLocationId = null;
+                parentAdminLevel = 0;
+            } else {
+                // Going back to the previous breadcrumb level
+                const parentBreadcrumb = this.breadcrumbs[this.breadcrumbs.length - 2];
+                parentLocationId = parentBreadcrumb.id;
+                parentAdminLevel = parseInt(parentBreadcrumb.adminLevel) + 1;
+            }
+        } else {
+            // No breadcrumbs, go to countries
+            parentLocationId = null;
+            parentAdminLevel = 0;
+        }
+        
+        // Navigate to the parent level
+        this.navigateToLevel(parentLocationId, parentAdminLevel);
+    }
+    
+    getAdminLevelName(level) {
+        const levelNames = {
+            0: 'Countries',
+            1: 'States', 
+            2: 'Localities',
+            3: 'Counties'
+        };
+        return levelNames[level] || `Level ${level}`;
+    }
+    
+    showChildrenLoading(show) {
+        const loading = document.getElementById('children-loading');
+        const list = document.getElementById('children-list');
+        
+        if (show) {
+            loading.style.display = 'block';
+            list.style.display = 'none';
+        } else {
+            loading.style.display = 'none';
+            list.style.display = 'block';
+        }
+    }
+}
+
+// Initialize the location browser when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    new LocationBrowser();
+});
+</script>
+{% endblock %}

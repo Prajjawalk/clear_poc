@@ -1,0 +1,50 @@
+[
+  {
+    "model": "auth.user_groups",
+    "pk": 1,
+    "fields": {
+      "user": 2,
+      "group": 1
+    }
+  },
+  {
+    "model": "auth.user_groups",
+    "pk": 2,
+    "fields": {
+      "user": 3,
+      "group": 2
+    }
+  },
+  {
+    "model": "auth.user_groups",
+    "pk": 3,
+    "fields": {
+      "user": 4,
+      "group": 3
+    }
+  },
+  {
+    "model": "auth.user_groups",
+    "pk": 4,
+    "fields": {
+      "user": 5,
+      "group": 4
+    }
+  },
+  {
+    "model": "auth.user_groups",
+    "pk": 5,
+    "fields": {
+      "user": 6,
+      "group": 5
+    }
+  },
+  {
+    "model": "auth.user_groups",
+    "pk": 6,
+    "fields": {
+      "user": 7,
+      "group": 6
+    }
+  }
+]

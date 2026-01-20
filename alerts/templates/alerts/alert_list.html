@@ -1,0 +1,365 @@
+{% extends "alerts/base.html" %}
+{% load i18n %}
+{% load humanize %}
+{% load translation_tags %}
+
+{% block title %}{% trans "Alerts" %} - NRC EWAS{% endblock %}
+
+{% block main_content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="/">
+                        <i class="bi bi-house"></i> {% translate "Home" %}
+                    </a>
+                </li>
+                <li class="breadcrumb-item active">{% translate "Alert System" %}</li>
+                <li class="breadcrumb-item active">{% translate "All Alerts" %}</li>
+            </ol>
+        </nav>
+        <h1 class="nrc-heading mb-0">
+            <i class="bi bi-bell me-2 text-danger"></i>{% translate "Alert List" %}
+        </h1>
+    </div>
+    <div class="btn-group" role="group">
+        <a href="{% url 'alerts:alert_map' %}" class="btn btn-outline-primary">
+            <i class="bi bi-map me-1"></i>{% translate "Map View" %}
+        </a>
+        <a href="{% url 'alerts:subscription_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus me-1"></i>{% translate "Subscribe" %}
+        </a>
+    </div>
+</div>
+
+<!-- Single Column Layout (filters moved to sidebar) -->
+<div class="row">
+    <div class="col-12">
+        <!-- Results Header -->
+        <div class="d-flex justify-content-end align-items-center mb-3">
+            <div class="text-muted">
+                {% if page_obj %}
+                    {% blocktrans with start=page_obj.start_index end=page_obj.end_index total=page_obj.paginator.count %}
+                        {{ start }}-{{ end }} of {{ total }} alerts
+                    {% endblocktrans %}
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Alert Cards -->
+        {% for alert in alerts %}
+        <div class="card mb-3 alert-card" data-alert-id="{{ alert.id }}">
+            <div class="card-header d-flex justify-content-between align-items-start">
+                <div>
+                    <h5 class="card-title mb-1">
+                        <a href="{% url 'alerts:alert_detail' alert.id %}" class="text-decoration-none">
+                            {{ alert.title }}
+                        </a>
+                    </h5>
+                    <div class="d-flex align-items-center gap-2 text-muted small">
+                        <span class="badge {{ alert.shock_type.background_css_class }} text-white">
+                            {{ alert.shock_type.name }}
+                        </span>
+                        <span class="badge severity-{{ alert.severity }}">
+                            {% trans "Severity" %} {{ alert.severity }}
+                        </span>
+                        <span>
+                            <i class="bi bi-calendar3 me-1"></i>
+                            {{ alert.shock_date|date:"M d, Y" }}
+                        </span>
+                        <span>
+                            <i class="bi bi-database me-1"></i>
+                            {{ alert.data_source.name }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- User Actions -->
+                <div class="btn-group" role="group">
+                    {% if alert.user_interactions %}
+                        {% for interaction in alert.user_interactions %}
+                            {% if interaction.bookmarked %}
+                            <button type="button" class="btn btn-sm btn-warning bookmark-btn"
+                                    data-alert-id="{{ alert.id }}" title="{% trans 'Remove Bookmark' %}">
+                                <i class="bi bi-bookmark-fill"></i>
+                            </button>
+                            {% else %}
+                            <button type="button" class="btn btn-sm btn-outline-warning bookmark-btn"
+                                    data-alert-id="{{ alert.id }}" title="{% trans 'Add Bookmark' %}">
+                                <i class="bi bi-bookmark"></i>
+                            </button>
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                    <button type="button" class="btn btn-sm btn-outline-warning bookmark-btn"
+                            data-alert-id="{{ alert.id }}" title="{% trans 'Add Bookmark' %}">
+                        <i class="bi bi-bookmark"></i>
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card-body">
+                <p class="card-text">{{ alert.text|truncatewords:30 }}</p>
+
+                <!-- Alert Locations -->
+                <div class="mb-2">
+                    <small class="text-muted">
+                        <i class="bi bi-geo-alt me-1"></i>
+                        {% trans "Affected areas" %}:
+                        {% if alert.locations.all %}
+                            {% for location in alert.locations.all %}
+                                <span class="badge bg-primary text-white">{{ location.name }}</span>
+                                {% if not forloop.last %} {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <span class="text-muted">{% translate "No locations specified" %}</span>
+                        {% endif %}
+                    </small>
+                </div>
+
+                <!-- Alert Validity -->
+                <div class="text-muted small">
+                    <i class="bi bi-clock me-1"></i>
+                    {% trans "Valid from" %}: {{ alert.valid_from|date:"M d, H:i" }} {% trans "to" %} {{ alert.valid_until|date:"M d, H:i" }}
+                </div>
+
+                <!-- Detection Method -->
+                {% if alert.detector_name %}
+                <div class="text-muted small mt-1">
+                    <i class="bi bi-cpu me-1"></i>
+                    {% trans "Detected by" %}: <strong>{{ alert.detector_name }}</strong>
+                    {% if alert.source_detection %}
+                        <span class="badge bg-secondary ms-1" title="{% trans 'Confidence Score' %}">
+                            {{ alert.source_detection.confidence_score|floatformat:2 }}
+                        </span>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="card-footer d-flex justify-content-between align-items-center">
+                <div class="btn-group" role="group">
+                    <a href="{% url 'alerts:alert_detail' alert.id %}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-eye me-1"></i>
+                        {% trans "View Details" %}
+                    </a>
+                </div>
+
+                <!-- Community Ratings & Flags -->
+                <div class="d-flex gap-3 text-muted small">
+                    <!-- Average Rating -->
+                    {% if alert.average_rating %}
+                    <div title="Average rating from {{ alert.rating_count }} user{{ alert.rating_count|pluralize }}">
+                        <i class="bi bi-star-fill text-warning me-1"></i>
+                        {{ alert.average_rating|floatformat:1 }}/5
+                        <span class="text-muted">({{ alert.rating_count }})</span>
+                    </div>
+                    {% endif %}
+
+                    <!-- Community Flags -->
+                    {% if alert.is_flagged_false %}
+                    <div class="text-danger" title="{{ alert.false_flag_count }} user{{ alert.false_flag_count|pluralize }} flagged this as false">
+                        <i class="bi bi-x-circle me-1"></i>
+                        {% trans "Disputed" %}
+                    </div>
+                    {% endif %}
+
+                    {% if alert.is_flagged_incomplete %}
+                    <div class="text-warning" title="{{ alert.incomplete_flag_count }} user{{ alert.incomplete_flag_count|pluralize }} flagged this as incomplete">
+                        <i class="bi bi-exclamation-triangle me-1"></i>
+                        {% trans "Incomplete" %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="text-center py-5">
+            <i class="bi bi-exclamation-triangle display-1 text-muted"></i>
+            <h3 class="mt-3">{% trans "No alerts found" %}</h3>
+            <p class="text-muted">{% trans "Try adjusting your filters or check back later for new alerts." %}</p>
+        </div>
+        {% endfor %}
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <nav aria-label="{% trans 'Alert pagination' %}">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+
+<!-- CSRF Token for AJAX -->
+<input type="hidden" id="csrf-token" value="{{ csrf_token }}">
+{% endblock %}
+
+{% block extra_js %}
+<!-- Dynamic shock type styles -->
+{% include "alerts/shock_type_styles.html" %}
+
+<script>
+// AJAX Bookmark Toggle
+document.addEventListener('DOMContentLoaded', function() {
+    const csrfToken = document.getElementById('csrf-token').value;
+
+    // AJAX filter handling
+    function handleFilterChange() {
+        const sidebarForm = document.getElementById('sidebar-filter-form');
+        const mobileSidebarForm = document.getElementById('mobile-sidebar-filter-form');
+
+        function applyFilters(form) {
+            const formData = new FormData(form);
+            const params = new URLSearchParams();
+
+            // Build URL parameters from form data
+            for (let [key, value] of formData.entries()) {
+                if (value) {
+                    params.append(key, value);
+                }
+            }
+
+            // Handle unchecked Active Today checkbox specifically
+            const activeToday = form.querySelector('input[name="active_today"]');
+            if (activeToday && !activeToday.checked) {
+                params.append('active_today', '0');
+            }
+
+            const url = new URL(window.location.href.split('?')[0], window.location.origin);
+            url.search = params.toString();
+
+            // Fetch filtered content
+            fetch(url.href, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                // Update alert cards
+                const newAlertCards = doc.querySelector('.col-12').innerHTML;
+                document.querySelector('.col-12').innerHTML = newAlertCards;
+
+                // Update URL without reload
+                history.pushState({}, '', url.href);
+
+                // Re-attach bookmark button handlers to new content
+                attachBookmarkHandlers();
+            })
+            .catch(error => console.error('Filter error:', error));
+        }
+
+        if (sidebarForm) {
+            sidebarForm.addEventListener('change', function(e) {
+                applyFilters(this);
+            });
+        }
+
+        if (mobileSidebarForm) {
+            mobileSidebarForm.addEventListener('change', function(e) {
+                applyFilters(this);
+            });
+        }
+    }
+
+    // Function to attach/re-attach bookmark handlers
+    function attachBookmarkHandlers() {
+        document.querySelectorAll('.bookmark-btn').forEach(button => {
+            // Remove existing listeners to avoid duplicates
+            button.replaceWith(button.cloneNode(true));
+        });
+
+        document.querySelectorAll('.bookmark-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const alertId = this.dataset.alertId;
+                const icon = this.querySelector('i');
+
+                fetch(`/alerts/alert/${alertId}/bookmark/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.bookmarked) {
+                            this.classList.remove('btn-outline-warning');
+                            this.classList.add('btn-warning');
+                            icon.classList.remove('bi-bookmark');
+                            icon.classList.add('bi-bookmark-fill');
+                            this.title = '{% trans "Remove Bookmark" %}';
+                        } else {
+                            this.classList.remove('btn-warning');
+                            this.classList.add('btn-outline-warning');
+                            icon.classList.remove('bi-bookmark-fill');
+                            icon.classList.add('bi-bookmark');
+                            this.title = '{% trans "Add Bookmark" %}';
+                        }
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            });
+        });
+    }
+
+    // Initialize bookmark handlers and filter handling
+    attachBookmarkHandlers();
+    handleFilterChange();
+});
+</script>
+
+<style>
+.severity-1 { background-color: #d4edda; color: #155724; }
+.severity-2 { background-color: #fff3cd; color: #856404; }
+.severity-3 { background-color: #f8d7da; color: #721c24; }
+.severity-4 { background-color: #f5c6cb; color: #721c24; }
+.severity-5 { background-color: #dc3545; color: white; }
+
+.alert-card:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transition: box-shadow 0.2s ease-in-out;
+}
+
+.badge.bg-conflict { background-color: #dc3545 !important; }
+.badge.bg-natural { background-color: #fd7e14 !important; }
+.badge.bg-health { background-color: #20c997 !important; }
+.badge.bg-foodsec { background-color: #6f42c1 !important; }
+</style>
+{% endblock %}

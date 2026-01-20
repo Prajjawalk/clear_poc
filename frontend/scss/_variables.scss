@@ -1,0 +1,116 @@
+// Bootstrap variable overrides
+// Customize Bootstrap variables here before importing Bootstrap
+
+@use "sass:color";
+
+// ============================================================================
+// NRC BRAND COLORS
+// ============================================================================
+// Based on NRC Brand Guidelines
+
+// NRC Primary Color
+$nrc-orange: #FF7602;
+
+// NRC Secondary Colors
+$nrc-perspective-blue: #00ADD0;
+$nrc-crisis-red: #CE5C43;
+$nrc-optimistic-yellow: #FDC82F;
+$nrc-expert-blue: #72C7E7;
+
+// NRC Neutral Colors (converted from CMYK to RGB/HEX)
+$nrc-black: #000000;          // CMYK 0 0 0 100
+$nrc-cool-grey-11: #4D4D4D;   // CMYK 0 0 0 70 (approximately)
+$nrc-cool-grey-7: #999999;    // CMYK 0 0 0 40 (approximately) 
+$nrc-cool-grey-3: #CCCCCC;    // CMYK 0 0 0 20 (approximately)
+$nrc-warm-grey-2: #E8E6E3;    // CMYK 6 7 10 11 (approximately)
+$nrc-white: #FFFFFF;          // CMYK 0 0 0 0
+
+// ============================================================================
+// BOOTSTRAP COLOR MAPPING
+// ============================================================================
+// Map NRC colors to Bootstrap semantic colors
+
+$primary: $nrc-orange;              // Main brand color for primary actions
+$secondary: $nrc-cool-grey-7;       // Neutral secondary color
+$success: $nrc-perspective-blue;    // Success states and positive actions
+$info: $nrc-expert-blue;           // Informational content and highlights
+$warning: $nrc-optimistic-yellow;  // Warning states and attention items
+$danger: $nrc-crisis-red;          // Error states and critical alerts
+$light: $nrc-warm-grey-2;          // Light backgrounds and containers
+$dark: $nrc-cool-grey-11;          // Dark text and strong emphasis
+
+// ============================================================================
+// NRC TYPOGRAPHY
+// ============================================================================
+// NRC Brand guideline: Roboto font family
+
+$font-family-sans-serif: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+$font-size-base: 1rem;
+$line-height-base: 1.6;
+
+// Spacing
+$spacer: 1rem;
+
+// Borders
+$border-radius: 0.375rem;
+$border-radius-sm: 0.25rem;
+$border-radius-lg: 0.5rem;
+
+// Shadows
+$box-shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+$box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+$box-shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+
+// ============================================================================
+// NRC APPLICATION SPECIFIC VARIABLES
+// ============================================================================
+
+// Data Pipeline specific colors using NRC palette
+$pipeline-bg: $nrc-warm-grey-2;
+$pipeline-border: $nrc-cool-grey-3;
+$pipeline-accent: $nrc-perspective-blue;
+
+// Location Management specific colors
+$location-bg: $nrc-warm-grey-2;
+$location-border: $nrc-cool-grey-3;
+$location-accent: $nrc-expert-blue;
+
+// Task Monitoring specific colors
+$task-success-bg: rgba($nrc-perspective-blue, 0.1);
+$task-warning-bg: rgba($nrc-optimistic-yellow, 0.1);
+$task-error-bg: rgba($nrc-crisis-red, 0.1);
+
+// Sidebar and Navigation
+$sidebar-bg: $nrc-white;
+$sidebar-border: $nrc-cool-grey-3;
+$sidebar-active: $nrc-orange;
+
+// Status and feedback colors using NRC palette
+$tag-colors: (
+  "primary": $nrc-orange,
+  "secondary": $nrc-cool-grey-7,
+  "success": $nrc-perspective-blue,
+  "danger": $nrc-crisis-red,
+  "warning": $nrc-optimistic-yellow,
+  "info": $nrc-expert-blue
+);
+
+// ============================================================================
+// NRC COMPONENT OVERRIDES
+// ============================================================================
+
+// Card styling to match NRC aesthetic
+$card-border-color: $nrc-cool-grey-3;
+$card-cap-bg: $nrc-warm-grey-2;
+
+// Button styling
+$btn-border-radius: 0.25rem;  // Slightly more rounded for modern NRC look
+
+// Form styling
+$input-border-color: $nrc-cool-grey-3;
+$input-focus-border-color: $nrc-orange;
+
+// Navigation styling
+$navbar-light-brand-color: $nrc-orange;
+$navbar-light-brand-hover-color: color.scale($nrc-orange, $lightness: -10%);
+$nav-link-hover-color: $nrc-orange;

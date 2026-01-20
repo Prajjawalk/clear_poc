@@ -1,0 +1,127 @@
+{% extends "layout.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "NRC EWAS - Data Pipeline" %}{% endblock %}
+{% block description %}Norwegian Refugee Council EWAS Sudan - Data Pipeline Management{% endblock %}
+{% block header_subtitle %}{% trans "Data Pipeline" %}{% endblock %}
+{% block app_class %}app-data-pipeline{% endblock %}
+
+{% block sidebar_icon %}bi bi-diagram-3{% endblock %}
+{% block sidebar_color %}primary{% endblock %}
+{% block sidebar_heading %}{% trans "Data Pipeline" %}{% endblock %}
+
+{% block mobile_sidebar_icon %}bi bi-diagram-3{% endblock %}
+{% block mobile_sidebar_color %}primary{% endblock %}
+{% block mobile_sidebar_heading %}{% trans "Data Pipeline" %}{% endblock %}
+
+{% block sidebar_nav %}
+<ul class="nav nav-pills flex-column">
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+           href="{% url 'data_pipeline:dashboard' %}" title="{% trans 'Dashboard' %}">
+            <i class="bi bi-speedometer2"></i>
+            <span class="nav-text ms-2">{% trans "Dashboard" %}</span>
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if 'source' in request.resolver_match.url_name %}active{% endif %}"
+           href="{% url 'data_pipeline:source_list' %}" title="{% trans 'Sources' %}">
+            <i class="bi bi-database"></i>
+            <span class="nav-text ms-2">{% trans "Sources" %}</span>
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if 'variable' in request.resolver_match.url_name %}active{% endif %}"
+           href="{% url 'data_pipeline:variable_list' %}" title="{% trans 'Variables' %}">
+            <i class="bi bi-graph-up"></i>
+            <span class="nav-text ms-2">{% trans "Variables" %}</span>
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if request.resolver_match.url_name == 'map' %}active{% endif %}"
+           href="{% url 'data_pipeline:map' %}" title="{% trans 'Map View' %}">
+            <i class="bi bi-geo-alt"></i>
+            <span class="nav-text ms-2">{% trans "Map View" %}</span>
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'task_monitoring:dashboard' %}" title="{% trans 'Task Monitor' %}">
+            <i class="bi bi-activity"></i>
+            <span class="nav-text ms-2">{% trans "Task Monitor" %}</span>
+        </a>
+    </li>
+</ul>
+{% endblock %}
+
+{% block mobile_sidebar_nav %}
+<ul class="nav nav-pills flex-column">
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+           href="{% url 'data_pipeline:dashboard' %}">
+            <i class="bi bi-speedometer2 me-2"></i>
+            {% trans "Dashboard" %}
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if 'source' in request.resolver_match.url_name %}active{% endif %}"
+           href="{% url 'data_pipeline:source_list' %}">
+            <i class="bi bi-database me-2"></i>
+            {% trans "Sources" %}
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if 'variable' in request.resolver_match.url_name %}active{% endif %}"
+           href="{% url 'data_pipeline:variable_list' %}">
+            <i class="bi bi-graph-up me-2"></i>
+            {% trans "Variables" %}
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if request.resolver_match.url_name == 'map' %}active{% endif %}"
+           href="{% url 'data_pipeline:map' %}">
+            <i class="bi bi-geo-alt me-2"></i>
+            {% trans "Map View" %}
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'task_monitoring:dashboard' %}">
+            <i class="bi bi-activity me-2"></i>
+            {% trans "Task Monitor" %}
+        </a>
+    </li>
+</ul>
+{% endblock %}
+
+{% block sidebar_actions %}
+<hr class="my-3">
+
+<h6 class="sidebar-heading nrc-heading mb-3">
+    <i class="bi bi-lightning me-2 text-warning"></i>
+    <span class="sidebar-text">{% trans "Quick Actions" %}</span>
+</h6>
+<div class="d-grid gap-2">
+    <a href="{% url 'data_pipeline:source_create' %}" class="btn btn-outline-primary btn-sm" title="{% trans 'New Source' %}">
+        <i class="bi bi-plus"></i><span class="nav-text ms-1">{% trans "New Source" %}</span>
+    </a>
+    <a href="{% url 'data_pipeline:variable_create' %}" class="btn btn-outline-success btn-sm" title="{% trans 'New Variable' %}">
+        <i class="bi bi-plus"></i><span class="nav-text ms-1">{% trans "New Variable" %}</span>
+    </a>
+</div>
+{% endblock %}
+
+{% block mobile_sidebar_actions %}
+<hr class="my-3">
+
+<h6 class="sidebar-heading nrc-heading mb-3">
+    <i class="bi bi-lightning me-2 text-warning"></i>
+    {% trans "Quick Actions" %}
+</h6>
+<div class="d-grid gap-2">
+    <a href="{% url 'data_pipeline:source_create' %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-plus me-1"></i>{% trans "New Source" %}
+    </a>
+    <a href="{% url 'data_pipeline:variable_create' %}" class="btn btn-outline-success btn-sm">
+        <i class="bi bi-plus me-1"></i>{% trans "New Variable" %}
+    </a>
+</div>
+{% endblock %}

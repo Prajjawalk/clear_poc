@@ -1,0 +1,421 @@
+{% extends "layout.html" %}
+{% load humanize %}
+{% load i18n %}
+
+{% block title %}{% trans "Notification Center" %}{% endblock %}
+{% block description %}Internal notification management and activity center{% endblock %}
+{% block header_subtitle %}{% trans "Notification Center" %}{% endblock %}
+{% block app_class %}app-notifications{% endblock %}
+
+{% block sidebar_icon %}bi bi-bell{% endblock %}
+{% block sidebar_color %}info{% endblock %}
+{% block sidebar_heading %}{% trans "Notifications" %}{% endblock %}
+
+{% block mobile_sidebar_icon %}bi bi-bell{% endblock %}
+{% block mobile_sidebar_color %}info{% endblock %}
+{% block mobile_sidebar_heading %}{% trans "Notifications" %}{% endblock %}
+
+{% block sidebar_nav %}
+<ul class="nav nav-pills flex-column">
+    <li class="nav-item mb-1">
+        <a class="nav-link active" href="{% url 'notifications:center' %}" title="{% trans 'Notification Center' %}">
+            <i class="bi bi-house"></i>
+            <span class="nav-text ms-2">{% trans "Center" %}</span>
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'notifications:list' %}" title="{% trans 'All Notifications' %}">
+            <i class="bi bi-list"></i>
+            <span class="nav-text ms-2">{% trans "All Notifications" %}</span>
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'notifications:list' %}?read=unread" title="{% trans 'Unread' %}">
+            <i class="bi bi-envelope"></i>
+            <span class="nav-text ms-2">{% trans "Unread" %}</span>
+            {% if stats.unread > 0 %}
+                <span class="badge bg-danger ms-1">{{ stats.unread }}</span>
+            {% endif %}
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'users:notification_preferences' %}" title="{% trans 'Settings' %}">
+            <i class="bi bi-gear"></i>
+            <span class="nav-text ms-2">{% trans "Settings" %}</span>
+        </a>
+    </li>
+</ul>
+{% endblock %}
+
+{% block mobile_sidebar_nav %}
+<ul class="nav nav-pills flex-column">
+    <li class="nav-item mb-1">
+        <a class="nav-link active" href="{% url 'notifications:center' %}">
+            <i class="bi bi-house me-2"></i>{% trans "Center" %}
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'notifications:list' %}">
+            <i class="bi bi-list me-2"></i>{% trans "All Notifications" %}
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'notifications:list' %}?read=unread">
+            <i class="bi bi-envelope me-2"></i>
+            {% trans "Unread" %}
+            {% if stats.unread > 0 %}
+                <span class="badge bg-danger ms-1">{{ stats.unread }}</span>
+            {% endif %}
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'users:notification_preferences' %}">
+            <i class="bi bi-gear me-2"></i>{% trans "Settings" %}
+        </a>
+    </li>
+</ul>
+{% endblock %}
+
+{% block sidebar_actions %}
+<hr class="my-3">
+
+<h6 class="sidebar-heading nrc-heading mb-3">
+    <i class="bi bi-lightning me-2 text-warning"></i>
+    <span class="sidebar-text">{% trans "Quick Actions" %}</span>
+</h6>
+<div class="d-grid gap-2">
+    <button id="markAllRead" class="btn btn-outline-success btn-sm" title="{% trans 'Mark All Read' %}">
+        <i class="bi bi-check-all"></i><span class="nav-text ms-1">{% trans "Mark All Read" %}</span>
+    </button>
+    <a href="{% url 'notifications:list' %}?read=unread" class="btn btn-outline-info btn-sm" title="{% trans 'View Unread' %}">
+        <i class="bi bi-envelope"></i><span class="nav-text ms-1">{% trans "View Unread" %}</span>
+    </a>
+</div>
+{% endblock %}
+
+{% block mobile_sidebar_actions %}
+<hr class="my-3">
+
+<h6 class="sidebar-heading nrc-heading mb-3">
+    <i class="bi bi-lightning me-2 text-warning"></i>
+    {% trans "Quick Actions" %}
+</h6>
+<div class="d-grid gap-2">
+    <button id="markAllReadMobile" class="btn btn-outline-success btn-sm">
+        <i class="bi bi-check-all me-1"></i>{% trans "Mark All Read" %}
+    </button>
+    <a href="{% url 'notifications:list' %}?read=unread" class="btn btn-outline-info btn-sm">
+        <i class="bi bi-envelope me-1"></i>{% trans "View Unread" %}
+    </a>
+</div>
+{% endblock %}
+
+{% block main_content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="/">
+                        <i class="bi bi-house"></i> {% trans "Home" %}
+                    </a>
+                </li>
+                <li class="breadcrumb-item active">{% trans "Notification Center" %}</li>
+            </ol>
+        </nav>
+        <h1 class="nrc-heading mb-0">
+            <i class="bi bi-bell me-2 text-info"></i>{% trans "Notification Center" %}
+        </h1>
+    </div>
+    <div class="btn-group" role="group">
+        <a href="{% url 'notifications:list' %}" class="btn btn-primary">
+            <i class="bi bi-list me-1"></i>{% trans "View All" %}
+        </a>
+        <a href="{% url 'users:notification_preferences' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-gear me-1"></i>{% trans "Settings" %}
+        </a>
+    </div>
+</div>
+
+<!-- Summary Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card text-center">
+            <div class="card-body">
+                <i class="bi bi-envelope text-danger" style="font-size: 2rem;"></i>
+                <h3 class="card-title mt-2">{{ stats.unread|intcomma }}</h3>
+                <p class="card-text text-muted">{% trans "Unread" %}</p>
+                <a href="{% url 'notifications:list' %}?read=unread" class="btn btn-sm btn-outline-danger">{% trans "View Unread" %}</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card text-center">
+            <div class="card-body">
+                <i class="bi bi-bell text-info" style="font-size: 2rem;"></i>
+                <h3 class="card-title mt-2">{{ stats.total|intcomma }}</h3>
+                <p class="card-text text-muted">{% trans "Total" %}</p>
+                <a href="{% url 'notifications:list' %}" class="btn btn-sm btn-outline-info">{% trans "View All" %}</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card text-center">
+            <div class="card-body">
+                <i class="bi bi-calendar-day text-success" style="font-size: 2rem;"></i>
+                <h3 class="card-title mt-2">{{ stats.today|intcomma }}</h3>
+                <p class="card-text text-muted">{% trans "Today" %}</p>
+                <a href="{% url 'notifications:list' %}?date_from={{ today }}" class="btn btn-sm btn-outline-success">{% trans "View Today" %}</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card text-center">
+            <div class="card-body">
+                <i class="bi bi-exclamation-triangle text-warning" style="font-size: 2rem;"></i>
+                <h3 class="card-title mt-2">{{ stats.urgent|intcomma }}</h3>
+                <p class="card-text text-muted">{% trans "Urgent" %}</p>
+                <a href="{% url 'notifications:list' %}?priority=urgent&read=unread" class="btn btn-sm btn-outline-warning">{% trans "View Urgent" %}</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Recent Unread Notifications -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-envelope me-2"></i>{% trans "Recent Unread Notifications" %}
+                </h5>
+                {% if stats.unread > 10 %}
+                <small class="text-muted">
+                    {% blocktrans %}Showing 10 of {{ stats.unread }} unread{% endblocktrans %}
+                </small>
+                {% endif %}
+            </div>
+            <div class="card-body p-0">
+                {% if recent_unread %}
+                <div class="list-group list-group-flush">
+                    {% for notification in recent_unread %}
+                    <div class="list-group-item notification-item" data-notification-id="{{ notification.id }}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center mb-1">
+                                    <span class="badge bg-{{ notification.priority|yesno:"danger,warning,info,primary" }} me-2">
+                                        {{ notification.get_priority_display }}
+                                    </span>
+                                    <span class="badge bg-light text-dark me-2">
+                                        {{ notification.get_notification_type_display }}
+                                    </span>
+                                    <small class="text-muted">{{ notification.created_at|naturaltime }}</small>
+                                </div>
+                                <h6 class="mb-1">{{ notification.title }}</h6>
+                                <p class="mb-1 text-muted">{{ notification.message|truncatewords:20 }}</p>
+                                {% if notification.action_url %}
+                                <div class="mt-2">
+                                    <a href="{{ notification.action_url }}" class="btn btn-sm btn-outline-primary">
+                                        {{ notification.action_text|default:"View Details" }}
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-three-dots"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <button class="dropdown-item mark-read-btn" data-notification-id="{{ notification.id }}">
+                                            <i class="bi bi-check me-2"></i>{% trans "Mark as Read" %}
+                                        </button>
+                                    </li>
+                                    {% if notification.action_url %}
+                                    <li>
+                                        <a class="dropdown-item" href="{{ notification.action_url }}">
+                                            <i class="bi bi-arrow-right me-2"></i>{{ notification.action_text|default:"View Details" }}
+                                        </a>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if stats.unread > 10 %}
+                <div class="card-footer text-center">
+                    <a href="{% url 'notifications:list' %}?read=unread" class="btn btn-outline-primary">
+                        {% trans "View All Unread Notifications" %}
+                    </a>
+                </div>
+                {% endif %}
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3 text-muted">{% trans "No Unread Notifications" %}</h5>
+                    <p class="text-muted">{% trans "Great! You're all caught up." %}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Notification Type Breakdown -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-pie-chart me-2"></i>{% trans "Notification Types" %}
+                </h6>
+            </div>
+            <div class="card-body">
+                {% for type_code, type_data in type_stats.items %}
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <span class="fw-bold">{{ type_data.name }}</span>
+                        {% if type_data.unread > 0 %}
+                            <span class="badge bg-danger ms-1">{{ type_data.unread }}</span>
+                        {% endif %}
+                    </div>
+                    <small class="text-muted">{{ type_data.total }} total</small>
+                </div>
+                <div class="progress mb-3" style="height: 4px;">
+                    <div class="progress-bar" role="progressbar"
+                         style="width: {{ type_data.percentage }}%"
+                         aria-valuenow="{{ type_data.total }}" aria-valuemin="0" aria-valuemax="{{ stats.total }}">
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Quick Filters -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-funnel me-2"></i>{% trans "Quick Filters" %}
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'notifications:list' %}?priority=urgent&read=unread" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-exclamation-triangle me-1"></i>{% trans "Urgent Unread" %}
+                    </a>
+                    <a href="{% url 'notifications:list' %}?type=alert" class="btn btn-sm btn-outline-warning">
+                        <i class="bi bi-bell me-1"></i>{% trans "Alert Notifications" %}
+                    </a>
+                    <a href="{% url 'notifications:list' %}?type=system" class="btn btn-sm btn-outline-info">
+                        <i class="bi bi-gear me-1"></i>{% trans "System Notifications" %}
+                    </a>
+                    <a href="{% url 'notifications:list' %}?date_from={{ today }}" class="btn btn-sm btn-outline-success">
+                        <i class="bi bi-calendar-day me-1"></i>{% trans "Today's Notifications" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Mark single notification as read
+    document.querySelectorAll('.mark-read-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const notificationId = this.dataset.notificationId;
+            markNotificationRead(notificationId);
+        });
+    });
+
+    // Mark all notifications as read
+    document.getElementById('markAllRead').addEventListener('click', markAllRead);
+    const markAllReadMobile = document.getElementById('markAllReadMobile');
+    if (markAllReadMobile) {
+        markAllReadMobile.addEventListener('click', markAllRead);
+    }
+
+    function markNotificationRead(notificationId) {
+        fetch(`/notifications/api/mark-read/${notificationId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remove the notification from the list
+                const notificationItem = document.querySelector(`[data-notification-id="${notificationId}"]`);
+                if (notificationItem) {
+                    notificationItem.style.opacity = '0.5';
+                    notificationItem.classList.add('text-muted');
+                    // Update badges and counters
+                    updateNotificationCounts();
+                }
+            } else {
+                console.error('Failed to mark notification as read:', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+
+    function markAllRead() {
+        if (confirm('{% trans "Mark all notifications as read?" %}')) {
+            fetch('/notifications/api/mark-all-read/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload(); // Refresh the page to show updated counts
+                } else {
+                    console.error('Failed to mark all notifications as read:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    }
+
+    function updateNotificationCounts() {
+        // Update notification counts in header/sidebar
+        fetch('/notifications/api/count/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update any notification count badges
+                const countBadges = document.querySelectorAll('.notification-count');
+                countBadges.forEach(badge => {
+                    badge.textContent = data.unread_count;
+                    if (data.unread_count === 0) {
+                        badge.style.display = 'none';
+                    }
+                });
+            }
+        });
+    }
+});
+</script>
+
+<style>
+.stat-card {
+    transition: transform 0.2s ease-in-out;
+}
+.stat-card:hover {
+    transform: translateY(-2px);
+}
+.notification-item {
+    transition: opacity 0.3s ease;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,18 @@
+[
+  {
+    "model": "data_pipeline.source",
+    "pk": 7,
+    "fields": {
+      "name": "Test Source",
+      "description": "Test source for integration testing with predictable data generation. \nThis source will generate 4 data points, so that detection thresholds and subscription filters can be tested:\n   - North Darfur: Conflict (0.9) and Food Security (0.9)\n   - Blue Nile: Conflict (0.95) and Food Security (0.92)",
+      "type": "database",
+      "info_url": "",
+      "base_url": "",
+      "class_name": "TestSource",
+      "comment": "Generates predictable test scenarios: Conflict Escalation, Food Crisis",
+      "is_active": true,
+      "created_at": "2025-09-18T17:06:36.783877+00:00",
+      "updated_at": "2025-09-19T11:24:59.764789+00:00"
+    }
+  }
+]

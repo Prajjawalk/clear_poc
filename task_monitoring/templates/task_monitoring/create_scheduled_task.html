@@ -1,0 +1,278 @@
+{% extends "task_monitoring/base.html" %}
+{% load i18n %}
+
+{% block title %}Create Scheduled Task - Task Monitoring{% endblock %}
+
+{% block main_content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="/">
+                        <i class="bi bi-house"></i> Home
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'task_monitoring:dashboard' %}">Task Monitoring</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'task_monitoring:scheduled_tasks_list' %}">Scheduled Tasks</a>
+                </li>
+                <li class="breadcrumb-item active">Create Task</li>
+            </ol>
+        </nav>
+        <h1 class="nrc-heading mb-0">
+            <i class="bi bi-plus-circle me-2 text-warning"></i>{% trans "Create Scheduled Task" %}
+        </h1>
+    </div>
+    <div class="d-flex align-items-center">
+        <a href="{% url 'task_monitoring:scheduled_tasks_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> {% trans "Back to List" %}
+        </a>
+    </div>
+</div>
+
+<!-- Task Creation Form -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0 nrc-heading">
+            <i class="bi bi-form me-2"></i>{% trans "Task Configuration" %}
+        </h5>
+    </div>
+    <div class="card-body">
+        <form method="post" id="scheduled-task-form">
+            {% csrf_token %}
+            
+            <!-- Basic Information -->
+            <h6 class="nrc-heading mb-3">{% trans "Basic Information" %}</h6>
+            <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="name" class="form-label">{% trans "Task Name" %} <span class="text-danger">*</span></label>
+                                <input type="text" name="name" id="name" class="form-control" required>
+                                <div class="form-text">{% trans "A unique name for this scheduled task" %}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="task" class="form-label">{% trans "Task" %} <span class="text-danger">*</span></label>
+                                <select name="task" id="task" class="form-select" required>
+                                    <option value="">{% trans "Select a task" %}</option>
+                                    {% for task_name in available_tasks %}
+                                        <option value="{{ task_name }}">{{ task_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <label for="description" class="form-label">{% trans "Description" %}</label>
+                                <textarea name="description" id="description" class="form-control" rows="2"></textarea>
+                            </div>
+                        </div>
+
+            <!-- Schedule Configuration -->
+            <hr class="my-4">
+            <h6 class="nrc-heading mb-3">{% trans "Schedule Configuration" %}</h6>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="schedule_type" class="form-label">{% trans "Schedule Type" %} <span class="text-danger">*</span></label>
+                                <select name="schedule_type" id="schedule_type" class="form-select" required>
+                                    <option value="">{% trans "Select schedule type" %}</option>
+                                    <option value="interval">{% trans "Interval (every X minutes/hours/days)" %}</option>
+                                    <option value="crontab">{% trans "Crontab (specific times)" %}</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check mt-4">
+                                    <input class="form-check-input" type="checkbox" name="enabled" id="enabled" checked>
+                                    <label class="form-check-label" for="enabled">
+                                        {% trans "Enabled" %}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Interval Schedule -->
+                        <div id="interval-schedule" class="schedule-section" style="display: none;">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="every" class="form-label">{% trans "Every" %}</label>
+                                    <input type="number" name="every" id="every" class="form-control" min="1" value="1">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="period" class="form-label">{% trans "Period" %}</label>
+                                    <select name="period" id="period" class="form-select">
+                                        <option value="seconds">{% trans "Seconds" %}</option>
+                                        <option value="minutes" selected>{% trans "Minutes" %}</option>
+                                        <option value="hours">{% trans "Hours" %}</option>
+                                        <option value="days">{% trans "Days" %}</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Crontab Schedule -->
+                        <div id="crontab-schedule" class="schedule-section" style="display: none;">
+                            <div class="row mb-3">
+                                <div class="col-md-2">
+                                    <label for="minute" class="form-label">{% trans "Minute" %}</label>
+                                    <input type="text" name="minute" id="minute" class="form-control" value="*" placeholder="0-59">
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="hour" class="form-label">{% trans "Hour" %}</label>
+                                    <input type="text" name="hour" id="hour" class="form-control" value="*" placeholder="0-23">
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="day_of_month" class="form-label">{% trans "Day of Month" %}</label>
+                                    <input type="text" name="day_of_month" id="day_of_month" class="form-control" value="*" placeholder="1-31">
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="month_of_year" class="form-label">{% trans "Month" %}</label>
+                                    <input type="text" name="month_of_year" id="month_of_year" class="form-control" value="*" placeholder="1-12">
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="day_of_week" class="form-label">{% trans "Day of Week" %}</label>
+                                    <input type="text" name="day_of_week" id="day_of_week" class="form-control" value="*" placeholder="0-6">
+                                </div>
+                            </div>
+                            <div class="alert alert-info">
+                                <small>
+                                    {% trans "Use * for any value. Examples:" %}<br>
+                                    <strong>0 9 * * 1-5</strong> - {% trans "Every weekday at 9:00 AM" %}<br>
+                                    <strong>0 */2 * * *</strong> - {% trans "Every 2 hours" %}<br>
+                                    <strong>30 4 1 * *</strong> - {% trans "At 4:30 AM on the 1st of every month" %}
+                                </small>
+                            </div>
+                        </div>
+
+            <!-- Task Arguments -->
+            <hr class="my-4">
+            <h6 class="nrc-heading mb-3">{% trans "Task Arguments" %}</h6>
+                        
+                        <div class="row mb-3" id="task-args-section" style="display: none;">
+                            <div class="col-md-6">
+                                <label for="source_id" class="form-label">{% trans "Source" %}</label>
+                                <select name="source_id" id="source_id" class="form-select">
+                                    <option value="">{% trans "Select source (optional)" %}</option>
+                                    {% for source in sources %}
+                                        <option value="{{ source.id }}">{{ source.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="variable_id" class="form-label">{% trans "Variable" %}</label>
+                                <select name="variable_id" id="variable_id" class="form-select">
+                                    <option value="">{% trans "Select variable (optional)" %}</option>
+                                    {% for variable in variables %}
+                                        <option value="{{ variable.id }}" data-source="{{ variable.source.id }}">
+                                            {{ variable.source.name }} - {{ variable.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="args" class="form-label">{% trans "Arguments (JSON)" %}</label>
+                                <textarea name="args" id="args" class="form-control" rows="3" placeholder='["arg1", "arg2"]'></textarea>
+                                <div class="form-text">{% trans "JSON array of positional arguments" %}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="kwargs" class="form-label">{% trans "Keyword Arguments (JSON)" %}</label>
+                                <textarea name="kwargs" id="kwargs" class="form-control" rows="3" placeholder='{"key": "value"}'></textarea>
+                                <div class="form-text">{% trans "JSON object of keyword arguments" %}</div>
+                            </div>
+                        </div>
+
+            <!-- Submit -->
+            <hr class="my-4">
+            <div class="d-flex justify-content-end">
+                <a href="{% url 'task_monitoring:scheduled_tasks_list' %}" class="btn btn-outline-secondary me-2">
+                    {% trans "Cancel" %}
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle"></i> {% trans "Create Scheduled Task" %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const scheduleTypeSelect = document.getElementById('schedule_type');
+    const intervalSection = document.getElementById('interval-schedule');
+    const crontabSection = document.getElementById('crontab-schedule');
+    const taskSelect = document.getElementById('task');
+    const taskArgsSection = document.getElementById('task-args-section');
+    const sourceSelect = document.getElementById('source_id');
+    const variableSelect = document.getElementById('variable_id');
+    const argsTextarea = document.getElementById('args');
+
+    // Toggle schedule sections
+    scheduleTypeSelect.addEventListener('change', function() {
+        intervalSection.style.display = 'none';
+        crontabSection.style.display = 'none';
+        
+        if (this.value === 'interval') {
+            intervalSection.style.display = 'block';
+        } else if (this.value === 'crontab') {
+            crontabSection.style.display = 'block';
+        }
+    });
+
+    // Show/hide task arguments based on selected task
+    taskSelect.addEventListener('change', function() {
+        const isDataPipelineTask = this.value.includes('data_pipeline.tasks');
+        taskArgsSection.style.display = isDataPipelineTask ? 'block' : 'none';
+    });
+
+    // Filter variables by source
+    sourceSelect.addEventListener('change', function() {
+        const selectedSourceId = this.value;
+        const variableOptions = variableSelect.querySelectorAll('option');
+        
+        variableOptions.forEach(option => {
+            if (option.value === '') {
+                option.style.display = 'block';
+                return;
+            }
+            
+            if (!selectedSourceId || option.dataset.source === selectedSourceId) {
+                option.style.display = 'block';
+            } else {
+                option.style.display = 'none';
+                if (option.selected) {
+                    option.selected = false;
+                    variableSelect.value = '';
+                }
+            }
+        });
+    });
+
+    // Update args based on selections
+    function updateArgs() {
+        if (!taskSelect.value.includes('data_pipeline.tasks')) return;
+        
+        const args = [];
+        if (sourceSelect.value) {
+            args.push(parseInt(sourceSelect.value));
+        }
+        if (variableSelect.value) {
+            if (args.length === 0) args.push(null); // source placeholder
+            args.push(parseInt(variableSelect.value));
+        }
+        
+        if (args.length > 0) {
+            argsTextarea.value = JSON.stringify(args);
+        }
+    }
+
+    sourceSelect.addEventListener('change', updateArgs);
+    variableSelect.addEventListener('change', updateArgs);
+});
+</script>
+{% endblock %}

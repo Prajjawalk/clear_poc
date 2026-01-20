@@ -1,0 +1,362 @@
+{% extends "layout.html" %}
+{% load i18n %}
+{% load translation_tags %}
+
+{% block title %}{% trans "NRC EWAS - Alert System" %}{% endblock %}
+{% block description %}{% translate "Norwegian Refugee EWAS Sudan - Alert System" %}{% endblock %}
+{% block header_subtitle %}{% trans "Alert System" %}{% endblock %}
+{% block app_class %}app-alerts{% endblock %}
+
+{% block sidebar_icon %}bi bi-bell{% endblock %}
+{% block sidebar_color %}danger{% endblock %}
+{% block sidebar_heading %}{% trans "Alert System" %}{% endblock %}
+
+{% block mobile_sidebar_icon %}bi bi-bell{% endblock %}
+{% block mobile_sidebar_color %}danger{% endblock %}
+{% block mobile_sidebar_heading %}{% trans "Alert System" %}{% endblock %}
+
+{% block sidebar_nav %}
+<ul class="nav nav-pills flex-column">
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if request.resolver_match.url_name == 'alert_list' %}active{% endif %}"
+           href="{% url 'alerts:alert_list' %}" title="{% trans 'All Alerts' %}">
+            <i class="bi bi-list"></i>
+            <span class="nav-text ms-2">{% trans "All Alerts" %}</span>
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if request.resolver_match.url_name == 'alert_map' %}active{% endif %}"
+           href="{% url 'alerts:alert_map' %}" title="{% trans 'Alert Map' %}">
+            <i class="bi bi-map"></i>
+            <span class="nav-text ms-2">{% trans "Alert Map" %}</span>
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if 'subscription' in request.resolver_match.url_name %}active{% endif %}"
+           href="{% url 'alerts:subscription_list' %}" title="{% trans 'Subscriptions' %}">
+            <i class="bi bi-envelope"></i>
+            <span class="nav-text ms-2">{% trans "Subscriptions" %}</span>
+        </a>
+    </li>
+    {% if user.is_staff %}
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if request.resolver_match.url_name == 'alert_create' %}active{% endif %}"
+           href="{% url 'alerts:alert_create' %}" title="{% trans 'Create Alert' %}">
+            <i class="bi bi-plus-circle"></i>
+            <span class="nav-text ms-2">{% trans "Create Alert" %}</span>
+        </a>
+    </li>
+    {% endif %}
+</ul>
+{% endblock %}
+
+{% block mobile_sidebar_nav %}
+<ul class="nav nav-pills flex-column">
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if request.resolver_match.url_name == 'alert_list' %}active{% endif %}"
+           href="{% url 'alerts:alert_list' %}">
+            <i class="bi bi-list me-2"></i>
+            {% trans "All Alerts" %}
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if request.resolver_match.url_name == 'alert_map' %}active{% endif %}"
+           href="{% url 'alerts:alert_map' %}">
+            <i class="bi bi-map me-2"></i>
+            {% trans "Alert Map" %}
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if 'subscription' in request.resolver_match.url_name %}active{% endif %}"
+           href="{% url 'alerts:subscription_list' %}">
+            <i class="bi bi-envelope me-2"></i>
+            {% trans "Subscriptions" %}
+        </a>
+    </li>
+    {% if user.is_staff %}
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if request.resolver_match.url_name == 'alert_create' %}active{% endif %}"
+           href="{% url 'alerts:alert_create' %}">
+            <i class="bi bi-plus-circle me-2"></i>
+            {% trans "Create Alert" %}
+        </a>
+    </li>
+    {% endif %}
+</ul>
+{% endblock %}
+
+{% block sidebar_actions %}
+<!-- Alert Filters (only on alert list page) -->
+{% if request.resolver_match.url_name == 'alert_list' %}
+<hr class="my-3">
+
+<!-- Filter Icon (always visible) -->
+<div class="nav-item mb-1">
+    <div class="nav-link d-flex align-items-center">
+        <i class="bi bi-funnel text-danger" title="{% trans 'Filter Alerts' %}"></i>
+        <span class="nav-text ms-2">{% trans "Filter Alerts" %}</span>
+    </div>
+</div>
+
+<!-- Filter Form (hidden when sidebar collapsed) -->
+<div class="sidebar-text">
+    <form method="get" id="sidebar-filter-form" class="mb-3">
+        <!-- Search -->
+        <div class="mb-2">
+            <label for="sidebar-search" class="form-label small">{% trans "Search" %}</label>
+            <input type="text" name="search" id="sidebar-search" class="form-control form-control-sm"
+                   value="{{ current_filters.search }}"
+                   placeholder="{% trans 'Title, content...' %}">
+        </div>
+
+        <!-- Shock Type -->
+        <div class="mb-2">
+            <label for="sidebar-shock-type" class="form-label small">{% trans "Type" %}</label>
+            <select name="shock_type" id="sidebar-shock-type" class="form-select form-select-sm">
+                <option value="">{% trans "All" %}</option>
+                {% for shock_type in shock_types %}
+                <option value="{{ shock_type.id }}"
+                        {% if current_filters.shock_type == shock_type.id|stringformat:"s" %}selected{% endif %}>
+                    {{ shock_type.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Severity -->
+        <div class="mb-2">
+            <label for="sidebar-severity" class="form-label small">{% trans "Severity" %}</label>
+            <select name="severity" id="sidebar-severity" class="form-select form-select-sm">
+                <option value="">{% trans "All" %}</option>
+                {% for value, label in severity_choices %}
+                <option value="{{ value }}"
+                        {% if current_filters.severity == value|stringformat:"s" %}selected{% endif %}>
+                    {{ label }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Source -->
+        <div class="mb-2">
+            <label for="sidebar-source" class="form-label small">{% trans "Source" %}</label>
+            <select name="source" id="sidebar-source" class="form-select form-select-sm">
+                <option value="">{% trans "All" %}</option>
+                {% for source in sources %}
+                <option value="{{ source.id }}"
+                        {% if current_filters.source == source.id|stringformat:"s" %}selected{% endif %}>
+                    {{ source.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Admin1 Location -->
+        <div class="mb-2">
+            <label for="sidebar-admin1" class="form-label small">{% trans "Admin1" %}</label>
+            <select name="admin1" id="sidebar-admin1" class="form-select form-select-sm">
+                <option value="">{% trans "All" %}</option>
+                {% for location in admin1_locations %}
+                <option value="{{ location.id }}"
+                        {% if current_filters.admin1 == location.id|stringformat:"s" %}selected{% endif %}>
+                    {{ location.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Detector -->
+        <div class="mb-2">
+            <label for="sidebar-detector" class="form-label small">{% trans "Detector" %}</label>
+            <select name="detector" id="sidebar-detector" class="form-select form-select-sm">
+                <option value="">{% trans "All" %}</option>
+                {% for detector in detectors %}
+                <option value="{{ detector.id }}"
+                        {% if current_filters.detector == detector.id|stringformat:"s" %}selected{% endif %}>
+                    {{ detector.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Date Range (compact) -->
+        <div class="row mb-2">
+            <div class="col-6">
+                <label for="sidebar-date-from" class="form-label small">{% trans "From" %}</label>
+                <input type="date" name="date_from" id="sidebar-date-from" class="form-control form-control-sm"
+                       value="{{ current_filters.date_from }}">
+            </div>
+            <div class="col-6">
+                <label for="sidebar-date-to" class="form-label small">{% trans "To" %}</label>
+                <input type="date" name="date_to" id="sidebar-date-to" class="form-control form-control-sm"
+                       value="{{ current_filters.date_to }}">
+            </div>
+        </div>
+
+        <!-- Active Today -->
+        <div class="mb-2">
+            <div class="form-check form-check-sm">
+                <input type="checkbox" name="active_today" id="sidebar-active-today" class="form-check-input"
+                       value="1" {% if current_filters.active_today != "0" %}checked{% endif %}>
+                <label for="sidebar-active-today" class="form-check-label small">
+                    {% trans "Active Today" %}
+                </label>
+            </div>
+        </div>
+
+        <!-- Bookmarked Only -->
+        <div class="mb-3">
+            <div class="form-check form-check-sm">
+                <input type="checkbox" name="bookmarked" id="sidebar-bookmarked" class="form-check-input"
+                       value="1" {% if current_filters.bookmarked %}checked{% endif %}>
+                <label for="sidebar-bookmarked" class="form-check-label small">
+                    {% trans "Bookmarked Only" %}
+                </label>
+            </div>
+        </div>
+
+        <div class="d-grid">
+            <a href="{% url 'alerts:alert_list' %}?active_today=0" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-x-circle me-1"></i>
+                <span class="nav-text">{% trans "Clear" %}</span>
+            </a>
+        </div>
+    </form>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block mobile_sidebar_actions %}
+<!-- Mobile Alert Filters (only on alert list page) -->
+{% if request.resolver_match.url_name == 'alert_list' %}
+<hr class="my-3">
+
+<h6 class="sidebar-heading nrc-heading mb-3">
+    <i class="bi bi-funnel me-2 text-primary"></i>
+    {% trans "Filter Alerts" %}
+</h6>
+
+<form method="get" id="mobile-sidebar-filter-form" class="mb-3">
+    <!-- Search -->
+    <div class="mb-2">
+        <label for="mobile-sidebar-search" class="form-label small">{% trans "Search" %}</label>
+        <input type="text" name="search" id="mobile-sidebar-search" class="form-control form-control-sm"
+               value="{{ current_filters.search }}"
+               placeholder="{% trans 'Title, content...' %}">
+    </div>
+
+    <!-- Shock Type -->
+    <div class="mb-2">
+        <label for="mobile-sidebar-shock-type" class="form-label small">{% trans "Type" %}</label>
+        <select name="shock_type" id="mobile-sidebar-shock-type" class="form-select form-select-sm">
+            <option value="">{% trans "All" %}</option>
+            {% for shock_type in shock_types %}
+            <option value="{{ shock_type.id }}"
+                    {% if current_filters.shock_type == shock_type.id|stringformat:"s" %}selected{% endif %}>
+                {{ shock_type.name }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- Severity -->
+    <div class="mb-2">
+        <label for="mobile-sidebar-severity" class="form-label small">{% trans "Severity" %}</label>
+        <select name="severity" id="mobile-sidebar-severity" class="form-select form-select-sm">
+            <option value="">{% trans "All" %}</option>
+            {% for value, label in severity_choices %}
+            <option value="{{ value }}"
+                    {% if current_filters.severity == value|stringformat:"s" %}selected{% endif %}>
+                {{ label }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- Source -->
+    <div class="mb-2">
+        <label for="mobile-sidebar-source" class="form-label small">{% trans "Source" %}</label>
+        <select name="source" id="mobile-sidebar-source" class="form-select form-select-sm">
+            <option value="">{% trans "All" %}</option>
+            {% for source in sources %}
+            <option value="{{ source.id }}"
+                    {% if current_filters.source == source.id|stringformat:"s" %}selected{% endif %}>
+                {{ source.name }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- Admin1 Location -->
+    <div class="mb-2">
+        <label for="mobile-sidebar-admin1" class="form-label small">{% trans "Admin1" %}</label>
+        <select name="admin1" id="mobile-sidebar-admin1" class="form-select form-select-sm">
+            <option value="">{% trans "All" %}</option>
+            {% for location in admin1_locations %}
+            <option value="{{ location.id }}"
+                    {% if current_filters.admin1 == location.id|stringformat:"s" %}selected{% endif %}>
+                {{ location.name }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- Detector -->
+    <div class="mb-2">
+        <label for="mobile-sidebar-detector" class="form-label small">{% trans "Detector" %}</label>
+        <select name="detector" id="mobile-sidebar-detector" class="form-select form-select-sm">
+            <option value="">{% trans "All" %}</option>
+            {% for detector in detectors %}
+            <option value="{{ detector.id }}"
+                    {% if current_filters.detector == detector.id|stringformat:"s" %}selected{% endif %}>
+                {{ detector.name }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- Date Range (compact) -->
+    <div class="row mb-2">
+        <div class="col-6">
+            <label for="mobile-sidebar-date-from" class="form-label small">{% trans "From" %}</label>
+            <input type="date" name="date_from" id="mobile-sidebar-date-from" class="form-control form-control-sm"
+                   value="{{ current_filters.date_from }}">
+        </div>
+        <div class="col-6">
+            <label for="mobile-sidebar-date-to" class="form-label small">{% trans "To" %}</label>
+            <input type="date" name="date_to" id="mobile-sidebar-date-to" class="form-control form-control-sm"
+                   value="{{ current_filters.date_to }}">
+        </div>
+    </div>
+
+    <!-- Active Today -->
+    <div class="mb-2">
+        <div class="form-check form-check-sm">
+            <input type="checkbox" name="active_today" id="mobile-sidebar-active-today" class="form-check-input"
+                   value="1" {% if current_filters.active_today != "0" %}checked{% endif %}>
+            <label for="mobile-sidebar-active-today" class="form-check-label small">
+                {% trans "Active Today" %}
+            </label>
+        </div>
+    </div>
+
+    <!-- Bookmarked Only -->
+    <div class="mb-3">
+        <div class="form-check form-check-sm">
+            <input type="checkbox" name="bookmarked" id="mobile-sidebar-bookmarked" class="form-check-input"
+                   value="1" {% if current_filters.bookmarked %}checked{% endif %}>
+            <label for="mobile-sidebar-bookmarked" class="form-check-label small">
+                {% trans "Bookmarked Only" %}
+            </label>
+        </div>
+    </div>
+
+    <div class="d-grid">
+        <a href="{% url 'alerts:alert_list' %}?active_today=0" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-x-circle me-1"></i>
+            {% trans "Clear" %}
+        </a>
+    </div>
+</form>
+{% endif %}
+{% endblock %}

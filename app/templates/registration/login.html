@@ -1,0 +1,184 @@
+{% load vite_tags %}
+{% load static %}
+{% load i18n %}
+<!DOCTYPE html>
+{% get_current_language as LANGUAGE_CODE %}
+<html lang="{{ LANGUAGE_CODE|default:'en' }}" {% if LANGUAGE_CODE == 'ar' %}dir="rtl"{% else %}dir="ltr"{% endif %}>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Early Warning and Alert System</title>
+
+    <!-- NRC Brand Description -->
+    <meta name="description" content="Norwegian Refugee Council EWAS Sudan - Login">
+
+    {% comment %}<!-- Vite HMR client for development -->{% endcomment %}
+    {% vite_hmr %}
+    {% comment %}<!-- Vite-compiled CSS with Bootstrap and Bootstrap Icons -->{% endcomment %}
+    {% vite_css %}
+
+    {% comment %}<!-- Bootstrap Icons CDN fallback for development -->{% endcomment %}
+    {% if debug %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    {% endif %}
+</head>
+<body class="nrc-body bg-light">
+
+<div class="container">
+    <div class="row justify-content-center min-vh-100 align-items-center">
+        <div class="col-md-6 col-lg-4">
+            <!-- Login Card -->
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <!-- NRC Logo and Branding -->
+                    <div class="text-center mb-4">
+                        {% get_current_language as LANGUAGE_CODE %}
+                        {% if LANGUAGE_CODE == 'ar' %}
+                            <img src="{% static 'NRC_logo_English_RGB_negative_aligned_right.png' %}" alt="NRC Logo" class="mb-3" style="height: 60px;">
+                        {% else %}
+                            <img src="{% static 'NRC_logo_English_RGB_negative_aligned_left.png' %}" alt="NRC Logo" class="mb-3" style="height: 60px;">
+                        {% endif %}
+                        <h2 class="nrc-heading mb-2">Sign In</h2>
+                        <p class="text-muted small">Early Warning and Alert System</p>
+                    </div>
+
+                    <!-- Error Messages -->
+                    {% if form.errors %}
+                        <div class="alert alert-danger" role="alert">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            {% if form.non_field_errors %}
+                                {{ form.non_field_errors.0 }}
+                            {% else %}
+                                Please correct the errors below.
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    <!-- Login Form -->
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <!-- Username Field -->
+                        <div class="mb-3">
+                            <label for="id_username" class="form-label">
+                                <i class="bi bi-person me-2"></i>Username
+                            </label>
+                            <input type="text"
+                                   class="form-control {% if form.username.errors %}is-invalid{% endif %}"
+                                   id="id_username"
+                                   name="username"
+                                   value="{{ form.username.value|default:'' }}"
+                                   required
+                                   autocomplete="username"
+                                   placeholder="Enter your username">
+                            {% if form.username.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.username.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Password Field -->
+                        <div class="mb-3">
+                            <label for="id_password" class="form-label">
+                                <i class="bi bi-lock me-2"></i>Password
+                            </label>
+                            <input type="password"
+                                   class="form-control {% if form.password.errors %}is-invalid{% endif %}"
+                                   id="id_password"
+                                   name="password"
+                                   required
+                                   autocomplete="current-password"
+                                   placeholder="Enter your password">
+                            {% if form.password.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.password.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Remember Me -->
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="remember_me" name="remember_me">
+                            <label class="form-check-label" for="remember_me">
+                                Remember me
+                            </label>
+                        </div>
+
+                        <!-- Hidden next field -->
+                        {% if next %}
+                            <input type="hidden" name="next" value="{{ next }}">
+                        {% endif %}
+
+                        <!-- Submit Button -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Demo Users Info -->
+                    <div class="mt-4 p-3 bg-light rounded">
+                        <h6 class="nrc-heading mb-2">
+                            <i class="bi bi-info-circle me-2"></i>Demo Users
+                        </h6>
+                        <p class="small text-muted mb-2">Available demo accounts:</p>
+                        <div class="row">
+                            <div class="col-6">
+                                <ul class="list-unstyled small">
+                                    <li><strong>emergency_manager</strong></li>
+                                    <li><strong>head_operations</strong></li>
+                                    <li><strong>project_manager</strong></li>
+                                </ul>
+                            </div>
+                            <div class="col-6">
+                                <ul class="list-unstyled small">
+                                    <li><strong>field_coordinator</strong></li>
+                                    <li><strong>system_admin</strong></li>
+                                    <li><strong>external_viewer</strong></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="text-center mt-4">
+                <small class="text-muted">
+                    Norwegian Refugee Council • Early Warning and Alert System for Sudan
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% comment %}<!-- Vite-compiled JavaScript with Bootstrap -->{% endcomment %}
+{% vite_js %}
+{% vite_legacy_js %}
+{% vite_polyfills %}
+
+<script>
+// Auto-focus username field
+document.getElementById('id_username').focus();
+
+// Add loading state to login button
+document.querySelector('form').addEventListener('submit', function(e) {
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="bi bi-arrow-clockwise spin me-2"></i>Signing In...';
+    submitBtn.disabled = true;
+
+    // Re-enable if form validation fails
+    setTimeout(() => {
+        if (document.querySelector('.alert-danger')) {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }
+    }, 100);
+});
+</script>
+
+</body>
+</html>

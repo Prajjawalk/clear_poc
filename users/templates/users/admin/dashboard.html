@@ -1,0 +1,268 @@
+{% extends "users/base.html" %}
+{% load humanize %}
+{% load i18n %}
+{% load user_tags %}
+
+{% block title %}{% trans "User Management Dashboard" %}{% endblock %}
+
+{% block main_content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="/">
+                        <i class="bi bi-house"></i> {% trans "Home" %}
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'users:profile' %}">{% trans "User Management" %}</a>
+                </li>
+                <li class="breadcrumb-item active">{% trans "Admin Dashboard" %}</li>
+            </ol>
+        </nav>
+        <h1 class="nrc-heading mb-0">
+            <i class="bi bi-speedometer2 me-2 text-success"></i>{% trans "User Management Dashboard" %}
+        </h1>
+    </div>
+    <div class="btn-group" role="group">
+        <a href="{% url 'users:admin_user_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus me-1"></i>{% trans "New User" %}
+        </a>
+        <a href="{% url 'users:admin_user_list' %}" class="btn btn-success">
+            <i class="bi bi-people me-1"></i>{% trans "Manage Users" %}
+        </a>
+    </div>
+</div>
+
+<!-- Summary Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card text-center">
+            <div class="card-body">
+                <i class="bi bi-people text-primary" style="font-size: 2rem;"></i>
+                <h3 class="card-title mt-2">{{ user_stats.total_users|intcomma }}</h3>
+                <p class="card-text text-muted">{% trans "Total Users" %}</p>
+                <a href="{% url 'users:admin_user_list' %}" class="btn btn-sm btn-outline-primary">{% trans "View All" %}</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card text-center">
+            <div class="card-body">
+                <i class="bi bi-check-circle text-success" style="font-size: 2rem;"></i>
+                <h3 class="card-title mt-2">{{ user_stats.verified_users|intcomma }}</h3>
+                <p class="card-text text-muted">{% trans "Verified Users" %}</p>
+                <a href="{% url 'users:admin_user_list' %}?verified=true" class="btn btn-sm btn-outline-success">{% trans "View Verified" %}</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card text-center">
+            <div class="card-body">
+                <i class="bi bi-envelope text-info" style="font-size: 2rem;"></i>
+                <h3 class="card-title mt-2">{{ user_stats.notification_enabled|intcomma }}</h3>
+                <p class="card-text text-muted">{% trans "Email Notifications" %}</p>
+                <a href="{% url 'users:admin_user_list' %}?notifications=true" class="btn btn-sm btn-outline-info">{% trans "View Active" %}</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card text-center">
+            <div class="card-body">
+                <i class="bi bi-person-plus text-warning" style="font-size: 2rem;"></i>
+                <h3 class="card-title mt-2">{{ user_stats.recent_signups|intcomma }}</h3>
+                <p class="card-text text-muted">{% trans "New This Week" %}</p>
+                <a href="{% url 'users:admin_user_list' %}" class="btn btn-sm btn-outline-warning">{% trans "View Recent" %}</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Recent Users -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-clock me-2"></i>{% trans "Recent Users" %}
+                </h5>
+                <a href="{% url 'users:admin_user_list' %}" class="btn btn-sm btn-outline-primary">
+                    {% trans "View All" %}
+                </a>
+            </div>
+            <div class="card-body p-0">
+                {% if recent_users %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>{% trans "User" %}</th>
+                                <th>{% trans "Email" %}</th>
+                                <th>{% trans "Status" %}</th>
+                                <th>{% trans "Joined" %}</th>
+                                <th>{% trans "Actions" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in recent_users %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2">
+                                            {{ user.username|first|upper }}
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold">{{ user.username }}</div>
+                                            {% if user.first_name or user.last_name %}
+                                            <small class="text-muted">{{ user.first_name }} {{ user.last_name }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ user.email }}</td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        {% if user.profile.email_verified %}
+                                            <span class="badge bg-success">{% trans "Verified" %}</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">{% trans "Unverified" %}</span>
+                                        {% endif %}
+                                        {% if user.profile.email_notifications_enabled %}
+                                            <span class="badge bg-info">{% trans "Notifications" %}</span>
+                                        {% endif %}
+                                        {% if user.is_staff %}
+                                            <span class="badge bg-secondary">{% trans "Staff" %}</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>{{ user.date_joined|date:"M d, Y" }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="/admin/auth/user/{{ user.id }}/change/" class="btn btn-outline-primary btn-sm" title="{% trans 'Edit' %}">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-people text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-2">{% trans "No users found" %}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Quick Actions -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-lightning me-2"></i>{% trans "Quick Actions" %}
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'users:admin_user_create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus me-2"></i>{% trans "Create New User" %}
+                    </a>
+                    <a href="{% url 'users:admin_user_list' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-people me-2"></i>{% trans "Manage All Users" %}
+                    </a>
+                    <a href="/admin/auth/user/" class="btn btn-outline-secondary">
+                        <i class="bi bi-gear me-2"></i>{% trans "Django Admin" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Statistics -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-pie-chart me-2"></i>{% trans "User Statistics" %}
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <div class="border-end">
+                            <h5 class="text-success">{{ user_stats.verified_users|percentage:user_stats.total_users }}%</h5>
+                            <small class="text-muted">{% trans "Verified" %}</small>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <h5 class="text-info">{{ user_stats.notification_enabled|percentage:user_stats.total_users }}%</h5>
+                        <small class="text-muted">{% trans "Notifications" %}</small>
+                    </div>
+                </div>
+
+                <div class="progress mb-2" style="height: 6px;">
+                    <div class="progress-bar bg-success" role="progressbar"
+                         style="width: {{ user_stats.verified_users|percentage:user_stats.total_users }}%"
+                         aria-valuenow="{{ user_stats.verified_users }}"
+                         aria-valuemin="0"
+                         aria-valuemax="{{ user_stats.total_users }}">
+                    </div>
+                </div>
+                <small class="text-muted">{% trans "Email Verification Rate" %}</small>
+
+                <div class="progress mt-3 mb-2" style="height: 6px;">
+                    <div class="progress-bar bg-info" role="progressbar"
+                         style="width: {{ user_stats.notification_enabled|percentage:user_stats.total_users }}%"
+                         aria-valuenow="{{ user_stats.notification_enabled }}"
+                         aria-valuemin="0"
+                         aria-valuemax="{{ user_stats.total_users }}">
+                    </div>
+                </div>
+                <small class="text-muted">{% trans "Notification Adoption Rate" %}</small>
+            </div>
+        </div>
+
+        <!-- System Health -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-activity me-2"></i>{% trans "System Health" %}
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted">{% trans "Database" %}</span>
+                    <span class="badge bg-success">{% trans "Online" %}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted">{% trans "Email Service" %}</span>
+                    <span class="badge bg-success">{% trans "Active" %}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-muted">{% trans "Notifications" %}</span>
+                    <span class="badge bg-success">{% trans "Running" %}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom CSS for stat cards -->
+<style>
+.stat-card {
+    transition: transform 0.2s ease-in-out;
+}
+.stat-card:hover {
+    transform: translateY(-2px);
+}
+.avatar-sm {
+    width: 2rem;
+    height: 2rem;
+    font-size: 0.875rem;
+}
+</style>
+{% endblock %}

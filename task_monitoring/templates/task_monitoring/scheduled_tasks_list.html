@@ -1,0 +1,236 @@
+{% extends "task_monitoring/base.html" %}
+{% load i18n %}
+
+{% block title %}Scheduled Tasks - Task Monitoring{% endblock %}
+
+{% block main_content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="/">
+                        <i class="bi bi-house"></i> Home
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'task_monitoring:dashboard' %}">Task Monitoring</a>
+                </li>
+                <li class="breadcrumb-item active">Scheduled Tasks</li>
+            </ol>
+        </nav>
+        <h1 class="nrc-heading mb-0">
+            <i class="bi bi-calendar3 me-2 text-warning"></i>{% trans "Scheduled Tasks" %}
+        </h1>
+    </div>
+    <div class="d-flex align-items-center">
+        <a href="{% url 'task_monitoring:create_scheduled_task' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> {% trans "Create Scheduled Task" %}
+        </a>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0 nrc-heading">
+            <i class="bi bi-funnel me-2"></i>{% trans "Filter Tasks" %}
+        </h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="enabled" class="form-label">{% trans "Status" %}</label>
+                            <select name="enabled" id="enabled" class="form-select">
+                                <option value="">{% trans "All" %}</option>
+                                <option value="true" {% if current_filters.enabled == "true" %}selected{% endif %}>
+                                    {% trans "Enabled" %}
+                                </option>
+                                <option value="false" {% if current_filters.enabled == "false" %}selected{% endif %}>
+                                    {% trans "Disabled" %}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="search" class="form-label">{% trans "Search" %}</label>
+                            <input type="text" name="search" id="search" class="form-control" 
+                                   value="{{ current_filters.search }}" 
+                                   placeholder="{% trans 'Search by name or task...' %}">
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-outline-primary me-2">
+                                {% trans "Filter" %}
+                            </button>
+                            <a href="{% url 'task_monitoring:scheduled_tasks_list' %}" class="btn btn-outline-secondary">
+                                {% trans "Clear" %}
+                            </a>
+                        </div>
+        </form>
+    </div>
+</div>
+
+<!-- Tasks Table -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0 nrc-heading">
+            <i class="bi bi-list-ul me-2"></i>{% trans "Scheduled Tasks" %}
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if tasks %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>{% trans "Name" %}</th>
+                            <th>{% trans "Task" %}</th>
+                            <th>{% trans "Schedule" %}</th>
+                            <th>{% trans "Next Run" %}</th>
+                            <th>{% trans "Status" %}</th>
+                            <th>{% trans "Last Run" %}</th>
+                            <th>{% trans "Actions" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for task in tasks %}
+                            <tr>
+                                <td>
+                                    <i class="bi bi-clock me-2 text-primary"></i>
+                                    <a href="{% url 'task_monitoring:scheduled_task_detail' task.id %}" class="text-decoration-none">
+                                        <strong>{{ task.name }}</strong>
+                                    </a>
+                                    {% if task.description %}
+                                        <br><small class="nrc-text-muted">{{ task.description }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <code class="small">{{ task.task }}</code>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">
+                                        <i class="bi bi-calendar3 me-1"></i>
+                                        {{ task.readable_schedule }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if task.next_run %}
+                                        <div>
+                                            <small class="text-primary">
+                                                <strong>{{ task.time_until_next }}</strong>
+                                            </small>
+                                            <br>
+                                            <small class="text-muted">
+                                                {{ task.next_run|date:"M j, H:i" }}
+                                            </small>
+                                        </div>
+                                    {% else %}
+                                        <span class="text-muted"><em>{% trans "Not scheduled" %}</em></span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if task.enabled %}
+                                        <span class="badge bg-success">{% trans "Enabled" %}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{% trans "Disabled" %}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if task.last_run_at %}
+                                        <small>{{ task.last_run_at|date:"M j, H:i" }}</small>
+                                    {% else %}
+                                        <span class="text-muted"><em>{% trans "Never" %}</em></span>
+                                    {% endif %}
+                                </td>
+                                <td class="table-actions">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{% url 'task_monitoring:scheduled_task_detail' task.id %}" 
+                                           class="btn btn-outline-info" title="{% trans 'View Details' %}">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <form method="post" action="{% url 'task_monitoring:toggle_scheduled_task' task.id %}" 
+                                              style="display: inline;">
+                                            {% csrf_token %}
+                                            <button type="submit" 
+                                                    class="btn btn-outline-{% if task.enabled %}warning{% else %}success{% endif %}"
+                                                    title="{% if task.enabled %}{% trans 'Disable' %}{% else %}{% trans 'Enable' %}{% endif %}">
+                                                <i class="bi bi-{% if task.enabled %}pause{% else %}play{% endif %}"></i>
+                                            </button>
+                                        </form>
+                                        <form method="post" action="{% url 'task_monitoring:run_scheduled_task' task.id %}" 
+                                              style="display: inline;">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="next" value="{% url 'task_monitoring:scheduled_tasks_list' %}">
+                                            <button type="submit" class="btn btn-outline-primary" title="{% trans 'Run Now' %}">
+                                                <i class="bi bi-play-circle"></i>
+                                            </button>
+                                        </form>
+                                        <form method="post" action="{% url 'task_monitoring:delete_scheduled_task' task.id %}" 
+                                              style="display: inline;"
+                                              onsubmit="return confirm('{% trans 'Are you sure you want to delete this scheduled task?' %}')">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-outline-danger" title="{% trans 'Delete' %}">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+                        <!-- Pagination -->
+                        {% if page_obj.has_other_pages %}
+                            <nav aria-label="{% trans 'Scheduled tasks pagination' %}">
+                                <ul class="pagination justify-content-center mt-4">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=1{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                                {% trans "First" %}
+                                            </a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                                {% trans "Previous" %}
+                                            </a>
+                                        </li>
+                                    {% endif %}
+
+                                    <li class="page-item active">
+                                        <span class="page-link">
+                                            {% trans "Page" %} {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}
+                                        </span>
+                                    </li>
+
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                                {% trans "Next" %}
+                                            </a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                                {% trans "Last" %}
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+        {% else %}
+            <div class="text-center py-4">
+                <i class="bi bi-clock-history display-1 text-muted mb-3"></i>
+                <h4 class="nrc-heading">{% trans "No scheduled tasks found" %}</h4>
+                <p class="text-muted">
+                    {% trans "Create your first scheduled task to automate data pipeline operations." %}
+                </p>
+                <a href="{% url 'task_monitoring:create_scheduled_task' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> {% trans "Create Scheduled Task" %}
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

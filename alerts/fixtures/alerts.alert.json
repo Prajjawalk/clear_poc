@@ -1,0 +1,90 @@
+[
+  {
+    "model": "alerts.alert",
+    "pk": 1,
+    "fields": {
+      "title": "Escalating Violence in Darfur Region",
+      "title_en": "Escalating Violence in Darfur Region",
+      "title_ar": "تصاعد العنف في منطقة دارفور",
+      "text": "Reports indicate increased armed clashes between various groups in West Darfur, resulting in civilian casualties and displacement. The security situation has deteriorated significantly over the past 48 hours, with multiple incidents reported across several localities.",
+      "text_en": "Reports indicate increased armed clashes between various groups in West Darfur, resulting in civilian casualties and displacement. The security situation has deteriorated significantly over the past 48 hours, with multiple incidents reported across several localities.",
+      "text_ar": "تشير التقارير إلى تزايد الاشتباكات المسلحة بين مختلف الجماعات في غرب دارفور، مما أدى إلى سقوط ضحايا مدنيين ونزوح السكان. تدهورت الحالة الأمنية بشكل كبير خلال الـ 48 ساعة الماضية، مع الإبلاغ عن حوادث متعددة عبر عدة محليات.",
+      "shock_type": 1,
+      "data_source": 1,
+      "shock_date": "2025-08-28",
+      "go_no_go": true,
+      "go_no_go_date": "2025-08-28T14:00:00Z",
+      "valid_from": "2025-08-28T12:00:00Z",
+      "valid_until": "2025-12-31T23:59:59Z",
+      "severity": 4,
+      "created_at": "2025-08-28T13:30:00Z",
+      "updated_at": "2025-12-31T14:00:00Z"
+    }
+  },
+  {
+    "model": "alerts.alert",
+    "pk": 2,
+    "fields": {
+      "title": "Flash Floods in Blue Nile State",
+      "title_en": "Flash Floods in Blue Nile State",
+      "title_ar": "فيضانات مفاجئة في ولاية النيل الأزرق",
+      "text": "Heavy seasonal rains have caused severe flooding in Blue Nile State, affecting multiple villages and displacing thousands of families. Access to affected areas is severely limited, hampering relief efforts.",
+      "text_en": "Heavy seasonal rains have caused severe flooding in Blue Nile State, affecting multiple villages and displacing thousands of families. Access to affected areas is severely limited, hampering relief efforts.",
+      "text_ar": "تسببت الأمطار الموسمية الغزيرة في فيضانات شديدة في ولاية النيل الأزرق، مما أثر على قرى متعددة وأدى إلى نزوح آلاف الأسر. الوصول إلى المناطق المتضررة محدود للغاية، مما يعرقل جهود الإغاثة.",
+      "shock_type": 2,
+      "data_source": 1,
+      "shock_date": "2025-08-27",
+      "go_no_go": true,
+      "go_no_go_date": "2025-08-27T16:30:00Z",
+      "valid_from": "2025-08-27T15:00:00Z",
+      "valid_until": "2025-09-03T23:59:59Z",
+      "severity": 3,
+      "created_at": "2025-08-27T15:45:00Z",
+      "updated_at": "2025-08-27T16:30:00Z"
+    }
+  },
+  {
+    "model": "alerts.alert",
+    "pk": 3,
+    "fields": {
+      "title": "Critical Food Security Crisis in Upper Nile State",
+      "title_en": "Critical Food Security Crisis in Upper Nile State",
+      "title_ar": "أزمة الأمن الغذائي الحرجة في ولاية أعالي النيل",
+      "text": "Extremely high acute malnutrition levels in Nasir and Ulang counties underscore risk of famine in Upper Nile State. Over 83,000 people are facing 'Catastrophe' food security phase, with malnutrition rates reaching 25.4% in Nasir and 23.4% in Ulang among children under 5. Around 80,000 people have been displaced, representing over 50% of the population in these counties.",
+      "text_en": "Extremely high acute malnutrition levels in Nasir and Ulang counties underscore risk of famine in Upper Nile State. Over 83,000 people are facing 'Catastrophe' food security phase, with malnutrition rates reaching 25.4% in Nasir and 23.4% in Ulang among children under 5. Around 80,000 people have been displaced, representing over 50% of the population in these counties.",
+      "text_ar": "تؤكد المستويات العالية جداً لسوء التغذية الحاد في مقاطعتي ناصر وأولانغ على خطر المجاعة في ولاية أعالي النيل. يواجه أكثر من 83,000 شخص مرحلة 'الكارثة' في الأمن الغذائي، حيث تصل معدلات سوء التغذية إلى 25.4% في ناصر و 23.4% في أولانغ بين الأطفال دون سن الخامسة. تم نزوح حوالي 80,000 شخص، يمثلون أكثر من 50% من السكان في هذه المقاطعات.",
+      "shock_type": 4,
+      "data_source": 1,
+      "shock_date": "2025-08-05",
+      "go_no_go": true,
+      "go_no_go_date": "2025-08-05T12:15:00Z",
+      "valid_from": "2025-08-05T11:00:00Z",
+      "valid_until": "2025-09-05T23:59:59Z",
+      "severity": 5,
+      "created_at": "2025-08-05T11:30:00Z",
+      "updated_at": "2025-08-05T12:15:00Z"
+    }
+  },
+  {
+    "model": "alerts.alert",
+    "pk": 4,
+    "fields": {
+      "title": "Cholera Outbreak Compounds Food Security Crisis",
+      "title_en": "Cholera Outbreak Compounds Food Security Crisis",
+      "title_ar": "تفشي الكوليرا يزيد من أزمة الأمن الغذائي",
+      "text": "A cholera outbreak in Greater Upper Nile Region has resulted in 21,892 cases and 474 deaths, further exacerbating the food security crisis. Nasir County reports a case fatality rate of 7.8% while Ulang County has 2.6%. The outbreak is severely hampering relief efforts in areas where 23% of households in Nasir and 11% in Ulang are experiencing extreme hunger.",
+      "text_en": "A cholera outbreak in Greater Upper Nile Region has resulted in 21,892 cases and 474 deaths, further exacerbating the food security crisis. Nasir County reports a case fatality rate of 7.8% while Ulang County has 2.6%. The outbreak is severely hampering relief efforts in areas where 23% of households in Nasir and 11% in Ulang are experiencing extreme hunger.",
+      "text_ar": "تفشي الكوليرا في منطقة أعالي النيل الكبرى أدى إلى 21,892 حالة و474 وفاة، مما فاقم أزمة الأمن الغذائي. تقرر مقاطعة ناصر معدل وفيات 7.8% بينما أولانغ لديها 2.6%. يعرقل التفشي بشدة جهود الإغاثة في مناطق حيث 23% من الأسر في ناصر و11% في أولانغ تعاني من الجوع الشديد.",
+      "shock_type": 3,
+      "data_source": 1,
+      "shock_date": "2025-08-10",
+      "go_no_go": true,
+      "go_no_go_date": "2025-08-10T16:30:00Z",
+      "valid_from": "2025-08-10T15:00:00Z",
+      "valid_until": "2025-09-10T23:59:59Z",
+      "severity": 4,
+      "created_at": "2025-08-10T15:45:00Z",
+      "updated_at": "2025-08-10T16:30:00Z"
+    }
+  }
+]

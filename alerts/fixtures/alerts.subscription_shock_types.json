@@ -1,0 +1,34 @@
+[
+  {
+    "model": "alerts.subscription_shock_types",
+    "pk": 1,
+    "fields": {
+      "subscription": 1,
+      "shocktype": 1
+    }
+  },
+  {
+    "model": "alerts.subscription_shock_types",
+    "pk": 2,
+    "fields": {
+      "subscription": 1,
+      "shocktype": 2
+    }
+  },
+  {
+    "model": "alerts.subscription_shock_types",
+    "pk": 3,
+    "fields": {
+      "subscription": 1,
+      "shocktype": 3
+    }
+  },
+  {
+    "model": "alerts.subscription_shock_types",
+    "pk": 4,
+    "fields": {
+      "subscription": 1,
+      "shocktype": 4
+    }
+  }
+]

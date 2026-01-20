@@ -1,0 +1,13 @@
+// Bootstrap Icons with Django-served fonts
+// Import icon classes from node_modules
+@use "sass:meta";
+@include meta.load-css("bootstrap-icons/font/bootstrap-icons.css");
+
+// Override @font-face to use Django static files (works in both dev and prod)
+// This ensures fonts are served by Django, not Vite's dev server
+@font-face {
+  font-display: block;
+  font-family: "bootstrap-icons";
+  src: url("/static/fonts/bootstrap-icons.woff2") format("woff2"),
+       url("/static/fonts/bootstrap-icons.woff") format("woff");
+}

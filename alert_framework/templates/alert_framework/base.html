@@ -1,0 +1,145 @@
+{% extends "layout.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "NRC EWAS - Alert Framework" %}{% endblock %}
+{% block description %}Norwegian Refugee Council Early Warning and Alert System for Sudan - Alert Framework{% endblock %}
+{% block header_subtitle %}{% trans "Alert Framework" %}{% endblock %}
+{% block app_class %}app-alert-framework{% endblock %}
+
+{% block sidebar_icon %}bi bi-shield-exclamation{% endblock %}
+{% block sidebar_color %}warning{% endblock %}
+{% block sidebar_heading %}{% trans "Alert Framework" %}{% endblock %}
+
+{% block mobile_sidebar_icon %}bi bi-shield-exclamation{% endblock %}
+{% block mobile_sidebar_color %}warning{% endblock %}
+{% block mobile_sidebar_heading %}{% trans "Alert Framework" %}{% endblock %}
+
+{% block sidebar_nav %}
+<ul class="nav nav-pills flex-column">
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+           href="{% url 'alert_framework:dashboard' %}" title="{% trans 'Dashboard' %}">
+            <i class="bi bi-speedometer2"></i>
+            <span class="nav-text ms-2">{% trans "Dashboard" %}</span>
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if 'detector' in request.resolver_match.url_name %}active{% endif %}"
+           href="{% url 'alert_framework:detector_list' %}" title="{% trans 'Detectors' %}">
+            <i class="bi bi-search"></i>
+            <span class="nav-text ms-2">{% trans "Detectors" %}</span>
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if 'detection' in request.resolver_match.url_name %}active{% endif %}"
+           href="{% url 'alert_framework:detection_list' %}" title="{% trans 'Detections' %}">
+            <i class="bi bi-exclamation-triangle"></i>
+            <span class="nav-text ms-2">{% trans "Detections" %}</span>
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if 'template' in request.resolver_match.url_name %}active{% endif %}"
+           href="{% url 'alert_framework:template_list' %}" title="{% trans 'Templates' %}">
+            <i class="bi bi-file-text"></i>
+            <span class="nav-text ms-2">{% trans "Templates" %}</span>
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'data_pipeline:dashboard' %}" title="{% trans 'Data Pipeline' %}">
+            <i class="bi bi-diagram-3"></i>
+            <span class="nav-text ms-2">{% trans "Data Pipeline" %}</span>
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'task_monitoring:dashboard' %}" title="{% trans 'Task Monitor' %}">
+            <i class="bi bi-activity"></i>
+            <span class="nav-text ms-2">{% trans "Task Monitor" %}</span>
+        </a>
+    </li>
+</ul>
+{% endblock %}
+
+{% block mobile_sidebar_nav %}
+<ul class="nav nav-pills flex-column">
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+           href="{% url 'alert_framework:dashboard' %}">
+            <i class="bi bi-speedometer2 me-2"></i>
+            {% trans "Dashboard" %}
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if 'detector' in request.resolver_match.url_name %}active{% endif %}"
+           href="{% url 'alert_framework:detector_list' %}">
+            <i class="bi bi-search me-2"></i>
+            {% trans "Detectors" %}
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if 'detection' in request.resolver_match.url_name %}active{% endif %}"
+           href="{% url 'alert_framework:detection_list' %}">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            {% trans "Detections" %}
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if 'template' in request.resolver_match.url_name %}active{% endif %}"
+           href="{% url 'alert_framework:template_list' %}">
+            <i class="bi bi-file-text me-2"></i>
+            {% trans "Templates" %}
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'data_pipeline:dashboard' %}">
+            <i class="bi bi-diagram-3 me-2"></i>
+            {% trans "Data Pipeline" %}
+        </a>
+    </li>
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'task_monitoring:dashboard' %}">
+            <i class="bi bi-activity me-2"></i>
+            {% trans "Task Monitor" %}
+        </a>
+    </li>
+</ul>
+{% endblock %}
+
+{% block sidebar_actions %}
+<hr class="my-3">
+
+<h6 class="sidebar-heading nrc-heading mb-3">
+    <i class="bi bi-lightning me-2 text-warning"></i>
+    <span class="sidebar-text">{% trans "Quick Actions" %}</span>
+</h6>
+<div class="d-grid gap-2">
+    <a href="{% url 'alert_framework:detector_list' %}" class="btn btn-outline-primary btn-sm" title="{% trans 'Manage Detectors' %}">
+        <i class="bi bi-search"></i><span class="nav-text ms-1">{% trans "Manage Detectors" %}</span>
+    </a>
+    <a href="{% url 'alert_framework:detection_list' %}" class="btn btn-outline-warning btn-sm" title="{% trans 'View Detections' %}">
+        <i class="bi bi-exclamation-triangle"></i><span class="nav-text ms-1">{% trans "View Detections" %}</span>
+    </a>
+    <a href="{% url 'alert_framework:template_list' %}" class="btn btn-outline-success btn-sm" title="{% trans 'Alert Templates' %}">
+        <i class="bi bi-file-text"></i><span class="nav-text ms-1">{% trans "Alert Templates" %}</span>
+    </a>
+</div>
+{% endblock %}
+
+{% block mobile_sidebar_actions %}
+<hr class="my-3">
+
+<h6 class="sidebar-heading nrc-heading mb-3">
+    <i class="bi bi-lightning me-2 text-warning"></i>
+    {% trans "Quick Actions" %}
+</h6>
+<div class="d-grid gap-2">
+    <a href="{% url 'alert_framework:detector_list' %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-search me-1"></i>{% trans "Manage Detectors" %}
+    </a>
+    <a href="{% url 'alert_framework:detection_list' %}" class="btn btn-outline-warning btn-sm">
+        <i class="bi bi-exclamation-triangle me-1"></i>{% trans "View Detections" %}
+    </a>
+    <a href="{% url 'alert_framework:template_list' %}" class="btn btn-outline-success btn-sm">
+        <i class="bi bi-file-text me-1"></i>{% trans "Alert Templates" %}
+    </a>
+</div>
+{% endblock %}

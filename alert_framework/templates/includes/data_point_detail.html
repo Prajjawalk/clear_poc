@@ -1,0 +1,124 @@
+{% load i18n humanize %}
+
+<!-- Data Point Details Card -->
+{% if data_point %}
+<div class="card mb-3">
+    <div class="card-header">
+        <h6 class="mb-0">
+            <i class="bi bi-box me-1"></i>
+            {% trans "Source Data Point" %}
+        </h6>
+    </div>
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-5">{% trans "Location" %}:</dt>
+            <dd class="col-7">
+                <strong>{{ data_point.gid.name }}</strong>
+                <br><small class="text-muted">{{ data_point.gid.geo_id }}</small>
+            </dd>
+
+            <dt class="col-5">{% trans "Period" %}:</dt>
+            <dd class="col-7">
+                {{ data_point.start_date|date:"M d, Y" }}
+                {% if data_point.end_date != data_point.start_date %}
+                    <br><small class="text-muted">{% trans "to" %} {{ data_point.end_date|date:"M d, Y" }}</small>
+                {% endif %}
+            </dd>
+
+            <dt class="col-5">{% trans "Admin Level" %}:</dt>
+            <dd class="col-7">{{ data_point.adm_level.name }}</dd>
+
+            <dt class="col-5">{% trans "Value" %}:</dt>
+            <dd class="col-7">
+                {% if data_point.value is not None %}
+                    <span class="badge bg-primary">{{ data_point.value|floatformat:2 }}</span>
+                {% else %}
+                    <span class="text-muted">-</span>
+                {% endif %}
+            </dd>
+
+            {% if data_point.text %}
+            <dt class="col-5">{% trans "Text" %}:</dt>
+            <dd class="col-7">{{ data_point.text }}</dd>
+            {% endif %}
+
+            <dt class="col-5">{% trans "Created" %}:</dt>
+            <dd class="col-7">
+                <small class="text-muted">{{ data_point.created_at|date:"M d, Y H:i" }}</small>
+            </dd>
+        </dl>
+
+        <!-- Raw Data Section -->
+        {% if data_point.raw_data %}
+        <hr class="my-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="mb-0">{% trans "Raw Data" %}</h6>
+            <button class="btn btn-sm btn-outline-secondary copy-raw-data-btn" type="button">
+                <i class="bi bi-clipboard"></i> {% trans "Copy" %}
+            </button>
+        </div>
+        {{ data_point.raw_data|json_script:"raw-data-json" }}
+        <pre class="bg-light p-2 rounded raw-data-content" style="font-size: 11px; max-height: 300px; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word;"></pre>
+        {% endif %}
+
+        <!-- Link to full variable details -->
+        <hr class="my-3">
+        <a href="{% url 'data_pipeline:variable_detail' data_point.variable.id %}?date={{ data_point.start_date|date:'Y-m-d' }}"
+           class="btn btn-sm btn-outline-primary" target="_blank">
+            <i class="bi bi-box-arrow-up-right me-1"></i>
+            {% trans "View in Data Pipeline" %}
+        </a>
+    </div>
+</div>
+
+<script>
+// Format raw data as JSON and setup copy functionality
+(function() {
+    // Find the JSON script tag and format the data
+    const jsonScript = document.getElementById('raw-data-json');
+    const preElement = document.querySelector('.raw-data-content');
+
+    if (jsonScript && preElement) {
+        try {
+            const rawData = JSON.parse(jsonScript.textContent);
+            preElement.textContent = JSON.stringify(rawData, null, 2);
+        } catch (e) {
+            console.error('Error formatting raw data:', e);
+            preElement.textContent = 'Error formatting JSON data';
+        }
+    }
+
+    // Setup copy functionality
+    const copyButton = document.querySelector('.copy-raw-data-btn');
+    if (copyButton) {
+        copyButton.addEventListener('click', function() {
+            const cardBody = this.closest('.card-body');
+            const pre = cardBody.querySelector('.raw-data-content');
+            const text = pre.textContent;
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(function() {
+                    // Visual feedback
+                    const originalHTML = copyButton.innerHTML;
+                    copyButton.innerHTML = '<i class="bi bi-check"></i> {% trans "Copied" %}';
+                    copyButton.classList.remove('btn-outline-secondary');
+                    copyButton.classList.add('btn-success');
+
+                    setTimeout(function() {
+                        copyButton.innerHTML = originalHTML;
+                        copyButton.classList.remove('btn-success');
+                        copyButton.classList.add('btn-outline-secondary');
+                    }, 2000);
+                }, function(err) {
+                    console.error('Could not copy text:', err);
+                    alert('Failed to copy. Please copy manually.');
+                });
+            } else {
+                // Fallback for older browsers
+                alert('Clipboard API not supported. Please copy manually.');
+            }
+        });
+    }
+})();
+</script>
+{% endif %}

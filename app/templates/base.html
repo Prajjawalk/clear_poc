@@ -1,0 +1,42 @@
+{% load django_vite %}
+{% load static %}
+{% load i18n %}
+<!DOCTYPE html>
+{% get_current_language as LANGUAGE_CODE %}
+<html lang="{{ LANGUAGE_CODE|default:'en' }}" {% if LANGUAGE_CODE == 'ar' %}dir="rtl"{% else %}dir="ltr"{% endif %}>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}NRC EWAS{% endblock %}</title>
+
+    <!-- NRC Brand Description -->
+    <meta name="description" content="{% block description %}Norwegian Refugee Council EWAS Sudan{% endblock %}">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'nrc_logo_square.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'nrc_logo_square.png' %}">
+    <link rel="shortcut icon" href="{% static 'nrc_logo_square.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'nrc_logo_square.png' %}">
+
+    {% comment %}<!-- Vite HMR client and assets -->{% endcomment %}
+    {% vite_hmr_client %}
+    {% vite_asset 'js/main.js' %}
+
+    {% include 'includes/responsive_css.html' %}
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="nrc-body">
+
+{% include 'includes/header.html' %}
+
+<main>
+    {% block content %}{% endblock %}
+</main>
+
+{% include 'includes/footer.html' %}
+
+{% block extra_js %}{% endblock %}
+
+</body>
+</html>

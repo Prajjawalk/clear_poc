@@ -1,0 +1,247 @@
+{% extends "location/base.html" %}
+
+{% block title %}{% if form.instance.pk %}Edit {{ form.instance.name }}{% else %}Add New Location{% endif %}{% endblock %}
+
+{% block main_content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        {% if form.instance.pk %}
+            Edit Location: {{ form.instance.name }}
+        {% else %}
+            Add New Location
+        {% endif %}
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group">
+            {% if form.instance.pk %}
+                <a href="{% url 'location:location_detail' form.instance.pk %}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Details
+                </a>
+            {% else %}
+                <a href="{% url 'location:location_list' %}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to List
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <form method="post" class="needs-validation" novalidate>
+            {% csrf_token %}
+            
+            <!-- Basic Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Basic Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.admin_level.id_for_label }}" class="form-label">
+                                    Administrative Level <span class="text-danger">*</span>
+                                </label>
+                                {{ form.admin_level }}
+                                {% if form.admin_level.help_text %}
+                                    <div class="form-text">{{ form.admin_level.help_text }}</div>
+                                {% endif %}
+                                {% if form.admin_level.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.admin_level.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.parent.id_for_label }}" class="form-label">Parent Location</label>
+                                {{ form.parent }}
+                                {% if form.parent.help_text %}
+                                    <div class="form-text">{{ form.parent.help_text }}</div>
+                                {% endif %}
+                                {% if form.parent.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.parent.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.geo_id.id_for_label }}" class="form-label">
+                                    Geographic ID <span class="text-danger">*</span>
+                                </label>
+                                {{ form.geo_id }}
+                                {% if form.geo_id.help_text %}
+                                    <div class="form-text">{{ form.geo_id.help_text }}</div>
+                                {% endif %}
+                                {% if form.geo_id.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.geo_id.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.name.id_for_label }}" class="form-label">
+                                    Location Name <span class="text-danger">*</span>
+                                </label>
+                                {{ form.name }}
+                                {% if form.name.help_text %}
+                                    <div class="form-text">{{ form.name.help_text }}</div>
+                                {% endif %}
+                                {% if form.name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.name.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.comment.id_for_label }}" class="form-label">Comment</label>
+                        {{ form.comment }}
+                        {% if form.comment.help_text %}
+                            <div class="form-text">{{ form.comment.help_text }}</div>
+                        {% endif %}
+                        {% if form.comment.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.comment.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Geographic Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Geographic Information</h5>
+                    <small class="text-muted">Optional geographic data for mapping and spatial analysis</small>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="{{ form.boundary.id_for_label }}" class="form-label">Boundary Polygon</label>
+                        {{ form.boundary }}
+                        {% if form.boundary.help_text %}
+                            <div class="form-text">{{ form.boundary.help_text }}</div>
+                        {% endif %}
+                        {% if form.boundary.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.boundary.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.point.id_for_label }}" class="form-label">Representative Point</label>
+                        {{ form.point }}
+                        {% if form.point.help_text %}
+                            <div class="form-text">{{ form.point.help_text }}</div>
+                        {% endif %}
+                        {% if form.point.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.point.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form-wide errors -->
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger" role="alert">
+                    <h6 class="alert-heading">Please correct the following errors:</h6>
+                    {% for error in form.non_field_errors %}
+                        <p class="mb-0">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Action Buttons -->
+            <div class="d-flex gap-2 mb-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-lg"></i>
+                    {% if form.instance.pk %}Update Location{% else %}Create Location{% endif %}
+                </button>
+                
+                {% if form.instance.pk %}
+                    <a href="{% url 'location:location_detail' form.instance.pk %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-lg"></i> Cancel
+                    </a>
+                {% else %}
+                    <a href="{% url 'location:location_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-lg"></i> Cancel
+                    </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+    
+    <!-- Sidebar with help information -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">Guidelines</h6>
+            </div>
+            <div class="card-body">
+                <h6>Administrative Hierarchy</h6>
+                <ul class="small">
+                    <li><strong>Country (Level 0):</strong> Root level, no parent</li>
+                    <li><strong>State (Level 1):</strong> Parent must be Country</li>
+                    <li><strong>District (Level 2):</strong> Parent must be State</li>
+                    <li><strong>County (Level 3):</strong> Parent must be District</li>
+                </ul>
+                
+                <h6>Geographic ID Format</h6>
+                <p class="small">Use hierarchical format like:</p>
+                <ul class="small">
+                    <li>SD (for Sudan - Country)</li>
+                    <li>SD_001 (for state under Sudan)</li>
+                    <li>SD_001_002 (for district under state)</li>
+                </ul>
+                
+                <h6>Geographic Data</h6>
+                <p class="small">
+                    Boundary and point data are optional but useful for:
+                </p>
+                <ul class="small">
+                    <li>Mapping and visualization</li>
+                    <li>Spatial analysis</li>
+                    <li>Geographic searches</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Form validation feedback
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        var forms = document.getElementsByClassName('needs-validation');
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
+</script>
+{% endblock %}

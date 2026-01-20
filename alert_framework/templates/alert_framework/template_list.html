@@ -1,0 +1,171 @@
+{% extends "alert_framework/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Alert Templates" %}{% endblock %}
+
+{% block main_content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="/">
+                        <i class="bi bi-house"></i> {% trans "Home" %}
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'alert_framework:dashboard' %}">{% trans "Alert Framework" %}</a>
+                </li>
+                <li class="breadcrumb-item active">{% trans "Templates" %}</li>
+            </ol>
+        </nav>
+        <h1 class="nrc-heading mb-0">
+            <i class="bi bi-file-text me-2 text-success"></i>{% trans "Alert Templates" %}
+        </h1>
+    </div>
+</div>
+
+<!-- Statistics -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-primary">{{ stats.total_templates }}</h5>
+                <p class="card-text">{% trans "Total Templates" %}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-success">{{ stats.active_templates }}</h5>
+                <p class="card-text">{% trans "Active Templates" %}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-info">{{ stats.shock_types_covered }}</h5>
+                <p class="card-text">{% trans "Shock Types Covered" %}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Template List -->
+{% if templates %}
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>{% trans "Name" %}</th>
+                        <th>{% trans "Shock Type" %}</th>
+                        <th>{% trans "Status" %}</th>
+                        <th>{% trans "Language" %}</th>
+                        <th>{% trans "Created" %}</th>
+                        <th class="table-actions">{% trans "Actions" %}</th>
+                    </tr>
+                </thead>
+                    <tbody>
+                        {% for template in templates %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'alert_framework:template_detail' template.pk %}">
+                                        <strong>{{ template.name }}</strong>
+                                    </a>
+                                    {% if template.description %}
+                                        <br><small class="text-muted">{{ template.description|truncatechars:60 }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if template.shock_type %}
+                                        <span class="badge bg-primary">{{ template.shock_type.name }}</span>
+                                    {% else %}
+                                        <span class="text-muted">{% trans "Generic" %}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if template.active %}success{% else %}secondary{% endif %}">
+                                        {% if template.active %}{% trans "Active" %}{% else %}{% trans "Inactive" %}{% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ template.language|upper }}</span>
+                                </td>
+                                <td>{{ template.created_at|date:"Y-m-d" }}</td>
+                                <td class="table-actions">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{% url 'alert_framework:template_detail' template.pk %}" 
+                                           class="btn btn-outline-primary" title="{% trans 'View Details' %}">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-outline-secondary" 
+                                                title="{% trans 'Preview Template' %}" onclick="previewTemplate({{ template.pk }})">
+                                            <i class="bi bi-file-text"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+    </div>
+{% else %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-file-text text-muted" style="font-size: 3rem;"></i>
+            <h4 class="mt-3">{% trans "No Templates Found" %}</h4>
+            <p class="text-muted">{% trans "No alert templates have been configured yet." %}</p>
+        </div>
+    </div>
+{% endif %}
+
+<!-- Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="previewModalLabel">{% trans "Template Preview" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button>
+            </div>
+            <div class="modal-body" id="previewContent">
+                <!-- Preview content will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Close" %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function previewTemplate(templateId) {
+    fetch(`/alert_framework/templates/${templateId}/`)
+        .then(response => response.text())
+        .then(html => {
+            // Extract preview content from the response
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const previewElement = doc.querySelector('.template-preview');
+            
+            if (previewElement) {
+                document.getElementById('previewContent').innerHTML = previewElement.innerHTML;
+            } else {
+                document.getElementById('previewContent').innerHTML = '<p class="text-muted">{% trans "Preview not available" %}</p>';
+            }
+            
+            new bootstrap.Modal(document.getElementById('previewModal')).show();
+        })
+        .catch(error => {
+            document.getElementById('previewContent').innerHTML = '<p class="text-danger">{% trans "Error loading preview" %}</p>';
+            new bootstrap.Modal(document.getElementById('previewModal')).show();
+        });
+}
+</script>
+{% endblock %}

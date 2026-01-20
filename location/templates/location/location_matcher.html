@@ -1,0 +1,176 @@
+{% extends "location/base.html" %}
+
+{% block title %}Location Matcher{% endblock %}
+
+{% block main_content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Location Matcher</h1>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Find Matching Location</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-4">
+                    Use this tool to find locations in the database that match a given location name. 
+                    This is useful for data integration and mapping external location names to our database.
+                </p>
+                
+                <form method="post" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="location_name" class="form-label">
+                            Location Name <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="form-control" id="location_name" name="location_name" 
+                               placeholder="Enter location name to match..." required>
+                        <div class="form-text">Name of the location to find in the database</div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="source" class="form-label">Source</label>
+                                <input type="text" class="form-control" id="source" name="source" 
+                                       placeholder="e.g., ACLED, UNHCR">
+                                <div class="form-text">Source where this name comes from (optional)</div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="admin_level" class="form-label">Administrative Level</label>
+                                <select class="form-select" id="admin_level" name="admin_level">
+                                    <option value="">Any level</option>
+                                    {% for level in admin_levels %}
+                                        <option value="{{ level.code }}">{{ level.name }} (Level {{ level.code }})</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text">Expected administrative level (optional)</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="parent_id" class="form-label">Parent Location Context</label>
+                        <select class="form-select" id="parent_id" name="parent_id">
+                            <option value="">No parent context</option>
+                            {% for location in locations %}
+                                <option value="{{ location.id }}">
+                                    {{ location.name }} ({{ location.geo_id }}) - {{ location.admin_level.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Parent location to provide context for matching (optional)</div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i> Find Matching Location
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sidebar with help information -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">How Location Matching Works</h6>
+            </div>
+            <div class="card-body">
+                <p class="small">
+                    The location matcher uses exact matching to find locations in the database. 
+                    It searches through:
+                </p>
+                
+                <ol class="small">
+                    <li><strong>Gazetteer entries</strong> - Alternative names from various sources</li>
+                    <li><strong>Location names</strong> - Official location names</li>
+                </ol>
+                
+                <h6>Matching Strategy</h6>
+                <ul class="small">
+                    <li>Exact name matching only (case-insensitive)</li>
+                    <li>No fuzzy matching to avoid false positives</li>
+                    <li>Source-specific matching when source is provided</li>
+                    <li>Administrative level filtering</li>
+                    <li>Parent context for disambiguation</li>
+                </ul>
+                
+                <h6>Tips for Better Matching</h6>
+                <ul class="small">
+                    <li>Specify the source if you know it</li>
+                    <li>Use parent context to disambiguate common names</li>
+                    <li>Check different spelling variations</li>
+                    <li>Consider administrative level constraints</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="card-title mb-0">Common Sources</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-1">
+                    {% for source in sources %}
+                        <span class="badge bg-info">{{ source }}</span>
+                    {% endfor %}
+                </div>
+                {% if not sources %}
+                    <p class="small text-muted">No sources available yet. Add gazetteer entries to see sources here.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="card-title mb-0">Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'location:location_list' %}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-list"></i> Browse All Locations
+                    </a>
+                    <a href="{% url 'location:gazetteer_list' %}" class="btn btn-sm btn-outline-success">
+                        <i class="bi bi-book"></i> Browse Gazetteer
+                    </a>
+                    <hr>
+                    <a href="{% url 'location:location_create' %}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus"></i> Add New Location
+                    </a>
+                    <a href="{% url 'location:gazetteer_create' %}" class="btn btn-sm btn-success">
+                        <i class="bi bi-plus"></i> Add Gazetteer Entry
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Form validation feedback
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        var forms = document.getElementsByClassName('needs-validation');
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,279 @@
+[
+    {
+        "model": "alert_framework.detector",
+        "pk": 1,
+        "fields": {
+            "name": "Conflict Surge Detector",
+            "class_name": "surge_detector.ConflictSurgeDetector",
+            "description": "Detects sudden increases in conflict events compared to historical baseline",
+            "active": true,
+            "configuration": {
+                "threshold_multiplier": 2.0,
+                "baseline_days": 30,
+                "minimum_events": 5,
+                "confidence_boost": {
+                    "high_fatalities": 0.2,
+                    "multiple_locations": 0.1,
+                    "recent_trend": 0.15
+                },
+                "location_filters": {
+                    "admin_levels": [1, 2],
+                    "exclude_patterns": ["refugee camp", "displacement site"]
+                }
+            },
+            "run_count": 0,
+            "detection_count": 0,
+            "last_run": null,
+            "created_at": "2025-01-01T00:00:00Z",
+            "updated_at": "2025-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "alert_framework.detector",
+        "pk": 2,
+        "fields": {
+            "name": "Displacement Surge Detector",
+            "class_name": "surge_detector.DisplacementSurgeDetector",
+            "description": "Detects significant increases in displacement figures from IDMC data",
+            "active": true,
+            "configuration": {
+                "threshold_multiplier": 1.5,
+                "baseline_days": 14,
+                "minimum_displaced": 1000,
+                "confidence_boost": {
+                    "cross_border_movement": 0.25,
+                    "urban_displacement": 0.15,
+                    "repeat_displacement": 0.2
+                },
+                "data_sources": ["IDMC_GIDD", "IDMC_IDU"],
+                "displacement_types": ["conflict", "violence", "disaster"]
+            },
+            "run_count": 0,
+            "detection_count": 0,
+            "last_run": null,
+            "created_at": "2025-01-01T00:00:00Z",
+            "updated_at": "2025-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "alert_framework.detector",
+        "pk": 3,
+        "fields": {
+            "name": "Z-Score Anomaly Detector",
+            "class_name": "zscore_detector.ZScoreDetector",
+            "description": "Multi-level Z-score based anomaly detection for humanitarian data including IOM displacement data",
+            "active": true,
+            "configuration": {
+                "zscore_threshold_1": 1.5,
+                "zscore_threshold_2": 2.0,
+                "zscore_threshold_3": 2.5,
+                "zscore_threshold_4": 3.0,
+                "window_size": 30,
+                "min_baseline_periods": 7,
+                "freq": "1D",
+                "variable_filters": {
+                    "variable_codes": ["iom_dtm_displacement"],
+                    "source_names": ["IOM", "IDMC"],
+                    "data_types": ["mixed", "quantitative"]
+                }
+            },
+            "run_count": 0,
+            "detection_count": 0,
+            "last_run": null,
+            "created_at": "2025-01-01T00:00:00Z",
+            "updated_at": "2025-01-01T00:00:00Z"
+        }
+    },
+    {
+    "model": "alert_framework.detector",
+    "pk": 4,
+    "fields": {
+      "name": "Dataminr Scoring Detector",
+      "description": "Scoring detector configured to match pandas scoring logic. Uses max() for topics and keywords instead of sum(), matching the behavior: max([topic_scores]) + max([keyword_scores]) * location_multiplier. Configured with exact keyword weights and topic priorities from pandas analysis.",
+      "class_name": "alert_framework.detectors.scoring_detector.ScoringDetector",
+      "active": true,
+      "configuration": {
+        "variable_code": "dataminr_alerts",
+        "source_name": "Dataminr",
+        "base_score": 0.0,
+        "auto_trigger_on_data": true,
+        "field_scores": {
+          "alertType.name": {
+            "exact_match": {
+              "Flash": 10,
+              "Urgent": 7,
+              "Alert": 3
+            }
+          },
+          "alertTopics": {
+            "_mode": "max",
+            "contains": {
+              "Conflicts - Air": 4,
+              "Conflicts - Land": 4,
+              "Public Health - Diseases": 4,
+              "Politics and International Affairs - International Politics": 2,
+              "Infrastructure - Protection": 3,
+              "Public Safety - Safety Information": 3,
+              "Transportation - Maritime": 2,
+              "Infrastructure - Utilities": 2,
+              "Disasters and Weather - Thunderstorms": 3,
+              "Disasters and Weather - Lightning": 2
+            }
+          }
+        },
+        "keyword_scores": {
+          "killed": 8,
+          "kills": 8,
+          "kill": 8,
+          "died": 8,
+          "death": 8,
+          "deaths": 8,
+          "casualties": 8,
+          "injured": 6,
+          "wounded": 6,
+          "took controle": 3,
+          "take controle": 3,
+          "takes controle": 3,
+          "civilian": 3,
+          "strike": 2,
+          "attack": 2,
+          "attacked": 2,
+          "bombing": 3,
+          "airstrike": 2,
+          "artillery": 3,
+          "shelling": 3,
+          "drone": 2,
+          "clash": 2,
+          "clashes": 2,
+          "forces": 2,
+          "armed": 2,
+          "cholera": 2,
+          "dengue": 2,
+          "violence": 2,
+          "conflict": 1,
+          "fighting": 2,
+          "military": 1
+        },
+        "keyword_max_mode": true,
+        "text_fields": [
+          "headline",
+          "text_fallback"
+        ],
+        "location_multipliers": {
+          "Al Fashir": 1.5,
+          "Khartoum": 1.3,
+          "Darfur": 1.4,
+          "El Obeid": 1.2,
+          "Nyala": 1.2,
+          "North Darfur": 1.3,
+          "Mellit": 1.2,
+          "Port Sudan": 1.1
+        },
+        "location_fields": [
+          "estimatedEventLocation[0]",
+          "location_fallback"
+        ],
+        "thresholds": {
+          "critical": 22,
+          "high": 15,
+          "medium": 8,
+          "low": 4
+        },
+        "min_detection_score": 8,
+        "enable_clustering": true,
+        "cluster_window_hours": 6,
+        "cluster_min_alerts": 2,
+        "shock_type_mapping": {
+          "alertTopics==Conflicts - Air": "Conflict",
+          "alertTopics==Conflicts - Land": "Conflict",
+          "alertTopics==Public Health - Diseases": "Health emergencies",
+          "alertTopics==Disasters and Weather - Floods": "Natural disasters",
+          "alertTopics==Disasters and Weather - Thunderstorms": "Natural disasters",
+          "alertTopics==Disasters and Weather - Droughts": "Natural disasters",
+          "alertTopics==Disasters and Weather - Earthquakes": "Natural disasters",
+          "contains:flood": "Natural disasters",
+          "contains:flooding": "Natural disasters",
+          "contains:drought": "Natural disasters",
+          "contains:earthquake": "Natural disasters",
+          "contains:famine": "Food security",
+          "contains:hunger": "Food security",
+          "contains:food shortage": "Food security",
+          "contains:drone": "Conflict",
+          "contains:civilian": "Conflict",
+          "contains:cholera": "Health emergencies"
+        }
+      },
+      "last_run": null,
+      "run_count": 0,
+      "detection_count": 0,
+      "created_at": "2025-09-25T13:00:00.000000+00:00",
+      "updated_at": "2025-09-25T13:00:00.000000+00:00"
+    }
+  },
+  {
+    "model": "alert_framework.detector",
+    "pk": 5,
+    "fields": {
+      "name": "Dataminr BERT Detector",
+      "description": "BERT-based ML detector for Dataminr headline classification. Uses fine-tuned BERT model to classify headlines and determine if they should trigger alerts. Applies the same shock type mapping as the scoring detector.",
+      "class_name": "dataminr_bert_detector.DataminrBertDetector",
+      "active": true,
+      "configuration": {
+        "model_path": "bert",
+        "variable_code": "dataminr_alerts",
+        "confidence_threshold": 0.5,
+        "max_length": 64,
+        "batch_size": 8,
+        "headline_field": "raw_data_headline",
+        "auto_trigger_on_data": true,
+        "shock_type_mapping": {
+          "alertTopics==Conflicts - Air": "Conflict",
+          "alertTopics==Conflicts - Land": "Conflict",
+          "alertTopics==Public Health - Diseases": "Health emergencies",
+          "alertTopics==Disasters and Weather - Floods": "Natural disasters",
+          "alertTopics==Disasters and Weather - Thunderstorms": "Natural disasters",
+          "alertTopics==Disasters and Weather - Droughts": "Natural disasters",
+          "alertTopics==Disasters and Weather - Earthquakes": "Natural disasters",
+          "contains:flood": "Natural disasters",
+          "contains:flooding": "Natural disasters",
+          "contains:drought": "Natural disasters",
+          "contains:earthquake": "Natural disasters",
+          "contains:famine": "Food security",
+          "contains:hunger": "Food security",
+          "contains:food shortage": "Food security",
+          "contains:drone": "Conflict",
+          "contains:civilian": "Conflict",
+          "contains:cholera": "Health emergencies"
+        }
+      },
+      "last_run": null,
+      "run_count": 0,
+      "detection_count": 0,
+      "created_at": "2025-10-01T00:00:00.000000+00:00",
+      "updated_at": "2025-10-01T00:00:00.000000+00:00"
+    }
+  },
+  {
+    "model": "alert_framework.detector",
+    "pk": 6,
+    "fields": {
+      "name": "GloFAS Flood Population Threshold Detector",
+      "description": "Threshold detector for GloFAS flood affected population. Triggers when population affected by floods is >= 100 people.",
+      "class_name": "threshold_detector.ThresholdDetector",
+      "active": true,
+      "configuration": {
+        "variable_code": "glofas_flood_population",
+        "threshold_value": 100,
+        "operator": "gte",
+        "use_latest_data": true,
+        "use_dynamic_confidence": true,
+        "monitored_sources": ["GloFAS - Global Flood Awareness System"]
+      },
+      "last_run": null,
+      "run_count": 0,
+      "detection_count": 0,
+      "created_at": "2025-11-01T00:00:00.000000+00:00",
+      "updated_at": "2025-11-01T00:00:00.000000+00:00"
+    }
+  }
+]

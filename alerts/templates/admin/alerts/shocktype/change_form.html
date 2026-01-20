@@ -1,0 +1,308 @@
+{% extends "admin/change_form.html" %}
+
+{% block admin_change_form_document_ready %}
+{{ block.super }}
+
+<!-- Emoji Picker Styles -->
+<style>
+.emoji-picker-container {
+    position: relative;
+    display: inline-block;
+    z-index: 1;
+}
+
+.emoji-picker-button {
+    margin-left: 5px;
+    padding: 3px 8px;
+    background: #007cba;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.emoji-picker-button:hover {
+    background: #005a87;
+}
+
+.emoji-picker-dropdown {
+    position: fixed;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 999999 !important;
+    padding: 10px;
+    width: 280px;
+    display: none;
+    max-height: 450px;
+    overflow: hidden;
+}
+
+.emoji-categories {
+    display: flex;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+}
+
+.emoji-category {
+    padding: 5px 8px;
+    cursor: pointer;
+    border-radius: 3px;
+    margin-right: 2px;
+    font-size: 14px;
+}
+
+.emoji-category:hover,
+.emoji-category.active {
+    background: #f0f0f0;
+}
+
+.emoji-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 3px;
+    max-height: 350px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    width: 100%;
+}
+
+.emoji-item {
+    padding: 6px;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 3px;
+    font-size: 16px;
+    min-height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.emoji-item:hover {
+    background: #f0f0f0;
+}
+
+.search-box {
+    width: calc(100% - 12px);
+    padding: 5px;
+    margin: 0 0 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    box-sizing: border-box;
+}
+
+/* Override any admin styles that might interfere */
+.emoji-picker-dropdown * {
+    z-index: inherit;
+}
+
+/* Ensure the dropdown is always on top of admin elements */
+body .emoji-picker-dropdown {
+    z-index: 10000 !important;
+    position: absolute !important;
+}
+
+/* Fix for Django admin fieldsets */
+.form-row .emoji-picker-container .emoji-picker-dropdown {
+    z-index: 10001 !important;
+}
+</style>
+
+<!-- Emoji Picker Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Emoji categories with common symbols for alert types
+    const emojiCategories = {
+        'Alert': ['⚡', '🔥', '💥', '⚠️', '🚨', '📢', '🆘', '❗', '‼️', '❌', '🔴', '🟠', '🟡', '💀', '☠️', '⚰️', '🩸', '💣', '🧨', '⛔', '🚫', '🔞', '🚷', '🚯', '🚳', '🚱', '📵', '🔕', '🚭', '💢', '🔸', '🔹'],
+        'Weather': ['🌪️', '⛈️', '🌊', '💧', '❄️', '🌡️', '☀️', '🌧️', '⛅', '🌩️', '🌈', '💨', '🧊', '🌀', '🌨️', '⛄', '🌦️', '🌤️', '⛱️', '🏔️', '🗻', '🌋', '🏞️', '🌍', '🌎', '🌏', '🪐', '💫', '⭐', '🌟', '✨', '☄️'],
+        'Health': ['✚', '🏥', '💊', '🩺', '🦠', '😷', '🤒', '🤕', '💉', '🧬', '⛑️', '🩹', '🧪', '🚑', '👨‍⚕️', '👩‍⚕️', '🧑‍⚕️', '🩸', '🔬', '🧫', '⚕️', '❤️‍🩹', '🫀', '🧠', '🦷', '🦴', '👁️', '🩼', '🧴', '🌡️', '⚗️', '🧻'],
+        'Food': ['🍽️', '🍞', '🌾', '🥖', '🍚', '🥣', '🍲', '🥘', '🍱', '🧄', '🥕', '🌽', '🍅', '🥔', '🥬', '🥒', '🌶️', '🫑', '🥑', '🍆', '🫒', '🧅', '🍄', '🥜', '🌰', '🍇', '🍈', '🍉', '🍊', '🍋', '🍌', '🍍'],
+        'Security': ['🛡️', '🔒', '🔐', '👮', '⚔️', '🗡️', '🏰', '🚪', '🔑', '👁️', '📹', '🚨', '👮‍♂️', '👮‍♀️', '🕵️', '💂', '👨‍✈️', '👩‍✈️', '🔫', '🏹', '⚖️', '🏛️', '🚔', '🚓', '🚒', '🗝️', '🔓', '📱', '💻', '🛡️', '⛑️', '🎖️'],
+        'Transport': ['🚗', '🚌', '🚁', '✈️', '🚢', '🚂', '🚲', '🛣️', '🌉', '⛽', '🚧', '🚥', '🛑', '🚕', '🚙', '🚐', '🛻', '🚚', '🚛', '🚜', '🏎️', '🚓', '🚑', '🚒', '🛺', '🛩️', '🛫', '🛬', '⛵', '🚤', '🚖', '🚘'],
+        'Symbols': ['📍', '📌', '🔺', '🔻', '⭐', '💎', '🔶', '🔷', '🔸', '🔹', '⬆️', '⬇️', '➡️', '⬅️', '↗️', '↘️', '↙️', '↖️', '↕️', '↔️', '↩️', '↪️', '⤴️', '⤵️', '🔀', '🔁', '🔂', '🔄', '◀️', '▶️', '🔘', '🔳']
+    };
+
+    // Create emoji picker for each emoji input
+    document.querySelectorAll('.emoji-picker-input').forEach(function(input) {
+        const container = document.createElement('div');
+        container.className = 'emoji-picker-container';
+        
+        // Wrap input in container
+        input.parentNode.insertBefore(container, input);
+        container.appendChild(input);
+        
+        // Create picker button
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'emoji-picker-button';
+        button.textContent = '😊';
+        button.title = 'Choose emoji/symbol';
+        container.appendChild(button);
+        
+        // Create dropdown
+        const dropdown = document.createElement('div');
+        dropdown.className = 'emoji-picker-dropdown';
+        
+        // Search box
+        const searchBox = document.createElement('input');
+        searchBox.type = 'text';
+        searchBox.className = 'search-box';
+        searchBox.placeholder = 'Search emojis...';
+        dropdown.appendChild(searchBox);
+        
+        // Categories
+        const categoriesDiv = document.createElement('div');
+        categoriesDiv.className = 'emoji-categories';
+        
+        Object.keys(emojiCategories).forEach((category, index) => {
+            const categoryBtn = document.createElement('div');
+            categoryBtn.className = 'emoji-category' + (index === 0 ? ' active' : '');
+            categoryBtn.textContent = category;
+            categoryBtn.dataset.category = category;
+            categoriesDiv.appendChild(categoryBtn);
+        });
+        dropdown.appendChild(categoriesDiv);
+        
+        // Emoji grid
+        const grid = document.createElement('div');
+        grid.className = 'emoji-grid';
+        // Set initial grid styles
+        grid.setAttribute('style', 
+            'display: grid !important; ' +
+            'grid-template-columns: repeat(6, 1fr) !important; ' +
+            'gap: 3px !important; ' +
+            'max-height: 350px !important; ' +
+            'overflow-y: auto !important; ' +
+            'overflow-x: hidden !important; ' +
+            'width: 100% !important; ' +
+            'height: auto !important;'
+        );
+        dropdown.appendChild(grid);
+        
+        // Append dropdown to document body to avoid container clipping
+        document.body.appendChild(dropdown);
+        
+        // Show emojis for active category
+        function showCategory(categoryName) {
+            grid.innerHTML = '';
+            emojiCategories[categoryName].forEach(emoji => {
+                const item = document.createElement('div');
+                item.className = 'emoji-item';
+                item.textContent = emoji;
+                item.title = emoji;
+                item.addEventListener('click', function() {
+                    input.value = emoji;
+                    dropdown.style.display = 'none';
+                    input.dispatchEvent(new Event('change'));
+                });
+                grid.appendChild(item);
+            });
+        }
+        
+        // Category switching
+        categoriesDiv.addEventListener('click', function(e) {
+            if (e.target.classList.contains('emoji-category')) {
+                categoriesDiv.querySelectorAll('.emoji-category').forEach(cat => cat.classList.remove('active'));
+                e.target.classList.add('active');
+                showCategory(e.target.dataset.category);
+            }
+        });
+        
+        // Search functionality
+        searchBox.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            if (searchTerm) {
+                grid.innerHTML = '';
+                Object.values(emojiCategories).flat().forEach(emoji => {
+                    // Simple search - you could enhance this with emoji names
+                    if (emoji.toLowerCase().includes(searchTerm)) {
+                        const item = document.createElement('div');
+                        item.className = 'emoji-item';
+                        item.textContent = emoji;
+                        item.addEventListener('click', function() {
+                            input.value = emoji;
+                            dropdown.style.display = 'none';
+                            input.dispatchEvent(new Event('change'));
+                        });
+                        grid.appendChild(item);
+                    }
+                });
+            } else {
+                showCategory(categoriesDiv.querySelector('.emoji-category.active').dataset.category);
+            }
+        });
+        
+        // Toggle dropdown
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const isVisible = dropdown.style.display === 'block';
+            
+            // Close all other dropdowns
+            document.querySelectorAll('.emoji-picker-dropdown').forEach(d => d.style.display = 'none');
+            
+            if (!isVisible) {
+                // Calculate position relative to button
+                const buttonRect = button.getBoundingClientRect();
+                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+                
+                // Position dropdown below the button
+                const topPosition = buttonRect.bottom + scrollTop + 2;
+                const leftPosition = buttonRect.left + scrollLeft;
+                
+                // Check if dropdown would go off-screen and adjust if needed
+                const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+                const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+                
+                let adjustedTop = topPosition;
+                let adjustedLeft = leftPosition;
+                
+                // Adjust horizontal position if off-screen
+                if (leftPosition + 280 > viewportWidth) {
+                    adjustedLeft = buttonRect.right + scrollLeft - 280;
+                }
+                
+                // Adjust vertical position if off-screen
+                if (topPosition + 450 > viewportHeight) {
+                    adjustedTop = buttonRect.top + scrollTop - 450 - 2;
+                }
+                
+                // Show dropdown with proper styling
+                dropdown.className = 'emoji-picker-dropdown';
+                dropdown.setAttribute('style', 
+                    'display: block !important; ' +
+                    'visibility: visible !important; ' +
+                    'opacity: 1 !important; ' +
+                    'position: fixed !important; ' +
+                    'z-index: 999999 !important; ' +
+                    'background: white !important; ' +
+                    'border: 1px solid #ddd !important; ' +
+                    'border-radius: 4px !important; ' +
+                    'box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important; ' +
+                    'top: ' + adjustedTop + 'px !important; ' +
+                    'left: ' + adjustedLeft + 'px !important; ' +
+                    'width: 280px !important; ' +
+                    'padding: 10px !important; ' +
+                    'max-height: 450px !important; ' +
+                    'overflow: hidden !important;'
+                );
+                
+                showCategory('Alert'); // Default category
+            }
+        });
+        
+        // Close on outside click
+        document.addEventListener('click', function(e) {
+            if (!container.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

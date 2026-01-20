@@ -1,0 +1,293 @@
+{% extends "data_pipeline/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Data Pipeline - Map View" %}{% endblock %}
+
+{% block extra_css %}
+{% load static %}
+{% load vite_tags %}
+{% vite_css 'js/dataMap.js' %}
+<style>
+    .map-container {
+        height: 600px;
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+        position: relative;
+    }
+
+    .filter-card {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .map-controls {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 1000;
+        background: white;
+        border-radius: 6px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        padding: 8px;
+    }
+
+    .legend {
+        background: white;
+        padding: 10px;
+        border-radius: 6px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        line-height: 1.4;
+        font-size: 13px;
+    }
+
+    .legend h6 {
+        margin: 0 0 8px 0;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 4px;
+    }
+
+    .legend-color {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        margin-right: 8px;
+        border: 1px solid #333;
+    }
+
+    .loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        border-radius: 8px;
+    }
+
+    .empty-state {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        color: #6c757d;
+        z-index: 1500;
+    }
+
+    .filter-form .form-label {
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+
+    .filter-form .form-control,
+    .filter-form .form-select {
+        margin-bottom: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .map-container {
+            height: 500px;
+        }
+
+        .filter-card {
+            margin-bottom: 1rem;
+        }
+
+        .map-controls {
+            position: relative;
+            top: auto;
+            right: auto;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block main_content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="/">
+                        <i class="bi bi-house"></i> {% trans "Home" %}
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'data_pipeline:dashboard' %}">
+                        <i class="bi bi-diagram-3"></i> {% trans "Data Pipeline" %}
+                    </a>
+                </li>
+                <li class="breadcrumb-item active">{% trans "Map View" %}</li>
+            </ol>
+        </nav>
+        <h1 class="nrc-heading mb-0">
+            <i class="bi bi-geo-alt me-2 text-primary"></i>{% trans "Geographic Data Visualization" %}
+        </h1>
+        <p class="text-muted mt-1">{% trans "Interactive map showing geographic distribution of data variables" %}</p>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Filter Controls -->
+    <div class="col-lg-3 mb-4">
+        <div class="filter-card">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-funnel me-2"></i>{% trans "Filters" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="mapFilters" class="filter-form">
+                    <!-- Source Filter -->
+                    <div class="mb-3">
+                        <label for="sourceSelect" class="form-label">{% trans "Data Source" %}</label>
+                        <select class="form-select" id="sourceSelect" name="source">
+                            <option value="">{% trans "All Sources" %}</option>
+                            {% for source in sources %}
+                            <option value="{{ source.id }}">{{ source.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Variable Filter -->
+                    <div class="mb-3">
+                        <label for="variableSelect" class="form-label">{% trans "Variable" %}</label>
+                        <select class="form-select" id="variableSelect" name="variable">
+                            <option value="">{% trans "All Variables" %}</option>
+                            {% for variable in variables_data %}
+                            <option value="{{ variable.id }}" data-source="{{ variable.source.id }}">
+                                {{ variable.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Date Range Filters -->
+                    <div class="mb-3">
+                        <label for="startDate" class="form-label">{% trans "Start Date" %}</label>
+                        <input type="date" class="form-control" id="startDate" name="start_date"
+                               value="{{ default_start_date|date:'Y-m-d' }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="endDate" class="form-label">{% trans "End Date" %}</label>
+                        <input type="date" class="form-control" id="endDate" name="end_date"
+                               value="{{ default_end_date|date:'Y-m-d' }}">
+                    </div>
+
+                    <!-- Aggregation Method -->
+                    <div class="mb-3">
+                        <label for="aggregationSelect" class="form-label">{% trans "Aggregation" %}</label>
+                        <select class="form-select" id="aggregationSelect" name="aggregation">
+                            <option value="latest">{% trans "Latest Value" %}</option>
+                            <option value="sum">{% trans "Sum" %}</option>
+                            <option value="avg">{% trans "Average" %}</option>
+                            <option value="count">{% trans "Count" %}</option>
+                        </select>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary" id="applyFilters">
+                            <i class="bi bi-search me-1"></i>{% trans "Apply Filters" %}
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" id="resetFilters">
+                            <i class="bi bi-arrow-clockwise me-1"></i>{% trans "Reset" %}
+                        </button>
+                        <button type="button" class="btn btn-outline-info" id="zoomToData">
+                            <i class="bi bi-arrows-move me-1"></i>{% trans "Zoom to Data" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Data Info Panel -->
+        <div class="card mt-3" id="dataInfoPanel" style="display: none;">
+            <div class="card-header bg-info text-white">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-info-circle me-2"></i>{% trans "Data Information" %}
+                </h6>
+            </div>
+            <div class="card-body">
+                <div id="dataInfoContent">
+                    <!-- Dynamic content -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Map Container -->
+    <div class="col-lg-9">
+        <div class="map-container" id="mapContainer">
+            <!-- Map Controls -->
+            <div class="map-controls">
+                <div class="btn-group-vertical" role="group">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="toggleClustering" title="{% trans 'Toggle Clustering' %}">
+                        <i class="bi bi-collection"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="fullscreenMap" title="{% trans 'Fullscreen' %}">
+                        <i class="bi bi-arrows-fullscreen"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading Overlay -->
+            <div class="loading-overlay" id="loadingOverlay">
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">{% trans "Loading..." %}</span>
+                    </div>
+                    <div class="mt-2">{% trans "Loading map data..." %}</div>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div class="empty-state" id="emptyState" style="display: none;">
+                <i class="bi bi-geo-alt text-muted" style="font-size: 3rem;"></i>
+                <h5 class="mt-2 text-muted">{% trans "No Data Available" %}</h5>
+                <p class="text-muted">{% trans "Try adjusting your filters to see data on the map." %}</p>
+            </div>
+
+            <!-- Map Element -->
+            <div id="map" style="height: 100%; width: 100%;"></div>
+        </div>
+
+        <!-- Map Legend -->
+        <div class="mt-3">
+            <div class="legend" id="mapLegend" style="display: none;">
+                <h6>{% trans "Legend" %}</h6>
+                <div id="legendContent">
+                    <!-- Dynamic legend content -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% load vite_tags %}
+<script>
+// Store variables data for the JavaScript module
+window.variablesData = {{ variables_data|safe }};
+</script>
+<script id="variables-data" type="application/json">{{ variables_data|safe }}</script>
+{% vite_js 'js/dataMap.js' %}
+{% vite_legacy_js 'js/dataMap.js' %}
+{% endblock %}

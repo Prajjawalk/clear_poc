@@ -1,0 +1,286 @@
+{% extends "location/base.html" %}
+{% load humanize %}
+
+{% block title %}Location Dashboard{% endblock %}
+
+{% block main_content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="/">
+                        <i class="bi bi-house"></i> Home
+                    </a>
+                </li>
+                <li class="breadcrumb-item active">Location Management</li>
+            </ol>
+        </nav>
+        <h1 class="nrc-heading mb-0">
+            <i class="bi bi-geo-alt me-2 text-success"></i>Location Management Dashboard
+        </h1>
+    </div>
+    <div class="d-flex align-items-center">
+        <a href="{% url 'location:location_create' %}" class="btn btn-outline-primary btn-sm me-2">
+            <i class="bi bi-plus me-1"></i>New Location
+        </a>
+        <a href="{% url 'location:gazetteer_create' %}" class="btn btn-outline-success btn-sm">
+            <i class="bi bi-plus me-1"></i>New Gazetteer Entry
+        </a>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title mb-0">{{ stats.total_locations|intcomma }}</h4>
+                        <p class="card-text">Total Locations</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-geo-alt fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stat-card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title mb-0">{{ stats.total_admin_levels|intcomma }}</h4>
+                        <p class="card-text">Admin Levels</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-layers fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stat-card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title mb-0">{{ stats.total_gazetteer_entries|intcomma }}</h4>
+                        <p class="card-text">Gazetteer Entries</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-book fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stat-card bg-warning text-dark">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title mb-0">{{ stats.locations_by_admin_level|length }}</h4>
+                        <p class="card-text">Admin Level Types</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-diagram-3 fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Admin Level Breakdown -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Locations by Administrative Level</h5>
+            </div>
+            <div class="card-body">
+                {% if stats.locations_by_admin_level %}
+                    <div class="list-group list-group-flush">
+                        {% for level in stats.locations_by_admin_level %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ level.name }}</strong>
+                                    <small class="text-muted d-block">Level {{ level.code }}</small>
+                                </div>
+                                <span class="badge bg-primary rounded-pill">{{ level.location_count|intcomma }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">No administrative levels configured yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'location:location_list' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-list-ul me-2"></i>Browse All Locations
+                    </a>
+                    <a href="{% url 'location:gazetteer_list' %}" class="btn btn-outline-success">
+                        <i class="bi bi-journal me-2"></i>Browse Gazetteer Entries
+                    </a>
+                    <a href="{% url 'location:location_matcher' %}" class="btn btn-outline-info">
+                        <i class="bi bi-search me-2"></i>Match Locations
+                    </a>
+                    <hr>
+                    <a href="{% url 'location:location_create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-2"></i>Add New Location
+                    </a>
+                    <a href="{% url 'location:gazetteer_create' %}" class="btn btn-success">
+                        <i class="bi bi-plus-circle me-2"></i>Add Gazetteer Entry
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Recent Locations</h5>
+            </div>
+            <div class="card-body">
+                {% if stats.recent_locations %}
+                    <div class="list-group list-group-flush">
+                        {% for location in stats.recent_locations %}
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">
+                                        <a href="{% url 'location:location_detail' location.pk %}" class="text-decoration-none">
+                                            {{ location.name }}
+                                        </a>
+                                    </h6>
+                                    <small class="text-muted">{{ location.created_at|timesince }} ago</small>
+                                </div>
+                                <p class="mb-1">
+                                    <span class="badge bg-secondary">{{ location.admin_level.name }}</span>
+                                    <small class="text-muted">{{ location.geo_id }}</small>
+                                </p>
+                                {% if location.parent %}
+                                    <small class="text-muted">Parent: {{ location.parent.name }}</small>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <div class="card-footer text-center">
+                        <a href="{% url 'location:location_list' %}" class="btn btn-sm btn-outline-primary">View All Locations</a>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No locations created yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Recent Gazetteer Entries</h5>
+            </div>
+            <div class="card-body">
+                {% if stats.recent_gazetteer_entries %}
+                    <div class="list-group list-group-flush">
+                        {% for entry in stats.recent_gazetteer_entries %}
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ entry.name }}</h6>
+                                    <small class="text-muted">{{ entry.source }}</small>
+                                </div>
+                                <p class="mb-1">
+                                    <a href="{% url 'location:location_detail' entry.location.pk %}" class="text-decoration-none">
+                                        {{ entry.location.name }}
+                                    </a>
+                                    <span class="badge bg-secondary ms-1">{{ entry.location.admin_level.name }}</span>
+                                </p>
+                                {% if entry.code %}
+                                    <small class="text-muted">Code: {{ entry.code }}</small>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <div class="card-footer text-center">
+                        <a href="{% url 'location:gazetteer_list' %}" class="btn btn-sm btn-outline-success">View All Entries</a>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No gazetteer entries created yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- API Endpoints Section -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0 nrc-heading">
+                    <i class="bi bi-code-slash me-2"></i>API Endpoints
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="nrc-heading">Locations</h6>
+                        <ul class="list-unstyled">
+                            <li><a href="{% url 'location:locations_api' %}" class="text-decoration-none" target="_blank">
+                                <i class="bi bi-link-45deg me-2"></i>GET /location/api/locations/
+                            </a></li>
+                            <li><small class="nrc-text-muted">List locations with filtering and pagination</small></li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="nrc-heading">Admin Levels</h6>
+                        <ul class="list-unstyled">
+                            <li><a href="{% url 'location:admin_levels_api' %}" class="text-decoration-none" target="_blank">
+                                <i class="bi bi-link-45deg me-2"></i>GET /location/api/admin-levels/
+                            </a></li>
+                            <li><small class="nrc-text-muted">List administrative level definitions</small></li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6 mt-3">
+                        <h6 class="nrc-heading">Location Matching</h6>
+                        <ul class="list-unstyled">
+                            <li><a href="{% url 'location:match_location_api' %}" class="text-decoration-none" target="_blank">
+                                <i class="bi bi-link-45deg me-2"></i>POST /location/api/match/
+                            </a></li>
+                            <li><small class="nrc-text-muted">Match location names to database entries</small></li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6 mt-3">
+                        <h6 class="nrc-heading">Hierarchy</h6>
+                        <ul class="list-unstyled">
+                            <li><a href="#" class="text-decoration-none text-muted">
+                                <i class="bi bi-link-45deg me-2"></i>GET /location/api/locations/{id}/hierarchy/
+                            </a></li>
+                            <li><small class="nrc-text-muted">Get location hierarchy and children</small></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,464 @@
+@use "sass:color";
+@use "variables" as *;
+
+// ============================================================================
+// NOTIFICATION SYSTEM STYLES
+// ============================================================================
+
+// Notification bell button and badge
+#notificationBell {
+    .position-relative {
+        position: relative !important;
+    }
+
+    #notificationBadge {
+        font-size: 0.7rem;
+        min-width: 1.2rem;
+        height: 1.2rem;
+        line-height: 1.2rem;
+        text-align: center;
+        padding: 0;
+
+        // Pulse animation for new notifications
+        &.pulse {
+            animation: pulse 2s infinite;
+        }
+    }
+}
+
+@keyframes pulse {
+    0% {
+        transform: translate(-50%, -50%) scale(1);
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.1);
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+// Notification dropdown styles
+#notificationDropdown {
+    width: 320px !important; // Fixed width to match template
+    max-width: 320px;
+    border: 1px solid rgba($nrc-orange, 0.2);
+    box-shadow: 0 0.5rem 1rem rgba($nrc-black, 0.15);
+
+    .dropdown-header {
+        background-color: rgba($nrc-orange, 0.05);
+        border-bottom: 1px solid rgba($nrc-orange, 0.2);
+        font-weight: 500;
+
+        a {
+            color: $nrc-orange;
+            font-size: 0.875rem;
+
+            &:hover {
+                color: color.scale($nrc-orange, $lightness: -10%);
+            }
+        }
+    }
+
+    // Dropdown notification items (different from main notification page)
+    .dropdown-item.notification-item {
+        padding: 0.75rem 0.25rem 0.75rem 1rem; // Minimal right padding for more content space
+        border-bottom: 1px solid rgba($nrc-cool-grey-3, 0.3);
+        transition: all 0.2s ease;
+        cursor: default;
+        width: 100% !important;
+        max-width: 320px;
+        white-space: normal !important; // Override Bootstrap's nowrap
+
+        &.clickable {
+            cursor: pointer;
+
+            &:hover {
+                background-color: rgba($nrc-orange, 0.08);
+                transform: translateX(2px);
+            }
+        }
+
+        &:hover {
+            background-color: rgba($nrc-orange, 0.05);
+        }
+
+        &.unread {
+            background-color: rgba($nrc-perspective-blue, 0.08);
+            border-left: 3px solid $nrc-perspective-blue;
+
+            &:hover {
+                background-color: rgba($nrc-perspective-blue, 0.12);
+            }
+
+            &.clickable:hover {
+                background-color: rgba($nrc-perspective-blue, 0.15);
+            }
+        }
+
+        .flex-grow-1 {
+            min-width: 0;
+            max-width: 240px; // Simple fixed max width
+            overflow: hidden;
+        }
+
+        // Notification title in dropdown
+        .notification-title {
+            color: $nrc-cool-grey-11 !important;
+            font-size: 0.9rem !important;
+            line-height: 1.3 !important;
+            font-weight: 600 !important;
+            margin-bottom: 0.25rem !important;
+
+            // Allow wrapping and limit height
+            max-width: 240px !important;
+            max-height: 2.6em !important; // Roughly 2 lines
+            overflow: hidden !important;
+            white-space: normal !important;
+            word-wrap: break-word !important;
+            overflow-wrap: break-word !important;
+            hyphens: auto !important;
+        }
+
+        // Notification message in dropdown
+        .notification-message {
+            font-size: 0.85rem !important;
+            line-height: 1.3 !important;
+            color: $nrc-cool-grey-7 !important;
+            margin-bottom: 0.25rem !important;
+
+            // Allow wrapping with height limit for 2 lines
+            max-width: 240px !important;
+            max-height: 2.6em !important; // Roughly 2 lines
+            overflow: hidden !important;
+            white-space: normal !important;
+            word-wrap: break-word !important;
+            overflow-wrap: break-word !important;
+            hyphens: auto !important;
+        }
+
+        .mark-read-btn {
+            opacity: 0.7;
+            transition: opacity 0.2s ease;
+            border: none !important;
+            background: transparent !important;
+            flex-shrink: 0;
+            padding: 0.2rem 0.3rem !important;
+            font-size: 0.7rem !important;
+            width: auto !important;
+            min-width: 24px !important;
+
+            &:hover {
+                opacity: 1;
+                background-color: rgba($nrc-orange, 0.1) !important;
+            }
+        }
+    }
+}
+
+// Individual notification items (for notification list page - NOT dropdown)
+.notification-item {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba($nrc-cool-grey-3, 0.3);
+    transition: all 0.2s ease;
+    cursor: default;
+
+    // Only apply these styles if NOT in dropdown
+    &:not(.dropdown-item) {
+        &.clickable {
+            cursor: pointer;
+
+            &:hover {
+                background-color: rgba($nrc-orange, 0.08);
+                transform: translateX(2px);
+            }
+        }
+
+        &:hover {
+            background-color: rgba($nrc-orange, 0.05);
+        }
+
+        &.unread {
+            background-color: rgba($nrc-perspective-blue, 0.08);
+            border-left: 3px solid $nrc-perspective-blue;
+
+            &:hover {
+                background-color: rgba($nrc-perspective-blue, 0.12);
+            }
+
+            &.clickable:hover {
+                background-color: rgba($nrc-perspective-blue, 0.15);
+            }
+        }
+
+        &:last-child {
+            border-bottom: none;
+        }
+
+        .mark-read-btn {
+            opacity: 0.7;
+            transition: opacity 0.2s ease;
+            border: none !important;
+            background: transparent !important;
+
+            &:hover {
+                opacity: 1;
+                background-color: rgba($nrc-orange, 0.1) !important;
+            }
+        }
+
+        .btn-group-sm {
+            .btn {
+                padding: 0.2rem 0.4rem;
+                font-size: 0.75rem;
+                line-height: 1.2;
+            }
+        }
+    }
+}
+
+// Notification type icons
+.notification-type-icon {
+    &.text-danger { color: $nrc-crisis-red !important; }
+    &.text-warning { color: $nrc-optimistic-yellow !important; }
+    &.text-info { color: $nrc-expert-blue !important; }
+    &.text-secondary { color: $nrc-cool-grey-7 !important; }
+}
+
+// Notification center page styles
+.notification-center {
+    .stat-card {
+        &.notification-stats {
+            border-left: 4px solid $nrc-perspective-blue;
+
+            &:hover {
+                border-left-color: color.scale($nrc-perspective-blue, $lightness: -10%);
+            }
+        }
+    }
+
+    .notification-type-card {
+        border: 1px solid $card-border-color;
+        border-radius: $btn-border-radius;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        transition: all 0.2s ease;
+
+        &:hover {
+            box-shadow: 0 2px 8px rgba($nrc-black, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .type-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .type-name {
+            font-weight: 500;
+            color: $nrc-cool-grey-11;
+            margin-bottom: 0.25rem;
+        }
+
+        .type-counts {
+            font-size: 0.875rem;
+            color: $nrc-cool-grey-7;
+        }
+    }
+}
+
+// Notification list page styles
+.notification-list {
+    .notification-filters {
+        background-color: $card-cap-bg;
+        border: 1px solid $card-border-color;
+        border-radius: $btn-border-radius;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+
+        .filter-section {
+            margin-bottom: 1rem;
+
+            &:last-child {
+                margin-bottom: 0;
+            }
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: $nrc-cool-grey-11;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control,
+        .form-select {
+            border-color: $input-border-color;
+            font-size: 0.9rem;
+
+            &:focus {
+                border-color: $nrc-perspective-blue;
+                box-shadow: 0 0 0 0.2rem rgba($nrc-perspective-blue, 0.25);
+            }
+        }
+    }
+
+    .notification-card {
+        border: 1px solid $card-border-color;
+        border-radius: $btn-border-radius;
+        margin-bottom: 1rem;
+        transition: all 0.2s ease;
+
+        &:hover {
+            box-shadow: 0 2px 8px rgba($nrc-black, 0.1);
+        }
+
+        &.unread {
+            border-left: 4px solid $nrc-perspective-blue;
+            background-color: rgba($nrc-perspective-blue, 0.02);
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: between;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
+
+            .notification-title {
+                font-weight: 500;
+                color: $nrc-cool-grey-11;
+                font-size: 1.1rem;
+                line-height: 1.3;
+                margin-bottom: 0.25rem;
+            }
+
+            .notification-meta {
+                font-size: 0.875rem;
+                color: $nrc-cool-grey-7;
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                flex-wrap: wrap;
+            }
+        }
+
+        .notification-message {
+            color: $nrc-cool-grey-11;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+
+        .notification-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+
+            .btn-group {
+                .btn {
+                    padding: 0.375rem 0.75rem;
+                    font-size: 0.875rem;
+                }
+            }
+        }
+    }
+}
+
+// Priority badges
+.priority-badge {
+    &.priority-urgent {
+        background-color: $nrc-crisis-red;
+        color: white;
+    }
+    &.priority-high {
+        background-color: $nrc-optimistic-yellow;
+        color: $nrc-cool-grey-11;
+    }
+    &.priority-medium {
+        background-color: $nrc-expert-blue;
+        color: white;
+    }
+    &.priority-low {
+        background-color: $nrc-cool-grey-7;
+        color: white;
+    }
+}
+
+// Type badges
+.type-badge {
+    &.type-alert {
+        background-color: $nrc-crisis-red;
+        color: white;
+    }
+    &.type-data-update {
+        background-color: $nrc-perspective-blue;
+        color: white;
+    }
+    &.type-system {
+        background-color: $nrc-cool-grey-7;
+        color: white;
+    }
+    &.type-user {
+        background-color: $nrc-expert-blue;
+        color: white;
+    }
+}
+
+// Toast notifications
+.toast-container {
+    .toast {
+        border-radius: $btn-border-radius;
+        font-family: 'Roboto', sans-serif;
+        box-shadow: 0 4px 12px rgba($nrc-black, 0.15);
+        border: none;
+
+        .toast-body {
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+    }
+}
+
+// Raw data tooltips
+.raw-data-tooltip {
+    position: relative;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    color: inherit;
+
+    &:hover {
+        color: $nrc-perspective-blue;
+    }
+}
+
+// Custom tooltip styling for raw data
+.tooltip {
+    &.raw-data-tooltip-container {
+        .tooltip-inner {
+            max-width: 450px;
+            text-align: left;
+            background-color: $nrc-cool-grey-11;
+            color: white;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            padding: 12px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba($nrc-black, 0.25);
+
+            pre {
+                color: white;
+                background: transparent;
+                border: none;
+                margin: 0;
+                padding: 0;
+                font-size: 11px;
+                line-height: 1.3;
+            }
+        }
+
+        .tooltip-arrow {
+            &::before {
+                border-top-color: $nrc-cool-grey-11;
+            }
+        }
+    }
+}

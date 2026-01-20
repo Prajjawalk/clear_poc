@@ -1,0 +1,502 @@
+{% extends "task_monitoring/base.html" %}
+{% load i18n %}
+
+{% block title %}Task {{ task_id }} Logs - Task Monitoring{% endblock %}
+
+{% block main_content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="/">
+                        <i class="bi bi-house"></i> Home
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'task_monitoring:dashboard' %}">Task Monitoring</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'task_monitoring:logs_list' %}">Task Logs</a>
+                </li>
+                <li class="breadcrumb-item active">{{ task_id|truncatechars:20 }}</li>
+            </ol>
+        </nav>
+        <h1 class="nrc-heading mb-0">
+            <i class="bi bi-file-text me-2 text-info"></i>{% trans "Task Logs" %}
+        </h1>
+        <small class="text-muted">{{ task_id }}</small>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        {% if is_running %}
+            <div class="badge bg-success pulse-animation">
+                <i class="bi bi-play-circle me-1"></i>{% trans "RUNNING" %}
+            </div>
+        {% endif %}
+        <button id="auto-refresh-toggle" class="btn btn-outline-secondary btn-sm"
+                data-bs-toggle="button" aria-pressed="false">
+            <i class="bi bi-arrow-clockwise me-1"></i>
+            <span id="auto-refresh-text">{% trans "Auto Refresh" %}</span>
+        </button>
+        <div class="dropdown">
+            <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button"
+                    data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-download"></i> {% trans "Export" %}
+            </button>
+            <ul class="dropdown-menu">
+                <li>
+                    <a class="dropdown-item" href="{% url 'task_monitoring:logs_export' task_id %}?format=text">
+                        <i class="bi bi-file-text me-2"></i>{% trans "Text Format" %}
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="{% url 'task_monitoring:logs_export' task_id %}?format=json">
+                        <i class="bi bi-file-code me-2"></i>{% trans "JSON Format" %}
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <a href="{% url 'task_monitoring:logs_list' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i> {% trans "Back to List" %}
+        </a>
+    </div>
+</div>
+
+<!-- Task Info and Stats Row -->
+<div class="row mb-4">
+    <!-- Task Execution Info -->
+    {% if task_execution %}
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0 nrc-heading">
+                        <i class="bi bi-info-circle me-2"></i>{% trans "Task Information" %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">{% trans "Type:" %}</dt>
+                                <dd class="col-sm-8">{{ task_execution.task_type.name }}</dd>
+
+                                <dt class="col-sm-4">{% trans "Status:" %}</dt>
+                                <dd class="col-sm-8">
+                                    {% if task_execution.status == "success" %}
+                                        <span class="badge bg-success">{{ task_execution.get_status_display }}</span>
+                                    {% elif task_execution.status == "failure" %}
+                                        <span class="badge bg-danger">{{ task_execution.get_status_display }}</span>
+                                    {% elif task_execution.status == "started" %}
+                                        <span class="badge bg-primary">{{ task_execution.get_status_display }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ task_execution.get_status_display }}</span>
+                                    {% endif %}
+                                </dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">{% trans "Started:" %}</dt>
+                                <dd class="col-sm-8">
+                                    {% if task_execution.started_at %}
+                                        {{ task_execution.started_at|date:"M j, Y H:i:s" }}
+                                    {% else %}
+                                        <em>{% trans "Not started" %}</em>
+                                    {% endif %}
+                                </dd>
+
+                                <dt class="col-sm-4">{% trans "Duration:" %}</dt>
+                                <dd class="col-sm-8">
+                                    {% if task_execution.duration_seconds %}
+                                        {{ task_execution.duration_seconds|floatformat:1 }}s
+                                    {% elif task_execution.started_at and is_running %}
+                                        <span id="running-duration" data-start="{{ task_execution.started_at.isoformat }}">
+                                            {% trans "Running..." %}
+                                        </span>
+                                    {% else %}
+                                        <em>{% trans "Not available" %}</em>
+                                    {% endif %}
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Log Statistics -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0 nrc-heading">
+                    <i class="bi bi-bar-chart me-2"></i>{% trans "Log Statistics" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="text-muted small">{% trans "Total" %}</div>
+                        <div class="h5 mb-0">{{ log_stats.total }}</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-warning small">{% trans "Warnings" %}</div>
+                        <div class="h5 mb-0 text-warning">{{ log_stats.warning }}</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-danger small">{% trans "Errors" %}</div>
+                        <div class="h5 mb-0 text-danger">{{ log_stats.error|add:log_stats.critical }}</div>
+                    </div>
+                </div>
+                <hr>
+                <div class="row text-center small">
+                    <div class="col-4">
+                        <div class="text-secondary">DEBUG: {{ log_stats.debug }}</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-info">INFO: {{ log_stats.info }}</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-danger">CRITICAL: {{ log_stats.critical }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Log Display -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 nrc-heading">
+            <i class="bi bi-terminal me-2"></i>{% trans "Log Output" %}
+        </h5>
+        <div class="d-flex align-items-center gap-2">
+            <select id="level-filter" class="form-select form-select-sm" style="width: auto;">
+                <option value="">{% trans "All Levels" %}</option>
+                {% for level_num, level_name in level_choices %}
+                    <option value="{{ level_num }}">{{ level_name }}</option>
+                {% endfor %}
+            </select>
+            <button id="clear-logs" class="btn btn-outline-danger btn-sm">
+                <i class="bi bi-trash"></i> {% trans "Clear Logs" %}
+            </button>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div id="log-container" class="log-terminal" data-task-id="{{ task_id }}" data-is-running="{{ is_running|yesno:'true,false' }}">
+            {% if logs %}
+                {% for log in logs %}
+                    <div class="log-entry" data-level="{{ log.level }}" data-timestamp="{{ log.timestamp.isoformat }}">
+                        <span class="log-timestamp">{{ log.timestamp|date:"H:i:s.u" }}</span>
+                        <span class="log-level log-level-{{ log.level }}">{{ log.level_name }}</span>
+                        {% if log.module %}
+                            <span class="log-module">{{ log.module }}{% if log.line_number %}:{{ log.line_number }}{% endif %}</span>
+                        {% endif %}
+                        <span class="log-message">{{ log.message }}</span>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-file-text display-4 mb-3"></i>
+                    <p>{% trans "No logs available for this task yet." %}</p>
+                    {% if is_running %}
+                        <p class="small">{% trans "Logs will appear here as the task runs..." %}</p>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    {% if page_obj.has_other_pages %}
+        <div class="card-footer">
+            <nav aria-label="{% trans 'Log pagination' %}">
+                <ul class="pagination justify-content-center mb-0">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                                {% trans "Previous" %}
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">
+                            {% trans "Page" %} {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                                {% trans "Next" %}
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.log-terminal {
+    background-color: #1a1a1a;
+    color: #ffffff;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.85em;
+    height: 500px;
+    overflow-y: auto;
+    padding: 1rem;
+    border-radius: 0 0 0.375rem 0.375rem;
+}
+
+.log-entry {
+    margin-bottom: 0.25rem;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+.log-timestamp {
+    color: #888;
+    margin-right: 0.5rem;
+}
+
+.log-level {
+    font-weight: bold;
+    margin-right: 0.5rem;
+    padding: 0.1rem 0.3rem;
+    border-radius: 0.2rem;
+    font-size: 0.75em;
+}
+
+.log-level-10 { background-color: #6c757d; } /* DEBUG */
+.log-level-20 { background-color: #0dcaf0; color: #000; } /* INFO */
+.log-level-30 { background-color: #ffc107; color: #000; } /* WARNING */
+.log-level-40 { background-color: #dc3545; } /* ERROR */
+.log-level-50 { background-color: #000; border: 1px solid #dc3545; } /* CRITICAL */
+
+.log-module {
+    color: #ffc107;
+    margin-right: 0.5rem;
+    font-size: 0.9em;
+}
+
+.log-message {
+    white-space: pre-wrap;
+}
+
+.pulse-animation {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.log-entry.new-entry {
+    animation: highlight 1s ease-out;
+}
+
+@keyframes highlight {
+    0% { background-color: #ffc107; }
+    100% { background-color: transparent; }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const logContainer = document.getElementById('log-container');
+    const autoRefreshToggle = document.getElementById('auto-refresh-toggle');
+    const autoRefreshText = document.getElementById('auto-refresh-text');
+    const levelFilter = document.getElementById('level-filter');
+    const clearLogsBtn = document.getElementById('clear-logs');
+    const taskId = logContainer.dataset.taskId;
+    const isRunning = logContainer.dataset.isRunning === 'true';
+
+    let autoRefresh = false;
+    let refreshInterval = null;
+    let lastTimestamp = null;
+
+    // Get the latest timestamp from existing logs
+    const existingLogs = document.querySelectorAll('.log-entry[data-timestamp]');
+    if (existingLogs.length > 0) {
+        lastTimestamp = existingLogs[existingLogs.length - 1].dataset.timestamp;
+    }
+
+    // Auto-refresh toggle
+    autoRefreshToggle.addEventListener('click', function() {
+        autoRefresh = !autoRefresh;
+
+        if (autoRefresh) {
+            autoRefreshText.textContent = '{% trans "Stop Auto Refresh" %}';
+            autoRefreshToggle.classList.add('active');
+            startAutoRefresh();
+        } else {
+            autoRefreshText.textContent = '{% trans "Auto Refresh" %}';
+            autoRefreshToggle.classList.remove('active');
+            stopAutoRefresh();
+        }
+    });
+
+    // Start auto-refresh for running tasks
+    if (isRunning) {
+        autoRefreshToggle.click();
+    }
+
+    function startAutoRefresh() {
+        if (refreshInterval) return;
+
+        refreshInterval = setInterval(fetchNewLogs, 2000); // Poll every 2 seconds
+    }
+
+    function stopAutoRefresh() {
+        if (refreshInterval) {
+            clearInterval(refreshInterval);
+            refreshInterval = null;
+        }
+    }
+
+    function fetchNewLogs() {
+        const url = `/tasks/logs/api/${taskId}/`;
+        const params = new URLSearchParams();
+
+        if (lastTimestamp) {
+            params.append('since', lastTimestamp);
+        }
+
+        const levelValue = levelFilter.value;
+        if (levelValue) {
+            params.append('level', levelValue);
+        }
+
+        params.append('limit', '50');
+
+        fetch(`${url}?${params}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.logs.length > 0) {
+                    appendNewLogs(data.logs);
+                    lastTimestamp = data.logs[data.logs.length - 1].timestamp;
+                }
+
+                // Stop auto-refresh if task is no longer running
+                if (!data.is_running && autoRefresh) {
+                    autoRefreshToggle.click();
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching logs:', error);
+            });
+    }
+
+    function appendNewLogs(logs) {
+        logs.forEach(log => {
+            const logEntry = createLogEntry(log);
+            logEntry.classList.add('new-entry');
+            logContainer.appendChild(logEntry);
+        });
+
+        // Scroll to bottom
+        logContainer.scrollTop = logContainer.scrollHeight;
+
+        // Apply level filter to new logs
+        applyLevelFilter();
+    }
+
+    function createLogEntry(log) {
+        const div = document.createElement('div');
+        div.className = 'log-entry';
+        div.dataset.level = log.level;
+        div.dataset.timestamp = log.timestamp;
+
+        const timestamp = new Date(log.timestamp).toLocaleTimeString('en-US', {
+            hour12: false,
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+
+        let moduleInfo = '';
+        if (log.module) {
+            moduleInfo = `<span class="log-module">${log.module}${log.line_number ? ':' + log.line_number : ''}</span>`;
+        }
+
+        div.innerHTML = `
+            <span class="log-timestamp">${timestamp}</span>
+            <span class="log-level log-level-${log.level}">${log.level_name}</span>
+            ${moduleInfo}
+            <span class="log-message">${escapeHtml(log.message)}</span>
+        `;
+
+        return div;
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Level filter
+    levelFilter.addEventListener('change', applyLevelFilter);
+
+    function applyLevelFilter() {
+        const selectedLevel = levelFilter.value;
+        const logEntries = document.querySelectorAll('.log-entry');
+
+        logEntries.forEach(entry => {
+            if (selectedLevel === '' || entry.dataset.level === selectedLevel) {
+                entry.style.display = 'block';
+            } else {
+                entry.style.display = 'none';
+            }
+        });
+    }
+
+    // Clear logs
+    clearLogsBtn.addEventListener('click', function() {
+        if (confirm('{% trans "Are you sure you want to clear all logs for this task?" %}')) {
+            fetch(`/tasks/logs/clear/${taskId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error clearing logs: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error clearing logs:', error);
+                alert('Error clearing logs');
+            });
+        }
+    });
+
+    // Update running duration
+    const durationElement = document.getElementById('running-duration');
+    if (durationElement) {
+        const startTime = new Date(durationElement.dataset.start);
+
+        function updateDuration() {
+            const now = new Date();
+            const diff = Math.floor((now - startTime) / 1000);
+            const minutes = Math.floor(diff / 60);
+            const seconds = diff % 60;
+            durationElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        updateDuration();
+        setInterval(updateDuration, 1000);
+    }
+});
+</script>
+{% endblock %}

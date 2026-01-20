@@ -1,0 +1,109 @@
+@use "sass:color";
+@use "variables" as *;
+
+// ============================================================================
+// NAVIGATION STYLES
+// ============================================================================
+
+// NRC Navigation Pills
+.nav-pills .nav-link {
+    color: $nrc-cool-grey-11;
+    border-radius: $btn-border-radius;
+    transition: all 0.2s ease;
+
+    &:hover {
+        background-color: rgba($nrc-orange, 0.1);
+        color: $nrc-orange;
+    }
+
+    &.active {
+        background-color: $nrc-orange;
+        color: $nrc-white;
+        box-shadow: 0 2px 4px rgba($nrc-orange, 0.3);
+    }
+}
+
+// ============================================================================
+// APP-SPECIFIC STYLING
+// ============================================================================
+
+// Data Pipeline app - use NRC orange for sidebar icon
+.app-data-pipeline .sidebar-heading i {
+    color: $nrc-orange !important;
+}
+
+// Data Pipeline icons in home and other pages
+.bi-diagram-3 {
+    color: $nrc-orange !important;
+}
+
+// Data Pipeline card - override primary color with orange
+.card.border-primary .bi-diagram-3,
+.card.border-primary .text-primary.bi-check-circle,
+.card.border-primary .btn-primary .bi-diagram-3 {
+    color: $nrc-orange !important;
+}
+
+.card.border-primary .btn-primary {
+    background-color: $nrc-orange !important;
+    border-color: $nrc-orange !important;
+
+    &:hover {
+        background-color: color.scale($nrc-orange, $lightness: -10%) !important;
+        border-color: color.scale($nrc-orange, $lightness: -10%) !important;
+    }
+}
+
+// Application-specific color themes
+.app-data-pipeline {
+    .sidebar-heading {
+        color: $nrc-orange !important;
+    }
+    .nav-pills .nav-link.active {
+        background-color: $nrc-orange !important;
+    }
+    .nav-pills .nav-link:hover {
+        background-color: rgba($nrc-orange, 0.1) !important;
+        color: $nrc-orange !important;
+    }
+}
+
+.app-location {
+    .sidebar-heading {
+        color: $nrc-perspective-blue !important;
+    }
+    .nav-pills .nav-link.active {
+        background-color: $nrc-perspective-blue !important;
+    }
+    .nav-pills .nav-link:hover {
+        background-color: rgba($nrc-perspective-blue, 0.1) !important;
+        color: $nrc-perspective-blue !important;
+    }
+}
+
+.app-task-monitoring {
+    .sidebar-heading {
+        color: $nrc-optimistic-yellow !important;
+    }
+    .nav-pills .nav-link.active {
+        background-color: $nrc-optimistic-yellow !important;
+        color: $nrc-cool-grey-11 !important;
+    }
+    .nav-pills .nav-link:hover {
+        background-color: rgba($nrc-optimistic-yellow, 0.1) !important;
+        color: color.scale($nrc-optimistic-yellow, $lightness: -30%) !important;
+    }
+}
+
+.app-api {
+    .sidebar-heading {
+        color: $nrc-expert-blue !important;
+    }
+    .nav-pills .nav-link.active {
+        background-color: $nrc-expert-blue !important;
+    }
+    .nav-pills .nav-link:hover {
+        background-color: rgba($nrc-expert-blue, 0.1) !important;
+        color: $nrc-expert-blue !important;
+    }
+}

@@ -1,0 +1,203 @@
+{% extends "location/base.html" %}
+
+{% block title %}{% if form.instance.pk %}Edit Gazetteer Entry{% else %}Add New Gazetteer Entry{% endif %}{% endblock %}
+
+{% block main_content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        {% if form.instance.pk %}
+            Edit Gazetteer Entry
+        {% else %}
+            Add New Gazetteer Entry
+        {% endif %}
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group">
+            <a href="{% url 'location:gazetteer_list' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <form method="post" class="needs-validation" novalidate>
+            {% csrf_token %}
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Gazetteer Entry Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="{{ form.location.id_for_label }}" class="form-label">
+                            Location <span class="text-danger">*</span>
+                        </label>
+                        {{ form.location }}
+                        {% if form.location.help_text %}
+                            <div class="form-text">{{ form.location.help_text }}</div>
+                        {% endif %}
+                        {% if form.location.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.location.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.source.id_for_label }}" class="form-label">
+                                    Source <span class="text-danger">*</span>
+                                </label>
+                                {{ form.source }}
+                                {% if form.source.help_text %}
+                                    <div class="form-text">{{ form.source.help_text }}</div>
+                                {% endif %}
+                                {% if form.source.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.source.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.code.id_for_label }}" class="form-label">Alternative Code</label>
+                                {{ form.code }}
+                                {% if form.code.help_text %}
+                                    <div class="form-text">{{ form.code.help_text }}</div>
+                                {% endif %}
+                                {% if form.code.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.code.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">
+                            Alternative Name <span class="text-danger">*</span>
+                        </label>
+                        {{ form.name }}
+                        {% if form.name.help_text %}
+                            <div class="form-text">{{ form.name.help_text }}</div>
+                        {% endif %}
+                        {% if form.name.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.name.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form-wide errors -->
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger" role="alert">
+                    <h6 class="alert-heading">Please correct the following errors:</h6>
+                    {% for error in form.non_field_errors %}
+                        <p class="mb-0">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Action Buttons -->
+            <div class="d-flex gap-2 mb-4">
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-check-lg"></i>
+                    {% if form.instance.pk %}Update Entry{% else %}Create Entry{% endif %}
+                </button>
+                
+                <a href="{% url 'location:gazetteer_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-lg"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Sidebar with help information -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">What is a Gazetteer?</h6>
+            </div>
+            <div class="card-body">
+                <p class="small">
+                    A gazetteer is a directory of alternative names and codes used by different data sources 
+                    to refer to the same location. This helps with data integration and location matching.
+                </p>
+                
+                <h6>Examples</h6>
+                <div class="small">
+                    <p><strong>Location:</strong> Khartoum State</p>
+                    <ul>
+                        <li>ACLED: "Khartoum"</li>
+                        <li>UNHCR: "Khartoum State"</li>
+                        <li>Local: "ولاية الخرطوم"</li>
+                    </ul>
+                </div>
+                
+                <h6>Common Sources</h6>
+                <ul class="small">
+                    <li><strong>ACLED:</strong> Armed Conflict Location & Event Data</li>
+                    <li><strong>UNHCR:</strong> UN High Commissioner for Refugees</li>
+                    <li><strong>OCHA:</strong> UN Office for Coordination of Humanitarian Affairs</li>
+                    <li><strong>local:</strong> Local administrative names</li>
+                    <li><strong>ISO:</strong> International Organization for Standardization codes</li>
+                </ul>
+                
+                <h6>Tips</h6>
+                <ul class="small">
+                    <li>Use consistent source identifiers</li>
+                    <li>Include both codes and names when available</li>
+                    <li>Add entries for all variations used by data sources</li>
+                </ul>
+            </div>
+        </div>
+        
+        {% if form.instance.pk and form.instance.location %}
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">Location Info</h6>
+                </div>
+                <div class="card-body">
+                    <p class="small mb-2">
+                        <strong>{{ form.instance.location.name }}</strong><br>
+                        <code>{{ form.instance.location.geo_id }}</code><br>
+                        <span class="badge bg-secondary">{{ form.instance.location.admin_level.name }}</span>
+                    </p>
+                    <a href="{% url 'location:location_detail' form.instance.location.pk %}" class="btn btn-sm btn-outline-info">
+                        <i class="bi bi-eye"></i> View Location
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Form validation feedback
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        var forms = document.getElementsByClassName('needs-validation');
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
+</script>
+{% endblock %}
