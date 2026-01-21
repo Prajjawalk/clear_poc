@@ -1,0 +1,8 @@
+[phases.setup]
+nixPkgs = ["gdal", "geos", "proj", "postgresql"]
+
+[phases.install]
+cmds = ["pip install uv", "uv pip install -e .", "npm ci"]
+
+[phases.build]
+cmds = ["npm run build:prod", "python manage.py collectstatic --noinput"]

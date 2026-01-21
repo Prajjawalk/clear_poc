@@ -16,6 +16,7 @@ NRC EWAS Sudan is a geospatial web application designed to support humanitarian 
 ## Tech Stack
 
 ### Backend
+
 - **Django 5.2+** - Web framework with GeoDjango for geospatial features
 - **PostgreSQL + PostGIS** - Database with geospatial extensions
 - **Celery** - Distributed task queue for background jobs
@@ -23,12 +24,14 @@ NRC EWAS Sudan is a geospatial web application designed to support humanitarian 
 - **TiTiler** - Dynamic tile server for raster data
 
 ### Frontend
+
 - **Vite** - Fast build tool and dev server
 - **Bootstrap 5** - UI framework
 - **Leaflet** - Interactive maps with clustering support
 - **Vanilla JavaScript** - No framework, pure ES6+
 
 ### Data Processing
+
 - **Pandas & GeoPandas** - Data analysis and geospatial operations
 - **Rasterio** - Raster data processing
 - **OpenAI API** - LLM integration for analysis
@@ -45,6 +48,7 @@ NRC EWAS Sudan is a geospatial web application designed to support humanitarian 
 ### System Dependencies
 
 **Ubuntu/Debian**:
+
 ```bash
 sudo apt update
 sudo apt install -y python3.12 postgresql postgresql-contrib postgis redis-server
@@ -52,6 +56,7 @@ sudo apt install -y gdal-bin libgdal-dev libgeos-dev libproj-dev
 ```
 
 **macOS**:
+
 ```bash
 brew install python@3.12 postgresql postgis redis gdal
 brew services start postgresql
@@ -63,7 +68,7 @@ brew services start redis
 ### 1. Clone and Navigate
 
 ```bash
-cd django
+cd .
 ```
 
 ### 2. Environment Configuration
@@ -76,6 +81,7 @@ cp .envrc_sample .envrc
 ```
 
 Edit `.env` and `.envrc` with your configuration:
+
 - Database credentials
 - Django secret key
 - API keys (OpenAI, DTM, Slack)
@@ -125,22 +131,26 @@ uv run manage.py createsuperuser
 ### Running the Application
 
 **Full stack with Celery** (recommended):
+
 ```bash
 npm run dev
 ```
 
 This starts:
+
 - Django development server (http://localhost:8000)
 - Vite dev server with HMR (http://localhost:5173)
 - Celery worker for background tasks
 - TiTiler server for raster tiles
 
 **Without Celery** (lightweight):
+
 ```bash
 npm run dev:light
 ```
 
 **Individual services**:
+
 ```bash
 # Django only
 npm run dev:django
@@ -213,6 +223,7 @@ uv run manage.py collectstatic --noinput
 ### Environment Configuration
 
 Set environment variables:
+
 ```bash
 export DJANGO_ENV=PROD
 export DEBUG=False
@@ -240,6 +251,7 @@ celery -A app beat --loglevel=info
 ### Django Settings
 
 Settings are split into multiple files in `app/settings/`:
+
 - `core.py` - Base configuration
 - `dev.py` - Development settings
 - `test.py` - Test configuration
@@ -248,6 +260,7 @@ Settings are split into multiple files in `app/settings/`:
 ### Celery Queues
 
 The application uses multiple Celery queues:
+
 - `celery` - Default queue
 - `data_retrieval` - Data fetching tasks
 - `data_processing` - Data processing tasks
@@ -257,6 +270,7 @@ The application uses multiple Celery queues:
 ## VSCode Setup
 
 Recommended VSCode extensions:
+
 - Python (`ms-python.python`)
 - Ruff (`charliermarsh.ruff`)
 - Vitest (`vitest.explorer`)
@@ -267,6 +281,7 @@ See the included `.vscode/settings.json` and `.vscode/extensions.json` in the re
 ## Troubleshooting
 
 ### Redis Connection Error
+
 ```bash
 # Check Redis is running
 redis-cli ping  # Should return PONG
@@ -277,6 +292,7 @@ brew services start redis  # macOS
 ```
 
 ### Database Connection Error
+
 ```bash
 # Verify PostgreSQL is running
 pg_isready
@@ -286,6 +302,7 @@ psql -d nrc_ewas -c "SELECT PostGIS_version();"
 ```
 
 ### Frontend Build Issues
+
 ```bash
 # Clear cache and reinstall
 rm -rf node_modules package-lock.json
@@ -294,6 +311,7 @@ npm run build
 ```
 
 ### Celery Not Processing Tasks
+
 ```bash
 # Check Celery worker is running
 celery -A app inspect active
