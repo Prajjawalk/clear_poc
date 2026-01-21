@@ -23,7 +23,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", default="django-insecure-4@#)7&!v3g1@8^2j5$%+0z6@*x@r9q3b1&=5!_8c4g0h3k6z7n")
-ALLOWED_HOSTS = json.loads(os.getenv("ALLOWED_HOSTS", default=["localhost"]))
+_allowed_hosts_env = os.getenv("ALLOWED_HOSTS", "localhost")
+# Support both JSON array and comma-separated formats
+if _allowed_hosts_env.startswith("["):
+    ALLOWED_HOSTS = json.loads(_allowed_hosts_env)
+else:
+    ALLOWED_HOSTS = [h.strip() for h in _allowed_hosts_env.split(",") if h.strip()]
 
 # Application definition
 INSTALLED_APPS = [
