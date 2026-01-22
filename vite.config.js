@@ -5,7 +5,7 @@ export default defineConfig({
   root: "./frontend",
   base: "/static/dist/",
   build: {
-    outDir: "../static/dist",
+    outDir: "./static/dist",
     emptyOutDir: true,
     manifest: "manifest.json",
     rollupOptions: {
