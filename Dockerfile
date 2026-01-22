@@ -15,6 +15,9 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
+# Set production environment
+ENV DJANGO_ENV=PROD
+
 # Copy all source files
 COPY . .
 
