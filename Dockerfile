@@ -18,8 +18,8 @@ WORKDIR /app
 # Copy all source files
 COPY . .
 
-# Install Python dependencies
-RUN pip install uv && uv pip install --system .
+# Install Python dependencies from pyproject.toml
+RUN pip install uv && uv pip compile pyproject.toml -o requirements.txt && uv pip install --system -r requirements.txt
 
 # Install Node dependencies and build frontend
 RUN npm ci && npm run build:prod
