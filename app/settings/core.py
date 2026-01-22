@@ -61,6 +61,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # Serve static files in production
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -164,11 +165,21 @@ TRANSLATION_AUTO_CREATE_MISSING = True  # Automatically create missing translati
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = "static/"
-STATIC_ROOT = BASE_DIR / "static"
+STATIC_ROOT = BASE_DIR / "staticfiles"  # Collected static files (separate from source)
 STATICFILES_DIRS = [
     BASE_DIR / "assets",
-    BASE_DIR / "static" / "dist",  # Add Vite build output for development
+    BASE_DIR / "static",  # Vite build output and other static files
 ]
+
+# WhiteNoise for serving static files in production
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 # Media files (User uploads)
 # https://docs.djangoproject.com/en/5.2/topics/files/
@@ -270,12 +281,15 @@ else:
     }
 
 # Vite Configuration (django-vite)
+# Manifest is always in static/dist (Vite build output)
+# In production, collectstatic copies it to STATIC_ROOT/dist
 DJANGO_VITE = {
     "default": {
         "dev_mode": DEBUG,
         "dev_server_host": os.getenv("VITE_DEV_SERVER_HOST", "localhost"),
         "dev_server_port": int(os.getenv("VITE_DEV_SERVER_PORT", "3000")),
         "static_url_prefix": "dist",
+        "manifest_path": STATIC_ROOT / "dist" / "manifest.json",
     }
 }
 

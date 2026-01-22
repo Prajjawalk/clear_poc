@@ -15,18 +15,16 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
+# Copy all source files
+COPY . .
+
 # Install Python dependencies
-COPY pyproject.toml ./
-RUN pip install uv && uv pip install --system -e .
+RUN pip install uv && uv pip install --system .
 
 # Install Node dependencies and build frontend
-COPY package*.json ./
-RUN npm ci
+RUN npm ci && npm run build:prod
 
-COPY . .
-RUN npm run build:prod
-
-# Collect static files
+# Collect static files to staticfiles/ directory
 RUN python manage.py collectstatic --noinput
 
 EXPOSE 8000

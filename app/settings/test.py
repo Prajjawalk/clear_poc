@@ -11,10 +11,11 @@ DJANGO_VITE = {
         "dev_mode": False,  # Explicitly disable dev mode even with DEBUG=True
         "dev_server_host": "localhost",
         "dev_server_port": 3000,
-        "static_url_prefix": "",  # Empty prefix since static/dist is in STATICFILES_DIRS
+        "static_url_prefix": "dist",
+        "manifest_path": BASE_DIR / "static" / "dist" / "manifest.json",  # noqa: F405
     }
 }
 
 # Fix static file serving for E2E tests
-# Keep static/dist in STATICFILES_DIRS so Django can find and serve it with DEBUG=True
+# Vite build output is in static/dist
 # This is already configured in core.py and inherited here

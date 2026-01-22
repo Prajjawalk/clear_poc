@@ -1,0 +1,34 @@
+# Git
+.git
+.gitignore
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Node
+node_modules/
+
+# Build artifacts (will be rebuilt in Docker)
+static/
+staticfiles/
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+logs/
+*.log
+
+# Environment files (use Railway env vars instead)
+.env
+.env.local
+
+# Documentation
+*.md
+!README.md
+docs/
